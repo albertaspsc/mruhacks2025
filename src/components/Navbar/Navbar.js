@@ -7,53 +7,52 @@ import styles from "./Navbar.module.css";
 
 function NavigationBar() {
   const [expanded, setExpanded] = useState(false);
-  
+
   // Handle closing the navbar when clicking outside
   useEffect(() => {
     if (!expanded) return;
-    
+
     const handleOutsideClick = (e) => {
       // If the click is on the hamburger or its children, ignore
       if (e.target.closest(`.${styles.navbarToggler}`)) return;
-      
+
       // If the click is outside the nav container and navbar is expanded
       if (!e.target.closest(`.${styles.navContainer}`) && expanded) {
         handleNavLinkClick();
       }
     };
-    
+
     // Add event listener
-    document.addEventListener('click', handleOutsideClick);
-    
-    // Clean up
+    document.addEventListener("click", handleOutsideClick);
+
     return () => {
-      document.removeEventListener('click', handleOutsideClick);
+      document.removeEventListener("click", handleOutsideClick);
     };
   }, [expanded]);
-  
+
   const toggleNavbar = () => {
     const newExpandedState = !expanded;
     setExpanded(newExpandedState);
-    
+
     // Add or remove class from body when navbar is expanded
     if (newExpandedState) {
-      document.body.classList.add('navbar-expanded');
+      document.body.classList.add("navbar-expanded");
       // Lock scroll when menu is open
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.classList.remove('navbar-expanded');
+      document.body.classList.remove("navbar-expanded");
       // Restore scroll when menu is closed
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
   };
-  
+
   // Function to handle navigation link clicks
   const handleNavLinkClick = () => {
     setExpanded(false);
-    document.body.classList.remove('navbar-expanded');
-    document.body.style.overflow = '';
+    document.body.classList.remove("navbar-expanded");
+    document.body.style.overflow = "";
   };
-  
+
   return (
     <Navbar
       expanded={expanded}
@@ -73,19 +72,19 @@ function NavigationBar() {
           />
         </Navbar.Brand>
         <Navbar.Toggle
-            aria-controls="basic-navbar-nav"
-            onClick={toggleNavbar}
-            className={styles.navbarToggler}
+          aria-controls="basic-navbar-nav"
+          onClick={toggleNavbar}
+          className={styles.navbarToggler}
         >
-        <div className={styles.hamburgerIcon}>
+          <div className={styles.hamburgerIcon}>
             <span></span>
             <span></span>
             <span></span>
-        </div>
+          </div>
         </Navbar.Toggle>
         <Navbar.Collapse
           id="basic-navbar-nav"
-          className={`${styles.navbarCollapse} ${expanded ? styles.show : ''}`}
+          className={`${styles.navbarCollapse} ${expanded ? styles.show : ""}`}
         >
           <Nav className={styles.navContainer}>
             <Nav.Link

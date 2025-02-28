@@ -1,115 +1,105 @@
 .footer {
-    background-color: #000;
-    color: #fff;
-    padding: 3rem 5%;
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
+  background-color: #000;
+  color: #fff;
+  padding: 3rem 5%;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
 }
 
 .footerContent {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
 }
 
 .footerLeft {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .communityTitle {
-    max-width: 400px;
-    height: auto;
-    margin-bottom: 1.5rem;
+  max-width: 400px;
+  height: auto;
+  margin-bottom: 1.5rem;
 }
 
 .socialLinks {
-    display: flex;
-    gap: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
 }
 
 .socialLink {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .socialIcon {
-    background-color: #333;
-    color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: 
-        background-color 0.3s ease,
-        transform 0.3s ease;
+  background-color: #333;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .socialIcon:hover {
-    background-color: #7b2ba6;
-    color: #000;
-    transform: translateY(-3px);
+  background-color: #7b2ba6;
+  color: #000;
+  transform: translateY(-3px);
 }
 
 .footerRight {
-    max-width: 40%;
+  max-width: 40%;
 }
 
 .teamPhoto {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
 }
 
 .copyright p {
-    text-align: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgb(255, 255, 255);
-    font-size: 0.9rem;
-    color: rgb(255, 255, 255);
-}
-
-/* Add margin to main content to prevent footer overlap */
-:global(body) {
-    margin-bottom: 350px;
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgb(255, 255, 255);
+  font-size: 0.9rem;
+  color: rgb(255, 255, 255);
 }
 
 @media (max-width: 768px) {
-    :global(body) {
-        margin-bottom: 450px; /* Increases for mobile */
-    }
-    
-    /* This is the key fix - completely hide the footer when navbar is expanded */
-    :global(body.navbar-expanded) .footer {
-        display: none; /* Changed from opacity: 0 to completely remove from layout */
-    }
-    
-    .footerContent {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .footerLeft {
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-    
-    .footerRight {
-        max-width: 80%;
-    }
-    
-    .communityTitle {
-        margin-bottom: 1rem;
-    }
-    
-    .teamPhoto {
-        max-width: 400px;
-        height: auto;
-        border-radius: 8px;
-    }
+  :global(body.navbar-expanded) .footer {
+    display: none; /* Hide footer when navbar is expanded */
+  }
+
+  .footerContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footerLeft {
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .footerRight {
+    max-width: 80%;
+  }
+
+  .communityTitle {
+    margin-bottom: 1rem;
+  }
+
+  .teamPhoto {
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px;
+  }
 }
