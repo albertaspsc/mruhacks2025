@@ -1,72 +1,72 @@
 /* Navbar Styling */
 
 .navbarCustom {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 15px 0;
-  }
-  
-  /* Custom container instead of Bootstrap Container */
-  .navbarContainer {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0;
-  }
-  
-  .navbarBrand {
-    padding-left: 5px;
-    margin-right: 0;
-  }
-  
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px 0;
+}
+
+/* Custom container instead of Bootstrap Container */
+.navbarContainer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+.navbarBrand {
+  padding-left: 5px;
+  margin-right: 0;
+}
+
+.navbarCollapse {
+  justify-content: flex-end;
+  margin-right: 5px;
+}
+
+.navContainer {
+  margin-right: 0;
+}
+
+.navLink {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: "DM Sans", sans-serif;
+  color: #333 !important;
+  margin-left: 20px;
+  transition: color 0.3s ease;
+}
+
+.navLink:hover {
+  color: #4f46e5 !important;
+}
+
+/* Styling for the toggle button */
+.navbarToggler {
+  border: none !important;
+  margin-right: 5px;
+}
+
+.navbarToggler:focus {
+  box-shadow: none !important;
+}
+
+/* Mobile View */
+@media (max-width: 767.98px) {
   .navbarCollapse {
-    justify-content: flex-end;
-    margin-right: 5px;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
   }
-  
-  .navContainer {
-    margin-right: 0;
-  }
-  
+
   .navLink {
-    font-size: 16px;
-    font-weight: 700;
-    font-family: "DM Sans", sans-serif;
-    color: #333 !important;
-    margin-left: 20px;
-    transition: color 0.3s ease;
+    margin: 0.5rem 0;
   }
-  
-  .navLink:hover {
-    color: #4f46e5 !important;
-  }
-  
-  /* Styling for the toggle button */
-  .navbarToggler {
-    border: none !important;
-    margin-right: 5px;
-  }
-  
-  .navbarToggler:focus {
-    box-shadow: none !important;
-  }
-  
-  /* Mobile View */
-  @media (max-width: 767.98px) {
-    .navbarCollapse {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      width: 100%;
-      background-color: rgba(255, 255, 255, 0.95);
-      padding: 1rem;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-    }
-    
-    .navLink {
-      margin: 0.5rem 0;
-    }
-  }
+}
