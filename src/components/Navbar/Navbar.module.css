@@ -1,72 +1,129 @@
-/* Navbar Styling */
-
 .navbarCustom {
-  background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 15px 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px 0;
 }
 
-/* Custom container instead of Bootstrap Container */
 .navbarContainer {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
 }
 
-.navbarBrand {
-  padding-left: 5px;
-  margin-right: 0;
+.navbarBrand img {
+    padding-left: 25px;
+    height: 40px;
+    width: auto;
 }
 
-.navbarCollapse {
-  justify-content: flex-end;
-  margin-right: 5px;
+.navbarToggler {
+    display: none;
 }
 
 .navContainer {
-  margin-right: 0;
+    margin-right: 25px;
 }
 
 .navLink {
-  font-size: 16px;
-  font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  color: #333 !important;
-  margin-left: 20px;
-  transition: color 0.3s ease;
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 20px;
+    transition: color 0.3s ease;
 }
 
 .navLink:hover {
-  color: #4f46e5 !important;
+    color: #6A0DAD; /* Purple color */
 }
 
-/* Styling for the toggle button */
-.navbarToggler {
-  border: none !important;
-  margin-right: 5px;
-}
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .hamburgerIcon {
+        display: inline-block;
+        cursor: pointer;
+        width: 30px; /* Adjust size as needed */
+    }
+    
+    .hamburgerIcon span {
+        display: block;
+        width: 100%;
+        height: 3px; /* Thickness of lines */
+        background-color: black;
+        margin: 6px 0;
+        transition: 0.4s;
+    }
 
-.navbarToggler:focus {
-  box-shadow: none !important;
-}
+    .navbarToggler {
+        display: block;
+        z-index: 10000; /* Higher than navbar collapse */
+        position: relative;
+    }
 
-/* Mobile View */
-@media (max-width: 767.98px) {
-  .navbarCollapse {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 0.5rem;
-  }
+    .navbarCollapse {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 0;
+        overflow: hidden;
+        background-color: var(--background-color);
+        transition: height 0.3s ease;
+        z-index: 9999; /* High z-index to be above other elements */
+    }
 
-  .navLink {
-    margin: 0.5rem 0;
-  }
+    .navbarCollapse.show {
+        z-index: 9999;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+        padding-bottom: 200px; /* Extra padding to prevent footer overlap */
+    }
+
+    .navContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        margin-top: auto;
+        margin-bottom: auto;
+        padding-bottom: 150px; /* Extra space to account for footer */
+        width: 100%; /* Full width for mobile */
+    }
+
+    .navLink {
+        font-size: 1rem;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        margin-left: 0; 
+        padding: 12px 0;
+        width: 100%; /* Full width for click area */
+        text-align: center;
+    }
+
+    .navbarCollapse.show .navLink {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0.1s;
+    }
+
+    .navLink:hover {
+        color: #6A0DAD;
+    }
+    
+    /* Style for the last item to remove bottom border */
+    .navContainer .navLink:last-child {
+        border-bottom: none;
+    }
 }
