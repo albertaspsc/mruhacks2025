@@ -1,12 +1,12 @@
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap");
 
 /* Root Variables */
 :root {
-  --background-color: #FCFBF4;
+  --background-color: #fcfbf4;
   --text-color: #000000;
-  --heading-font: 'DM Sans', sans-serif;
-  --body-font: 'DM Sans', sans-serif;
+  --heading-font: "DM Sans", sans-serif;
+  --body-font: "DM Sans", sans-serif;
 }
 
 /* Apply Global Styles */
@@ -28,9 +28,14 @@ body {
 }
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--heading-font);
-  font-weight: 700;  /* Bold */
+  font-weight: 700; /* Bold */
   color: var(--text-color);
 }
 
