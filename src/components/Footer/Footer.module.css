@@ -7,19 +7,12 @@
   z-index: 100;
 }
 
-/* .footerContent {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-} */
-
 .footerContent {
   display: flex;
-  justify-content: center; /* Change from space-between to center */
+  justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
-  gap: 10%; /* Add a smaller gap */
+  gap: 10%;
 }
 
 .footerLeft {
@@ -86,6 +79,7 @@
   color: rgb(255, 255, 255);
 }
 
+/* Mobile view */
 @media (max-width: 768px) {
   .footerContent {
     flex-direction: column;
