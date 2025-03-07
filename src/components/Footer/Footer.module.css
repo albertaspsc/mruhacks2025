@@ -48,7 +48,8 @@
 }
 
 .socialIcon:hover {
-  background-color: #7b2ba6;
+  background-color: #ffffff;
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.75);
   color: #000;
   transform: translateY(-3px);
 }
