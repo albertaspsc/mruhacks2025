@@ -41,21 +41,34 @@ div.become-sponsor-container {
 
 
 div.sponsors {
+    padding: 2em;
     display: flex;
     flex-wrap: wrap;
     height: fit-content;
     justify-content: center;
     align-items: center;
-    gap: 1em;
+    gap: 2em 3em;
+    width: calc(min(30vh, 30%) * 2.5);
+    position: relative;
+    left: 50%;
+    translate: -50%;
 
-    img {
-        width: max(30%, 0vh);
-        padding: 2em;
-        box-sizing: content-box;
-        height: auto;
+    div {
+        height: 15vh;
+        width: max(30vh, 30%);
+        overflow: hidden;
         background-color: white;
-        border-radius: 10px;
         box-shadow: #0000003b 3px 3px 4px 2px;
+        border-radius: 0.7em;
+        padding: 1em;
+        display: flex;
+        align-items: center;
+
+        img {
+            // visibility: hidden;
+            height: auto;
+            width: 100%;
+        }
     }
 }
 

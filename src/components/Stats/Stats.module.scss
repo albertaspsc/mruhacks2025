@@ -9,23 +9,38 @@
         padding: 1em;
         font-weight: bold;
         font-size: 2em;
-        background: url("/background.png");
-        background-size: cover;
-        border-radius: 1em;
         align-content: center;
+        position: relative;
+        --x: 1;
+
+
+        &::after {
+            background: url("/background.png");
+            background-size: 100% 100%;
+            border-radius: 1em;
+            content: ' ';
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            z-index: -1;
+            transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
+
+        }
         // TODO - media query for font-size to add responsiveness
     }
 }
 
 
 .big-stat {
-    width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    
+    width: 75%;
+
     div {
-        height: 10em;
+        height: 100%;
+
         img {
             height: 100%;
             width: auto;
@@ -33,6 +48,7 @@
     }
 
     span {
+        font-weight: bold;
         font-size: 2em;
         text-align: start;
     }

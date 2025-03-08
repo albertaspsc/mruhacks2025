@@ -10,19 +10,19 @@ export default function Stats() {
       <h1>MRUHacks 2024 Stats:</h1>
       <div className={styles.stats}>
         {facts.split(";").map((x, i) => (
-          <div className="stat" key={`statistic-${i}`}>
+          <div className="stat" key={`statistic-${i}`} style={{ "--x": i + 1 }}>
             {x}
           </div>
         ))}
       </div>
-      <div className={styles["big-stat"]}>
+      <span className={styles["big-stat"]}>
         <div>
           <Image src={crt} alt="CRT mascot" />
         </div>
         <span>
           72% of people registered have never joined a hackathon before!
         </span>
-      </div>
+      </span>
     </div>
   );
 }
