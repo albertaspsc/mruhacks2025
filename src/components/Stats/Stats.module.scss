@@ -1,0 +1,48 @@
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10%;
+    padding: 2em;
+    width: 75%;
+
+    div {
+        padding: 1em;
+        font-weight: bold;
+        font-size: 2em;
+        background: url("/background.png");
+        background-size: cover;
+        border-radius: 1em;
+        align-content: center;
+        // TODO - media query for font-size to add responsiveness
+    }
+}
+
+
+.big-stat {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    div {
+        height: 10em;
+        img {
+            height: 100%;
+            width: auto;
+        }
+    }
+
+    span {
+        font-size: 2em;
+        text-align: start;
+    }
+
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+}
