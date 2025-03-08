@@ -141,8 +141,8 @@ const DynamicGradientBackground = () => {
       const data = imageData.data;
 
       // Much lower noise density and intensity for a more subtle effect
-      const noiseDensity = isMobile ? 0.15 : 0.08; // Reduced density
-      const noiseIntensity = isMobile ? 8 : 6; // Reduced intensity
+      const noiseDensity = isMobile ? 0.7 : 0.04; // Reduced density
+      const noiseIntensity = isMobile ? 7 : 5; // Reduced intensity
 
       for (let i = 0; i < data.length; i += 4) {
         if (Math.random() < noiseDensity) {
