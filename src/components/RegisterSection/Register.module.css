@@ -35,10 +35,21 @@
 }
 
 .logo {
-  max-width: 100%;
+  max-width: 65%;
   height: auto;
   max-height: 50vh;
   object-fit: contain;
+}
+
+.dateContainer {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.dateText {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #000;
 }
 
 .buttonContainer {
@@ -61,19 +72,20 @@
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
-  box-shadow: 0 4px 15px rgba(106, 13, 173, 0.4);
+  box-shadow: 0 4px 15px rgb(255, 255, 255);
 }
 
 .registerButton:hover {
   transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(238, 231, 89, 0.75);
+  color: gray;
+  box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
 }
 
 .registerButton:active {
   transform: translateY(-1px);
 }
 
-/* Responsive adjustments */
+/* Mobile view */
 @media (max-width: 768px) {
   .registerSection {
     height: 90vh; /* Slightly shorter on mobile */
@@ -87,8 +99,14 @@
     max-height: 40vh;
   }
 
+  .dateText {
+    font-size: 1rem;
+    font-weight: 300;
+    color: #000;
+  }
+
   .registerButton {
-    padding: 0.8rem 2.5rem;
-    font-size: 1.1rem;
+    padding: 0.5rem 2rem;
+    font-size: 1rem;
   }
 }

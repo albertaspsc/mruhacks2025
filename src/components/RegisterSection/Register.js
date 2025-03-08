@@ -20,6 +20,11 @@ const RegisterSection = () => {
             className={styles.logo}
           />
         </div>
+
+        <div className={styles.dateContainer}>
+          <p className={styles.dateText}>October 4 - 5, 2025</p>
+        </div>
+
         <div className={styles.buttonContainer}>
           <a
             href="https://docs.google.com/forms/d/e/1FAIpQLSehivEoIQAcrrFkfs0sM6_hHIN1kW1oXcAoTtbwG3kw_7JCng/viewform?usp=header"
