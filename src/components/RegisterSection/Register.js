@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import styles from "./Register.module.css";
-import logo from "@/assets/logos/black-white-logo.png";
+import logo from "../../assets/logos/black-white-logo.png";
 
 const RegisterSection = () => {
   return (
