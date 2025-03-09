@@ -66,8 +66,8 @@ const DynamicGradientBackground = () => {
         y: corner.y,
         radius: Math.random() * radiusVariation + baseRadius,
         color: colors[colorIndex],
-        vx: (Math.random() - 0.5) * (isMobile ? 0.6 : 0.4), // Slower on desktop
-        vy: (Math.random() - 0.5) * (isMobile ? 0.6 : 0.4), // Slower on desktop
+        vx: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.6), // Velocity for corner bubbles
+        vy: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.6),
         alpha: baseAlpha * 1.2 + Math.random() * alphaVariation,
       });
     }
@@ -94,8 +94,8 @@ const DynamicGradientBackground = () => {
           cellHeight * 0.1,
         radius: Math.random() * radiusVariation + baseRadius,
         color: colors[colorIndex],
-        vx: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.5),
-        vy: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.5),
+        vx: (Math.random() - 0.5) * (isMobile ? 1.0 : 0.7), // Velocity for grid bubbles
+        vy: (Math.random() - 0.5) * (isMobile ? 1.0 : 0.7),
         alpha: baseAlpha + Math.random() * alphaVariation,
       });
     }
@@ -109,8 +109,8 @@ const DynamicGradientBackground = () => {
         y: Math.random() * height,
         radius: Math.random() * (radiusVariation + 50) + baseRadius,
         color: colors[colorIndex],
-        vx: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.5),
-        vy: (Math.random() - 0.5) * (isMobile ? 0.8 : 0.5),
+        vx: (Math.random() - 0.5) * (isMobile ? 1.0 : 0.7), // Velocity for filler bubbles
+        vy: (Math.random() - 0.5) * (isMobile ? 1.0 : 0.7),
         alpha: baseAlpha * 0.7 + Math.random() * (alphaVariation * 0.7),
       });
     }
@@ -135,14 +135,14 @@ const DynamicGradientBackground = () => {
       }
     }
 
-    // Function to generate TV static noise
+    // Generating noise effect for background
     function generateNoise() {
       const imageData = noiseCtx.createImageData(width, height);
       const data = imageData.data;
 
       // Much lower noise density and intensity for a more subtle effect
-      const noiseDensity = isMobile ? 0.7 : 0.04; // Reduced density
-      const noiseIntensity = isMobile ? 7 : 5; // Reduced intensity
+      const noiseDensity = isMobile ? 0.3 : 0.04;
+      const noiseIntensity = isMobile ? 4 : 5;
 
       for (let i = 0; i < data.length; i += 4) {
         if (Math.random() < noiseDensity) {
@@ -157,9 +157,9 @@ const DynamicGradientBackground = () => {
 
       noiseCtx.putImageData(imageData, 0, 0);
 
-      // Apply blend mode and lower opacity
+      // Apply blend mode and opacity
       noiseCtx.globalCompositeOperation = "overlay";
-      noiseCtx.globalAlpha = isMobile ? 0.04 : 0.03; // Reduced opacity
+      noiseCtx.globalAlpha = isMobile ? 0.02 : 0.03; // Reduced opacity
     }
 
     function drawBackground() {
@@ -168,7 +168,7 @@ const DynamicGradientBackground = () => {
       ctx.fillStyle = "rgba(255, 255, 255, 1)";
       ctx.fillRect(0, 0, width, height);
 
-      // Use multiply for both mobile and desktop but with lighter effect on desktop
+      // Use multiply for both mobile and desktop for consistent colors
       ctx.globalCompositeOperation = "multiply";
 
       // Draw each bubble
@@ -239,8 +239,8 @@ const DynamicGradientBackground = () => {
             bubble.vy = (bubble.vy / speed) * minSpeed;
           }
 
-          // Keep speed reasonable
-          const maxSpeed = isMobile ? 1.0 : 0.9;
+          // Speed
+          const maxSpeed = isMobile ? 2.0 : 1.8;
           if (speed > maxSpeed) {
             bubble.vx = (bubble.vx / speed) * maxSpeed;
             bubble.vy = (bubble.vy / speed) * maxSpeed;
@@ -265,7 +265,7 @@ const DynamicGradientBackground = () => {
       // Update isMobile and recreate bubbles if the device type changes
       const newIsMobile = width < 768;
       if (newIsMobile !== isMobile) {
-        window.location.reload(); // Solution to recreate bubbles with new settings
+        window.location.reload();
       }
     }
 

@@ -1,10 +1,21 @@
 .registerSection {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  margin: 0;
+  min-height: 100vh;
+  margin: 0 auto;
   padding: 0;
+}
+
+.contentContainer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .backgroundContainer {
@@ -12,20 +23,9 @@
   top: 0;
   left: 0;
   right: 0;
-  width: 100vw;
-  height: 100%;
-  z-index: -1;
-}
-
-.contentContainer {
-  position: relative;
   width: 100%;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 1;
+  z-index: -1;
 }
 
 .logoContainer {

@@ -4,7 +4,7 @@ import Image from "next/image";
 import styles from "./Register.module.css";
 import logo from "../../assets/logos/black-white-logo.png";
 import MRUHacksCountdown from "./countdown/MRUHacksCountdown";
-import DynamicGradientBackground from "./DynamicGradientBackground";
+import DynamicGradientBackground from "./background/DynamicGradientBackground";
 
 const RegisterSection = () => {
   return (

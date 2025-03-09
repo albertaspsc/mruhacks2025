@@ -17,7 +17,7 @@
   color: #000;
   border-radius: 0.5rem;
   padding: 1rem 1.5rem;
-  min-width: 100px;
+  /* min-width: 100px; */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
@@ -60,8 +60,25 @@
     gap: 0.75rem;
   }
 
+  .countdownValue {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .countdownInfo {
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+
+  .countdownUnit {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
   .card {
-    min-width: auto;
-    width: 100%;
+    /* min-width: auto; */
+    width: 30%;
+    height: auto;
   }
 }
