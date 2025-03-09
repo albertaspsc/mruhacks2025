@@ -8,7 +8,7 @@
     div {
         padding: 1em;
         font-weight: bold;
-        font-size: 2em;
+        font-size: min(4vh, 4vw);
         align-content: center;
         position: relative;
         --x: 1;
@@ -49,7 +49,7 @@
 
     span {
         font-weight: bold;
-        font-size: 2em;
+        font-size: min(4vh, 4vw);
         text-align: start;
     }
 
@@ -57,8 +57,16 @@
 
 
 .container {
+    padding: 1em;
     display: flex;
     flex-direction: column;
     text-align: center;
     align-items: center;
+    @media (max-width: 500px) {
+        align-items: stretch;
+    }
+
+    h1 {
+        padding: 0em 1em;
+    }
 }

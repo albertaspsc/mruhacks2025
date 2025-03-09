@@ -1,10 +1,11 @@
 import React from "react";
 import styles from "./Sponsor.module.scss";
-import crt2 from "../../assets/mascots/crt2.png";
+import crt2 from "@/assets/mascots/crt2.png";
 import Image from "next/image";
-import acurve from "../../assets/sponsors/arcurve_logo_2024_color_large.webp";
-import institute from "../../assets/sponsors/Institute.webp";
-import library from "../../assets/sponsors/mrulibrary.webp";
+import acurve from "@/assets/sponsors/arcurve_logo_2024_color_large.webp";
+import institute from "@/assets/sponsors/Institute.webp";
+import library from "@/assets/sponsors/mrulibrary.webp";
+import arrowIcon from "@/assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
   return (
@@ -16,17 +17,17 @@ export default function Sponsor() {
           {" "}
           <div className={styles.sponsors}>
             {[acurve, institute, library].map((x, i) => (
-              <div key={`sponsor-img-${i}`}>
+              <a key={`sponsor-img-${i}`} href="https://example.com/">
                 <Image src={x} alt={`Sponsor ${i + 1} logo`} />
-              </div>
+              </a>
             ))}
           </div>
         </div>
         <div className={styles["become-sponsor-container"]}>
-          <button>
-            Become a sponsor
-            {/* TODO add icon */}
-          </button>
+          <a href="https://example.com/">
+            <span>Become a sponsor</span>
+            <Image src={arrowIcon} />
+          </a>
           <div className="crt">
             <Image src={crt2} alt="CRT tv mascot" />
           </div>
