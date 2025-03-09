@@ -1,0 +1,84 @@
+.hackathonCountdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.cardContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: #fff;
+  color: #000;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  /* min-width: 100px; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.countdownValue {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.countdownUnit {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.countdownInfo {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-top: 1rem;
+}
+
+.separator {
+  font-size: 2.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  margin: 0 0.5rem;
+}
+
+/* Mobile view */
+@media (max-width: 640px) {
+  .cardContainer {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+
+  .countdownValue {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .countdownInfo {
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+
+  .countdownUnit {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
+  .card {
+    /* min-width: auto; */
+    width: 30%;
+    height: auto;
+  }
+}
