@@ -25,9 +25,8 @@ const Footer = () => {
             >
               <div className={styles.socialIcon}>Instagram</div>
             </a>
-            {/*  Replace with actual discord link  */}
             <a
-              href="https://www.youtube.com/watch?v=9bZkp7q19f0"
+              href="https://discord.gg/e7Fg6jsnrm"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.socialLink}
