@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import styles from "./Register.module.css";
 import logo from "../../assets/logos/black-white-logo.png";
-import MRUHacksCountdown from "./CountDown/MRUHacksCountDown";
+import MRUHacksCountdown from "./countdown/MRUHacksCountdown";
 import DynamicGradientBackground from "./DynamicGradientBackground";
 
 const RegisterSection = () => {

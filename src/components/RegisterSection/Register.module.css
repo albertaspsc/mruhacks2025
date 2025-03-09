@@ -3,14 +3,16 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  z-index: 1; /* Lower z-index than navbar */
+  margin: 0;
+  padding: 0;
 }
 
 .backgroundContainer {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  width: 100vw;
   height: 100%;
   z-index: -1;
 }
@@ -18,20 +20,20 @@
 .contentContainer {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 2;
+  z-index: 1;
 }
 
 .logoContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem;
   max-width: 80%;
+  margin-top: 100px;
 }
 
 .logo {
@@ -42,7 +44,6 @@
 }
 
 .dateContainer {
-  margin: 1rem 0;
   text-align: center;
 }
 
@@ -53,7 +54,7 @@
 }
 
 .buttonContainer {
-  margin-top: 2rem;
+  margin: 1rem;
   display: flex;
   justify-content: center;
 }
@@ -92,7 +93,11 @@
   }
 
   .logoContainer {
-    max-width: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+    max-width: 80%;
   }
 
   .logo {

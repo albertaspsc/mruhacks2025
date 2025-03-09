@@ -52,6 +52,8 @@
   align-items: center;
   margin: 0 0.5rem;
 }
+
+/* Mobile view */
 @media (max-width: 640px) {
   .cardContainer {
     flex-direction: row;

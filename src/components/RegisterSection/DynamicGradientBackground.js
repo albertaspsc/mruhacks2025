@@ -10,8 +10,8 @@ const DynamicGradientBackground = () => {
     // Main gradient canvas setup
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = (canvas.width = canvas.parentElement.clientWidth);
+    let height = (canvas.height = canvas.parentElement.clientHeight);
 
     // Noise canvas setup
     const noiseCanvas = noiseCanvasRef.current;
