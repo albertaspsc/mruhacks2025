@@ -1,0 +1,72 @@
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10%;
+    padding: 2em;
+    width: 75%;
+
+    div {
+        padding: 1em;
+        font-weight: bold;
+        font-size: min(4vh, 4vw);
+        align-content: center;
+        position: relative;
+        --x: 1;
+
+
+        &::after {
+            background: url("/background.png");
+            background-size: 100% 100%;
+            border-radius: 1em;
+            content: ' ';
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            z-index: -1;
+            transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
+
+        }
+        // TODO - media query for font-size to add responsiveness
+    }
+}
+
+
+.big-stat {
+    display: flex;
+    align-items: center;
+    width: 75%;
+
+    div {
+        height: 100%;
+
+        img {
+            height: 100%;
+            width: auto;
+        }
+    }
+
+    span {
+        font-weight: bold;
+        font-size: min(4vh, 4vw);
+        text-align: start;
+    }
+
+}
+
+
+.container {
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    @media (max-width: 500px) {
+        align-items: stretch;
+    }
+
+    h1 {
+        padding: 0em 1em;
+    }
+}
