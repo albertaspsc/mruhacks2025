@@ -44,16 +44,20 @@
   .hamburgerIcon {
     display: inline-block;
     cursor: pointer;
-    width: 20px;
+    width: 30px;
+    height: 24px;
+    position: relative;
+    background: transparent;
   }
 
   .hamburgerIcon span {
     display: block;
-    width: 80%;
+    width: 60%;
     height: 2px; /* Thickness of lines */
     background-color: black;
-    margin: 4px 0;
+    margin: 5px 0;
     transition: 0.4s;
+    border-radius: 1px;
   }
 
   .navbarToggler {
@@ -74,7 +78,7 @@
     width: 100%;
     height: 0;
     overflow: hidden;
-    background-color: var(--background-color);
+    background-color: #fcfbf4; /* Matching the nav container background */
     transition: height 0.3s ease;
     z-index: 9999; /* High z-index to be above other elements */
   }
@@ -91,7 +95,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    overflow-y: auto;
+    overflow: hidden; /* Changed from overflow-y: auto to prevent scrolling */
+    background-color: #fcfbf4; /* Explicit background color */
   }
 
   .navContainer {
@@ -99,11 +104,9 @@
     flex-direction: column;
     align-items: center;
     gap: 2rem;
-    margin-top: auto;
-    margin-bottom: auto;
-    background-color: #fcfbf4;
-    padding-bottom: 150px; /* Extra space to account for footer */
     width: 100%; /* Full width for mobile */
+    padding: 50px 0; /* Reduced padding */
+    background-color: transparent; /* Make it transparent as parent has background */
   }
 
   .navLink {
@@ -123,5 +126,9 @@
     opacity: 1;
     transform: translateY(0);
     transition-delay: 0.1s;
+  }
+
+  body.menu-open {
+    overflow: hidden; /* Prevent body scrolling when menu is open */
   }
 }
