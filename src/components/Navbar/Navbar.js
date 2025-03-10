@@ -88,18 +88,18 @@ function NavigationBar() {
         >
           <Nav className={styles.navContainer}>
             <Nav.Link
-              href="#about"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
-            >
-              About
-            </Nav.Link>
-            <Nav.Link
               href="#home"
               onClick={handleNavLinkClick}
               className={styles.navLink}
             >
               Register
+            </Nav.Link>
+            <Nav.Link
+              href="#about"
+              onClick={handleNavLinkClick}
+              className={styles.navLink}
+            >
+              About
             </Nav.Link>
             <Nav.Link
               href="#faq"
