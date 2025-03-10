@@ -1,129 +1,134 @@
 .navbarCustom {
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 15px 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px 0;
 }
 
 .navbarContainer {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
 }
 
 .navbarBrand img {
-    padding-left: 25px;
-    height: 40px;
-    width: auto;
+  padding-left: 25px;
+  height: 40px;
+  width: auto;
 }
 
 .navbarToggler {
-    display: none;
+  display: none;
 }
 
 .navContainer {
-    margin-right: 25px;
+  margin-right: 25px;
 }
 
 .navLink {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 20px;
-    transition: color 0.3s ease;
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 20px;
+  transition: color 0.3s ease;
 }
 
 .navLink:hover {
-    color: #6A0DAD; /* Purple color */
+  color: #6e40f2; /* Purple color */
 }
 
 /* Mobile Styles */
 @media (max-width: 768px) {
-    .hamburgerIcon {
-        display: inline-block;
-        cursor: pointer;
-        width: 30px; /* Adjust size as needed */
-    }
-    
-    .hamburgerIcon span {
-        display: block;
-        width: 100%;
-        height: 3px; /* Thickness of lines */
-        background-color: black;
-        margin: 6px 0;
-        transition: 0.4s;
-    }
+  .hamburgerIcon {
+    display: inline-block;
+    cursor: pointer;
+    width: 30px;
+    height: 24px;
+    position: relative;
+    background: transparent;
+  }
 
-    .navbarToggler {
-        display: block;
-        z-index: 10000; /* Higher than navbar collapse */
-        position: relative;
-    }
+  .hamburgerIcon span {
+    display: block;
+    width: 60%;
+    height: 2px; /* Thickness of lines */
+    background-color: black;
+    margin: 5px 0;
+    transition: 0.4s;
+    border-radius: 1px;
+  }
 
-    .navbarCollapse {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 0;
-        overflow: hidden;
-        background-color: var(--background-color);
-        transition: height 0.3s ease;
-        z-index: 9999; /* High z-index to be above other elements */
-    }
+  .navbarToggler {
+    display: block;
+    z-index: 10000; /* Higher than navbar collapse */
+    position: relative;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 10px;
+    margin-right: 15px;
+  }
 
-    .navbarCollapse.show {
-        z-index: 9999;
-        height: 100vh;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        overflow-y: auto;
-        padding-bottom: 200px; /* Extra padding to prevent footer overlap */
-    }
+  .navbarCollapse {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    background-color: #fcfbf4; /* Matching the nav container background */
+    transition: height 0.3s ease;
+    z-index: 9999; /* High z-index to be above other elements */
+  }
 
-    .navContainer {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-        margin-top: auto;
-        margin-bottom: auto;
-        padding-bottom: 150px; /* Extra space to account for footer */
-        width: 100%; /* Full width for mobile */
-    }
+  .navbarCollapse.show {
+    z-index: 9999;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Changed from overflow-y: auto to prevent scrolling */
+    background-color: #fcfbf4; /* Explicit background color */
+  }
 
-    .navLink {
-        font-size: 1rem;
-        opacity: 0;
-        transform: translateY(-10px);
-        transition: opacity 0.4s ease, transform 0.4s ease;
-        margin-left: 0; 
-        padding: 12px 0;
-        width: 100%; /* Full width for click area */
-        text-align: center;
-    }
+  .navContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%; /* Full width for mobile */
+    padding: 50px 0; /* Reduced padding */
+    background-color: transparent; /* Make it transparent as parent has background */
+  }
 
-    .navbarCollapse.show .navLink {
-        opacity: 1;
-        transform: translateY(0);
-        transition-delay: 0.1s;
-    }
+  .navLink {
+    font-size: 1rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition:
+      opacity 0.4s ease,
+      transform 0.4s ease;
+    margin-left: 0;
+    padding: 12px 0;
+    width: 100%; /* Full width for click area */
+    text-align: center;
+  }
 
-    .navLink:hover {
-        color: #6A0DAD;
-    }
-    
-    /* Style for the last item to remove bottom border */
-    .navContainer .navLink:last-child {
-        border-bottom: none;
-    }
+  .navbarCollapse.show .navLink {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.1s;
+  }
+
+  body.menu-open {
+    overflow: hidden; /* Prevent body scrolling when menu is open */
+  }
 }

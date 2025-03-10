@@ -1,125 +1,79 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav } from "react-bootstrap";
 import Image from "next/image";
-import logo from "../../assets/logos/color-logo.png";
+import Link from "next/link";
 import styles from "./Navbar.module.css";
+import logo from "../../assets/logos/color-logo.png";
 
-function NavigationBar() {
-  const [expanded, setExpanded] = useState(false);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Handle closing the navbar when clicking outside
   useEffect(() => {
-    if (!expanded) return;
-
-    const handleOutsideClick = (e) => {
-      // If the click is on the hamburger or its children, ignore
-      if (e.target.closest(`.${styles.navbarToggler}`)) return;
-
-      // If the click is outside the nav container and navbar is expanded
-      if (!e.target.closest(`.${styles.navContainer}`) && expanded) {
-        handleNavLinkClick();
-      }
-    };
-
-    // Add event listener
-    document.addEventListener("click", handleOutsideClick);
-
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-    };
-  }, [expanded]);
-
-  const toggleNavbar = () => {
-    const newExpandedState = !expanded;
-    setExpanded(newExpandedState);
-
-    // Add or remove class from body when navbar is expanded
-    if (newExpandedState) {
-      document.body.classList.add("navbar-expanded");
-      // Lock scroll when menu is open
-      document.body.style.overflow = "hidden";
+    if (isOpen) {
+      document.body.classList.add("menu-open");
     } else {
-      document.body.classList.remove("navbar-expanded");
-      // Restore scroll when menu is closed
-      document.body.style.overflow = "";
+      document.body.classList.remove("menu-open");
     }
+
+    // Cleanup on component unmount
+    return () => {
+      document.body.classList.remove("menu-open");
+    };
+  }, [isOpen]);
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
-  // Function to handle navigation link clicks
-  const handleNavLinkClick = () => {
-    setExpanded(false);
-    document.body.classList.remove("navbar-expanded");
-    document.body.style.overflow = "";
+  const closeMenu = () => {
+    setIsOpen(false);
   };
 
   return (
-    <Navbar
-      expanded={expanded}
-      expand="md"
-      className={`${styles.navbarCustom}`}
-      fixed="top"
-    >
+    <nav className={styles.navbarCustom}>
       <div className={styles.navbarContainer}>
-        <Navbar.Brand href="#home" className={styles.navbarBrand}>
-          <Image
-            src={logo}
-            height={40}
-            width={120}
-            className="d-inline-block align-top"
-            alt="MRUHacks Logo"
-            priority
-          />
-        </Navbar.Brand>
-        <Navbar.Toggle
-          aria-controls="basic-navbar-nav"
-          onClick={toggleNavbar}
+        <Link href="/" className={styles.navbarBrand}>
+          <Image src={logo} alt="Logo" width={120} height={40} />
+        </Link>
+
+        <button
           className={styles.navbarToggler}
+          type="button"
+          onClick={toggleMenu}
+          aria-label="Toggle navigation"
         >
           <div className={styles.hamburgerIcon}>
             <span></span>
             <span></span>
             <span></span>
           </div>
-        </Navbar.Toggle>
-        <Navbar.Collapse
-          id="basic-navbar-nav"
-          className={`${styles.navbarCollapse} ${expanded ? styles.show : ""}`}
+        </button>
+
+        <div
+          className={`${styles.navbarCollapse} ${isOpen ? styles.show : ""}`}
         >
-          <Nav className={styles.navContainer}>
-            <Nav.Link
-              href="#about"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
-            >
-              About
-            </Nav.Link>
-            <Nav.Link
-              href="#home"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
-            >
+          <div className={styles.navContainer}>
+            <Link href="#home" className={styles.navLink} onClick={closeMenu}>
               Register
-            </Nav.Link>
-            <Nav.Link
-              href="#faq"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
-            >
-              FAQ
-            </Nav.Link>
-            <Nav.Link
+            </Link>
+            <Link href="#about" className={styles.navLink} onClick={closeMenu}>
+              About
+            </Link>
+            <Link
               href="#sponsors"
-              onClick={handleNavLinkClick}
               className={styles.navLink}
+              onClick={closeMenu}
             >
               Sponsors
-            </Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
+            </Link>
+            <Link href="#faq" className={styles.navLink} onClick={closeMenu}>
+              FAQ
+            </Link>
+          </div>
+        </div>
       </div>
-    </Navbar>
+    </nav>
   );
-}
+};
 
-export default NavigationBar;
+export default Navbar;
