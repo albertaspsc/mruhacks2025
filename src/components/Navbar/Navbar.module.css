@@ -3,6 +3,21 @@
   backdrop-filter: blur(10px);
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   padding: 15px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.navbarScrolled {
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.mainContent {
+  padding-top: 70px;
 }
 
 .navbarContainer {
@@ -46,7 +61,7 @@
     cursor: pointer;
     width: 30px;
     height: 24px;
-    position: relative;
+    position: fixed;
     background: transparent;
   }
 

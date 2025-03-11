@@ -6,7 +6,6 @@ import logo from "../../assets/logos/black-white-logo.png";
 import MRUHacksCountdown from "./countdown/MRUHacksCountdown";
 import DynamicGradientBackground from "./background/DynamicGradientBackground";
 
-
 const RegisterSection = () => {
   return (
     <section id="register" className={styles.registerSection}>
@@ -38,7 +37,7 @@ const RegisterSection = () => {
           </a>
         </div>
 
-        <div className={styles.dateContainer}>
+        <div className={styles.contentContainer}>
           <MRUHacksCountdown />
         </div>
       </div>
