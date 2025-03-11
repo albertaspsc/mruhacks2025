@@ -1,0 +1,108 @@
+div.become-sponsor-container {
+    position: relative;
+    padding: 2em 0em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @media (max-width: 500px) {
+        margin-bottom: 3em;
+        div {
+        top: 50%;
+            
+        }
+        
+    }
+
+    div {
+        position: absolute;
+        height: 20vw;
+        width: auto;
+        right: min(10%, 5vw);
+        
+
+
+        img {
+            height: max(100%, 25vh);
+            width: auto;
+        }
+    }
+
+    a {
+        appearance: none;
+        background: linear-gradient(0.25turn, #4050FF, #A47CFF);
+        border: none;
+        padding: 1em 2em;
+        border-radius: 10em;
+        color: white;
+        box-shadow: 0px -1px 20px 4px #C3AFFF;
+        text-shadow: 0px 0px 3px #C3AFFF;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        display: flex;
+        gap: 5px;
+        text-decoration: none;
+        span {
+            align-content: center;
+        }
+
+        &:hover {
+            translate: 0px -5px;
+            scale: 1.05;
+            box-shadow: 0px -1px 10px 8px #C3AFFF;
+            text-shadow: 0px 0px 12px #C3AFFF;
+        }
+
+        img {
+            filter: brightness(10) drop-shadow( 0px 0px 2px white);
+        }
+    }
+
+}
+
+
+div.sponsors {
+    padding: 2em;
+    display: flex;
+    flex-wrap: wrap;
+    height: fit-content;
+    justify-content: center;
+    align-items: center;
+    gap: 2em 3em;
+    width: calc(min(30vh, 30%) * 3);
+    position: relative;
+    left: 50%;
+    translate: -50%;
+
+    a {
+        height: 15vh;
+        width: max(35vh, 35%);
+        overflow: hidden;
+        background-color: white;
+        box-shadow: #0000003b 3px 3px 4px 2px;
+        border-radius: 0.7em;
+        padding: 1em;
+        display: flex;
+        align-items: center;
+        padding: 1.5em;
+        transition: all ease-in-out 0.4s;
+
+        img {
+            // visibility: hidden;
+            height: auto;
+            width: 100%;
+        }
+
+        &:hover {
+            translate: -3px -3px;
+            box-shadow: rgba(0, 0, 0, 0.231372549) 6px 6px 4px 2px;
+        }
+    }
+}
+
+div.container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+}
