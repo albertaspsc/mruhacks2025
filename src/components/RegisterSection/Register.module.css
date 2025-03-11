@@ -33,7 +33,6 @@
   justify-content: center;
   align-items: center;
   max-width: 80%;
-  margin-top: 100px;
 }
 
 .logo {
@@ -106,7 +105,7 @@
 
   .dateText {
     font-size: 1rem;
-    font-weight: 300;
+    font-weight: 300px;
     color: #000;
   }
 
