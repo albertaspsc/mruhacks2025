@@ -8,6 +8,7 @@
   text-align: center;
 }
 
+
 /* Grid Layout */
 .container {
   display: grid;
@@ -18,7 +19,7 @@
   gap: 50px;
 }
 
-/* Text Section */
+/*Text Section */
 .textContainer {
   display: flex;
   flex-direction: column;
@@ -44,6 +45,7 @@
   color: #000;
 }
 
+
 /* Subheading */
 .subHeading {
   font-size: 2.5rem;
@@ -51,7 +53,7 @@
   color: #333;
   margin-bottom: 12px;
 }
-
+ 
 /* Event Date */
 .eventDate {
   font-size: 1.2rem;
@@ -145,7 +147,7 @@
   left: 150%;
 }
 
-/* ✅ Responsive Adjustments */
+/*  Responsive Adjustments */
 @media (max-width: 768px) {
   .container {
     grid-template-columns: 1fr;
