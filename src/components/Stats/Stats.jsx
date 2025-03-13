@@ -20,7 +20,7 @@ export default function Stats() {
           <Image src={crt} alt="CRT mascot" />
         </div>
         <span>
-          72% of people registered have never joined a hackathon before!
+          72% of people registered had never joined a hackathon before!
         </span>
       </span>
     </div>
