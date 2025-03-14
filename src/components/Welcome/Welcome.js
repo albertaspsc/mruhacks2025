@@ -39,14 +39,14 @@ const Welcome = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Join <strong>150+ innovators</strong> at the{" "}
-            <strong>Riddell Library and Learning Centre</strong>
-            on <strong>October 4th-5th</strong> for an{" "}
-            <strong>unforgettable hackathon experience</strong>. Whether
-            you&apos;re a designer, developer, or tech enthusiast,{" "}
+            Looking for a hackathon experience like no other? Gather with up to
+            150 innovators at the Riddell Library and Learning Centre. Whether
+            you&apos;re a designer, developer, or tech enthusiast, you&apos;ll
+            be part of a vibrant community ready to innovate and collaborate.
             {!isExpanded ? (
               <>
-                you&apos;ll be part of a vibrant...
+                {" "}
+                Connect with experienced software...
                 <button
                   className={styles.readMoreButton}
                   onClick={() => setIsExpanded(true)}
@@ -56,19 +56,12 @@ const Welcome = () => {
               </>
             ) : (
               <>
-                you&apos;ll be part of a vibrant community eager to innovate,
-                collaborate, and create. Connect with{" "}
-                <strong>
-                  industry leaders, top developers, and experienced software
-                  engineers{" "}
-                </strong>
-                through hands-on workshops and exciting challenges. Get ready
-                for a <strong>high-energy </strong>
-                event where you&apos;ll{" "}
-                <strong>build something incredible</strong> in just{" "}
-                <strong>24 hours</strong>. Enjoy complimentary food, networking
-                opportunities, and develop real-world projects with mentors
-                guiding you along the way.{" "}
+                {" "}
+                Connect with experienced software engineers serving as industry
+                mentors, dive into engaging hands-on workshops, and enjoy
+                complimentary food throughout the event. Your experience comes
+                first at MRUHacks–exciting activities, workshops, and plenty of
+                opportunities to network with companies and other hackers.
                 <button
                   className={styles.readMoreButton}
                   onClick={() => setIsExpanded(false)}
