@@ -1,0 +1,17 @@
+.gallery-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2em;
+  padding: 1em;
+  overflow-x: none;
+}
+
+.gallery-image {
+  height: 27vh;
+  width: auto;
+  box-sizing: border-box;
+  border: 1.1em solid white;
+  /* box-shadow: #0000007f 5px 5px 4px; */
+  box-shadow: #0000003b 3px 3px 4px 2px;
+}
