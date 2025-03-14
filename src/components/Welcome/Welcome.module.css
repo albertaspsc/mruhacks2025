@@ -1,0 +1,175 @@
+/* Main Section */
+.welcomeSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 5%;
+  color: black;
+  text-align: center;
+}
+
+/* Grid Layout */
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 1300px;
+  gap: 50px;
+}
+
+/*Text Section */
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* Main Heading */
+.mainHeading {
+  font-size: 3.75rem;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 10px;
+  line-height: 1.1;
+}
+
+/* Highlighted 'MRUHacks' */
+.highlight {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #000;
+}
+
+/* Subheading */
+.subHeading {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+/* Event Date */
+.eventDate {
+  font-size: 1.2rem;
+  color: #777;
+  margin-bottom: 16px;
+}
+
+/* Description */
+.description {
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.8;
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* Read More / Read Less */
+.readMoreButton {
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: opacity 0.3s ease;
+  margin-top: 5px;
+}
+
+.readMoreButton:hover {
+  opacity: 0.7;
+}
+
+/* Image Section */
+.imageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image */
+.welcomeImage {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Call-To-Action Button */
+.ctaButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 32px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background-color: black;
+  color: white;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+/* Glare Effect */
+.glareEffect {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.5s ease-in-out;
+}
+
+.ctaButton:hover .glareEffect {
+  left: 150%;
+}
+
+/*  Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 30px;
+  }
+
+  .textContainer {
+    text-align: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .description {
+    text-align: center;
+    max-width: 90%;
+  }
+
+  .readMoreButton {
+    display: block;
+    margin: 10px auto;
+  }
+
+  .ctaButton {
+    width: 100%;
+  }
+}

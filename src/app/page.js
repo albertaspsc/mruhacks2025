@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar/Navbar";
 import RegisterSection from "../components/RegisterSection/Register";
+import Welcome from "../components/Welcome/Welcome";
 import About from "../components/About/About";
 import Gallery from "../components/Gallery/Gallery";
 import Stats from "../components/Stats/Stats";
@@ -13,6 +14,10 @@ export default function Home() {
       <main>
         <section id="register">
           <RegisterSection />
+        </section>
+
+        <section>
+          <Welcome />
         </section>
 
         <section id="about">
