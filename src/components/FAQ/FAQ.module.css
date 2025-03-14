@@ -10,6 +10,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: repeat;
+  border-radius: 40px;
   overflow: hidden;
 }
 
