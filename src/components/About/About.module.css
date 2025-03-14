@@ -61,6 +61,7 @@
   font-size: 1rem;
   line-height: 1.8;
   color: #333;
+  text-align: right;
 }
 
 /* Background image container - positioned centrally behind content */
@@ -143,6 +144,7 @@
   .description {
     font-size: 1rem;
     line-height: 1.6;
+    text-align: right;
   }
 
   /* Completely hides decorative horizontal background image */
