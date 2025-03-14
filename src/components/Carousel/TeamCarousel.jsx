@@ -40,7 +40,7 @@ const TeamCarousel = (props) => {
     onNextButtonClick,
   } = usePrevNextButtons(carouselApi, onNavButtonClick);
 
-  // Create groups of 3 team members for each slide
+  // Groups of 3 team members for each slide
   const teamGroups = [];
   for (let i = 0; i < teamData.length; i += 3) {
     teamGroups.push(teamData.slice(i, i + 3));
