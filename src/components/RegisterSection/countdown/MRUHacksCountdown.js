@@ -4,7 +4,7 @@ import styles from "./MRUHacksCountdown.module.css";
 
 const MRUHacksCountdown = () => {
   // Date - October 4, 2025
-  const hackathonDate = new Date(2025, 9, 4); // months are 0-indexed in JavaScript (9 = October)
+  const hackathonDate = new Date(2025, 9, 5, 0, 0, 0); // months are 0-indexed in JavaScript (9 = October)
 
   const [countdownTimer, setCountdownTimer] = useState({
     weeks: 0,

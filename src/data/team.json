@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Jaunie Williams",
+    "title": "Director",
+    "pic": "jaunie.jpg"
+  },
+  {
+    "name": "Sunny Parmar",
+    "title": "Co-Director",
+    "pic": "sunny.jpg"
+  },
+  {
+    "name": "Thomas Kapocsi",
+    "title": "Board Member",
+    "pic": "thomas.jpg"
+  },
+  {
+    "name": "Taylor Amy",
+    "title": "Board Member",
+    "pic": "crt.png"
+  },
+  {
+    "name": "Kiera Dowell",
+    "title": "Experience Team Lead",
+    "pic": "kiera.jpg"
+  },
+  {
+    "name": "Aarav Shaji",
+    "title": "Experience Coordinator",
+    "pic": "aarav.jpg"
+  },
+  {
+    "name": "Manroop Grewal",
+    "title": "Experience Coordinator",
+    "pic": "manroop.jpg"
+  },
+  {
+    "name": "Imaan Ansar",
+    "title": "Experience Coordinator",
+    "pic": "imaan.jpg"
+  },
+  {
+    "name": "Mahek Ramzan",
+    "title": "Outreach Team Lead",
+    "pic": "mahek.jpg"
+  },
+  {
+    "name": "Dominik Vachon",
+    "title": "Sponsorship Outreach",
+    "pic": "crt.png"
+  },
+  {
+    "name": "Gabriel Edward Montilla",
+    "title": "Sponsorship Outreach",
+    "pic": "edward.jpg"
+  },
+  {
+    "name": "Asia Ongjoco",
+    "title": "Development Team Lead",
+    "pic": "asia.jpg"
+  },
+  {
+    "name": "Aldo Ortiz",
+    "title": "Developer",
+    "pic": "aldo.jpg"
+  },
+  {
+    "name": "Mehtab Singh",
+    "title": "Developer",
+    "pic": "mehtab.jpg"
+  },
+  {
+    "name": "Nathan Garcia",
+    "title": "Marketing Team Lead",
+    "pic": "nathan.jpg"
+  },
+  {
+    "name": "Megan Valderrama",
+    "title": "Marketing",
+    "pic": "megan.jpg"
+  },
+  {
+    "name": "Jashan Pal Singh",
+    "title": "Graphic Designer",
+    "pic": "jashan.jpg"
+  },
+  {
+    "name": "Sage Odesanya",
+    "title": "Principal Writer",
+    "pic": "sage.jpg"
+  }
+]
