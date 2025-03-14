@@ -60,15 +60,15 @@ const Welcome = () => {
                 collaborate, and create. Connect with{" "}
                 <strong>
                   industry leaders, top developers, and experienced software
-                  engineers
+                  engineers{" "}
                 </strong>
                 through hands-on workshops and exciting challenges. Get ready
-                for a <strong>high-energy</strong>
+                for a <strong>high-energy </strong>
                 event where you&apos;ll{" "}
                 <strong>build something incredible</strong> in just{" "}
                 <strong>24 hours</strong>. Enjoy complimentary food, networking
                 opportunities, and develop real-world projects with mentors
-                guiding you along the way.
+                guiding you along the way.{" "}
                 <button
                   className={styles.readMoreButton}
                   onClick={() => setIsExpanded(false)}
