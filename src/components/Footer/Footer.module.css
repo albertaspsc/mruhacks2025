@@ -22,7 +22,7 @@
 }
 
 .footerRight {
-  max-width: 40%;
+  max-width: 30%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -66,7 +66,7 @@
 }
 
 .teamPhoto {
-  width: 1000px;
+  width: 500px;
   height: auto;
   border-radius: 5px;
 }

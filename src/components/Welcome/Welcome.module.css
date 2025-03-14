@@ -8,7 +8,6 @@
   text-align: center;
 }
 
-
 /* Grid Layout */
 .container {
   display: grid;
@@ -45,7 +44,6 @@
   color: #000;
 }
 
-
 /* Subheading */
 .subHeading {
   font-size: 2.5rem;
@@ -53,7 +51,7 @@
   color: #333;
   margin-bottom: 12px;
 }
- 
+
 /* Event Date */
 .eventDate {
   font-size: 1.2rem;
