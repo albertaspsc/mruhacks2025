@@ -1,0 +1,152 @@
+/* Main container setup */
+.aboutSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 120px 20px;
+  background-color: #fcfbf4;
+  overflow: hidden;
+}
+
+/* Container that holds the image and text content */
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1300px;
+  width: 100%;
+  position: relative;
+  align-items: center;
+}
+
+/* Wrapper for the overlapping graphic image */
+.imageWrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Graphic image (left side), overlaps background */
+.aboutGraphic {
+  width: 110%;
+  max-width: 700px;
+  height: auto;
+  object-fit: contain;
+  position: relative;
+  top: 0;
+  transform: translateY(-10%);
+}
+
+/* Textual content styling */
+.textContent {
+  padding: 10px;
+  border-radius: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading for About section */
+.heading {
+  font-size: 2.7rem;
+  color: #000;
+  margin-bottom: 20px;
+  font-weight: 800;
+}
+
+/* Paragraph description styling */
+.description {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+/* Background image container - positioned centrally behind content */
+.backgroundImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 200x; /* Rounded corners added for smoother visual integration */
+}
+
+@media (max-width: 1099px) {
+  .heading {
+    margin-top: 0%;
+    margin-bottom: 0;
+    font-size: 2rem;
+  }
+  .description {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 871px) {
+  .heading {
+    margin-top: 0%;
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+  .description {
+    font-size: 0.7rem;
+  }
+}
+
+/* Responsive adjustments for small screens (768px and below) */
+@media (max-width: 768px) {
+  .aboutSection {
+    padding: 60px 20px;
+  }
+
+  .container {
+    grid-template-columns: 1fr; /* Stack vertically */
+    gap: 40px;
+  }
+
+  .imageWrapper {
+    position: static;
+    margin-bottom: 20px;
+  }
+
+  .aboutGraphic {
+    background: linear-gradient(135deg, #f8c0c8, #d9a7f9);
+    background-size: cover;
+    max-width: 100%;
+    width: 75%;
+    height: auto;
+    transform: none;
+    margin-bottom: 20px;
+    border-radius: 20px; /* Add rounded corners for better visual appearance */
+  }
+
+  .textContent {
+    position: relative;
+    padding: 20px;
+    order: -1;
+    text-align: center;
+    color: #000; /* Ensures text readability over gradient */
+  }
+
+  .heading {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .description {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Completely hides decorative horizontal background image */
+  .backgroundImage {
+    display: none;
+  }
+}
