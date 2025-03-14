@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./About.module.css";
-import background from "@/assets/backgrounds/horizontal-bkg.png";
-import aboutGraphic from "@/assets/graphics/about-component.png";
+import background from "../../assets/backgrounds/horizontal-bkg.png";
+import aboutGraphic from "../../assets/graphics/about-component.png";
 
 // Register GSAP plugin
 gsap.registerPlugin(ScrollTrigger);
