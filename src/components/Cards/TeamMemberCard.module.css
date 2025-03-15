@@ -1,0 +1,142 @@
+.memberCardContainer {
+  width: 180px;
+  margin: 0 auto;
+}
+
+.memberCardWrapper {
+  width: 100%;
+  height: 280px;
+  border-radius: 0.5rem;
+  overflow: visible;
+  background-image: url("../../assets/backgrounds/card-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.memberCardInner {
+  width: 85%;
+  height: 85%;
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 0.25rem;
+}
+
+.memberImage {
+  width: 140px;
+  height: 180px; /* Fixed height - less than background */
+  object-fit: cover; /* Maintains aspect ratio while filling */
+  border-radius: 0.25rem;
+}
+
+.textContainer {
+  margin-top: 0.5rem;
+  width: 100%;
+  text-align: center;
+  padding: 0 0.25rem;
+}
+
+.memberName {
+  font-family: "DM Sans Mono", monospace;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: black;
+  text-align: center;
+  margin: 0;
+  padding: 0.25rem 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+.memberTitle {
+  font-family: "DM Sans Mono", monospace;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #555;
+  text-align: center;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: normal;
+}
+
+/* Media queries for different screen sizes */
+@media (max-width: 1024px) {
+  .memberCardContainer {
+    width: 150px;
+  }
+
+  .memberCardWrapper {
+    height: 220px;
+  }
+
+  .memberCardInner {
+    width: 85%;
+    height: 85%;
+  }
+
+  .memberImage {
+    width: 115px;
+    height: 155px;
+  }
+
+  .memberName {
+    font-size: 0.8rem;
+  }
+
+  .memberTitle {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .memberCardContainer {
+    width: 120px;
+  }
+
+  .memberCardWrapper {
+    height: 180px;
+  }
+
+  .memberCardInner {
+    width: 85%;
+    height: 85%;
+    padding: 0.5rem;
+  }
+
+  .memberImage {
+    width: 90px;
+    height: 120px;
+  }
+
+  .memberName {
+    font-size: 0.75rem;
+  }
+
+  .memberTitle {
+    font-size: 0.625rem;
+  }
+}

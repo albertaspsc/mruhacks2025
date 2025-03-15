@@ -38,6 +38,20 @@
   border-radius: 1rem;
 }
 
+.carousel__slide__wider {
+  gap: 2rem; /* Reduced gap for the first two slides to fit 4 cards */
+}
+
+.carousel__slide__tablet {
+  gap: 3rem; /* Adjusted gap for tablet with 3 cards */
+  justify-content: center;
+}
+
+.carousel__slide__mobile {
+  gap: 3rem; /* Larger gap for mobile with just 2 cards */
+  justify-content: center;
+}
+
 .carousel__controls {
   display: flex;
   flex-direction: column;
@@ -126,10 +140,53 @@
 
 /* Control image size directly */
 .carousel__slide img {
-  max-width: 300px !important;
-  max-height: 300px !important;
-  object-fit: cover !important;
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
   border-radius: 0.5rem !important;
+  width: auto !important;
+  max-height: 300px !important;
+}
+
+/* Tablet styles - Added breakpoint to fix squished cards */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .carousel__slide {
+    gap: 2rem;
+    max-height: none;
+    height: auto;
+    padding: 1rem 0;
+  }
+
+  .carousel__slide__wider {
+    gap: 1.5rem;
+  }
+
+  .carousel__slide__tablet {
+    gap: 2rem; /* Adjusted for 3 cards on tablet */
+  }
+
+  .team-card-container {
+    max-width: 130px;
+    max-height: none;
+    height: auto;
+  }
+
+  .carousel__slide img {
+    max-width: 100% !important;
+    max-height: 200px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Adjust button size for tablets */
+  .carousel__button {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .carousel__arrow {
+    font-size: 2rem;
+  }
 }
 
 /* Mobile styles */
@@ -149,22 +206,38 @@
   .carousel__slide {
     gap: 1rem;
     padding: 0 0.25rem;
-    max-height: 300px;
+    max-height: none;
+    height: auto;
+  }
+
+  .carousel__slide__wider {
+    gap: 0.75rem;
+  }
+
+  .carousel__slide__mobile {
+    gap: 2rem; /* Adjusted for 2 cards on mobile */
   }
 
   .carousel__slide img {
-    max-width: 100px !important;
+    max-width: 100% !important;
     max-height: 150px !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   .team-card-container {
     max-width: 100px;
-    max-height: 200px;
+    max-height: none;
+    height: auto;
   }
 
   .carousel__button {
     width: 2.5rem;
     height: 2.5rem;
+  }
+
+  .carousel__arrow {
+    font-size: 1.8rem;
   }
 
   .carousel__dots {

@@ -54,7 +54,6 @@ export default function Home() {
 
         <section id="faq">
           <FAQ />
-
         </section>
 
         <section id="sponsors">
