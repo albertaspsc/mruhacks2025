@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { DotButton, useDotButton } from "./CarouselDotButtons";
 import {
   PrevButton,
@@ -15,6 +15,27 @@ import styles from "./carousel.module.css";
 const TeamCarousel = (props) => {
   const { teamData = [], options = { loop: true, align: "start" } } = props;
   const [carouselRef, carouselApi] = useCarousel(options, [Autoplay()]);
+  const [screenSize, setScreenSize] = useState("desktop");
+
+  // Update screen size state based on viewport width
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1025) {
+        setScreenSize("desktop");
+      } else if (window.innerWidth >= 769) {
+        setScreenSize("tablet");
+      } else {
+        setScreenSize("mobile");
+      }
+    };
+
+    // Initial setup
+    handleResize();
+
+    // Add resize listener
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const onNavButtonClick = useCallback((carouselApi) => {
     const autoplay = carouselApi?.plugins()?.autoplay;
@@ -40,11 +61,45 @@ const TeamCarousel = (props) => {
     onNextButtonClick,
   } = usePrevNextButtons(carouselApi, onNavButtonClick);
 
-  // Groups of 3 team members for each slide
-  const teamGroups = [];
-  for (let i = 0; i < teamData.length; i += 3) {
-    teamGroups.push(teamData.slice(i, i + 3));
-  }
+  // Create team groups based on screen size
+  const createTeamGroups = () => {
+    if (teamData.length === 0) return [];
+
+    const groups = [];
+
+    if (screenSize === "desktop") {
+      // Desktop view: First two slides have 4 members, rest have 3
+      // First group with 4 members
+      groups.push(teamData.slice(0, 4));
+
+      // Second group with 4 members
+      if (teamData.length > 4) {
+        groups.push(teamData.slice(4, 8));
+      }
+
+      // Rest of the groups with 3 members each
+      let processed = 8;
+      while (processed < teamData.length) {
+        groups.push(teamData.slice(processed, processed + 3));
+        processed += 3;
+      }
+    } else if (screenSize === "tablet") {
+      // Tablet view: All slides have 3 members
+      for (let i = 0; i < teamData.length; i += 3) {
+        groups.push(teamData.slice(i, i + 3));
+      }
+    } else {
+      // Mobile view: All slides have 2 members
+      for (let i = 0; i < teamData.length; i += 2) {
+        groups.push(teamData.slice(i, i + 2));
+      }
+    }
+
+    return groups;
+  };
+
+  // Create groups
+  const teamGroups = createTeamGroups();
 
   return (
     <section className={styles.carousel}>
@@ -66,7 +121,18 @@ const TeamCarousel = (props) => {
       >
         <div className={styles.carousel__container}>
           {teamGroups.map((group, index) => (
-            <div className={styles.carousel__slide} key={index}>
+            <div
+              className={`${styles.carousel__slide} ${
+                screenSize === "desktop" && index < 2
+                  ? styles.carousel__slide__wider
+                  : screenSize === "tablet"
+                    ? styles.carousel__slide__tablet
+                    : screenSize === "mobile"
+                      ? styles.carousel__slide__mobile
+                      : ""
+              }`}
+              key={index}
+            >
               {group.map((member, memberIndex) => (
                 <TeamMemberCard
                   key={`${index}-${memberIndex}`}
