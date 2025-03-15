@@ -18,10 +18,9 @@
   align-items: center;
 }
 
-/* Inner white container for the card */
 .memberCardInner {
   width: 85%;
-  height: 73%;
+  height: 85%;
   background-color: white;
   border-radius: 0.75rem;
   padding: 0.75rem;
@@ -29,6 +28,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .imageContainer {
@@ -53,6 +53,7 @@
   margin-top: 0.5rem;
   width: 100%;
   text-align: center;
+  padding: 0 0.25rem;
 }
 
 .memberName {
@@ -60,12 +61,13 @@
   font-weight: 700;
   font-size: 0.875rem;
   color: black;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: center;
   margin: 0;
   padding: 0.25rem 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .memberTitle {
@@ -73,11 +75,12 @@
   font-weight: 400;
   font-size: 0.75rem;
   color: #555;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: center;
   margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: normal;
 }
 
 /* Media queries for different screen sizes */
@@ -92,12 +95,12 @@
 
   .memberCardInner {
     width: 85%;
-    height: 73%;
+    height: 85%;
   }
 
   .memberImage {
-    width: 115px;
-    height: 155px;
+    width: 115px; /* Fixed width */
+    height: 155px; /* Fixed height */
   }
 
   .memberName {
@@ -120,13 +123,13 @@
 
   .memberCardInner {
     width: 85%;
-    height: 73%;
+    height: 85%;
     padding: 0.5rem;
   }
 
   .memberImage {
-    width: 90px;
-    height: 120px;
+    width: 90px; /* Fixed width */
+    height: 120px; /* Fixed height */
   }
 
   .memberName {
