@@ -3,8 +3,11 @@
 import React, { useState } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import RegisterSection from "../components/RegisterSection/Register";
+import Welcome from "../components/Welcome/Welcome";
+import About from "../components/About/About";
 import Gallery from "../components/Gallery/Gallery";
 import Stats from "../components/Stats/Stats";
+import FAQ from "../components/FAQ/FAQ";
 import Sponsor from "../components/Sponsor/Sponsor";
 import Footer from "../components/Footer/Footer";
 import TeamCarousel from "../components/Carousel/TeamCarousel";
@@ -19,6 +22,14 @@ export default function Home() {
       <main>
         <section id="register">
           <RegisterSection />
+        </section>
+
+        <section>
+          <Welcome />
+        </section>
+
+        <section id="about">
+          <About />
         </section>
 
         <section>
@@ -39,6 +50,10 @@ export default function Home() {
               containScroll: "trimSnaps",
             }}
           />
+        </section>
+
+        <section id="faq">
+          <FAQ />
         </section>
 
         <section id="sponsors">

@@ -105,4 +105,15 @@ div.container {
     flex-direction: column;
     align-items: stretch;
     text-align: center;
+
+    h1 {
+        margin-bottom: 1rem;
+        padding: 0 1em;
+        font-size: 2.8rem;
+    }
+    @media (max-width: 500px) {
+        h1 {
+            font-size: 1.8rem;
+        }
+    }
 }

@@ -5,7 +5,7 @@
 
 .memberCardWrapper {
   width: 100%;
-  height: 280px; /* Fixed height for all cards */
+  height: 280px;
   border-radius: 0.5rem;
   overflow: visible;
   background-image: url("../../assets/backgrounds/card-bg.png");
@@ -43,9 +43,9 @@
 }
 
 .memberImage {
-  width: 140px; /* Fixed width */
+  width: 140px;
   height: 180px; /* Fixed height - less than background */
-  object-fit: cover; /* Changed to 'cover' to maintain aspect ratio while filling */
+  object-fit: cover; /* Maintains aspect ratio while filling */
   border-radius: 0.25rem;
 }
 
@@ -99,8 +99,8 @@
   }
 
   .memberImage {
-    width: 115px; /* Fixed width */
-    height: 155px; /* Fixed height */
+    width: 115px;
+    height: 155px;
   }
 
   .memberName {
@@ -128,8 +128,8 @@
   }
 
   .memberImage {
-    width: 90px; /* Fixed width */
-    height: 120px; /* Fixed height */
+    width: 90px;
+    height: 120px;
   }
 
   .memberName {

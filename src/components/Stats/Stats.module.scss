@@ -62,11 +62,16 @@
     flex-direction: column;
     text-align: center;
     align-items: center;
-    @media (max-width: 500px) {
-        align-items: stretch;
-    }
 
     h1 {
         padding: 0em 1em;
+        font-size: 2.8rem;
+    }
+
+    @media (max-width: 500px) {
+        align-items: stretch;
+        h1 {
+            font-size: 1.8rem;
+        }   
     }
 }

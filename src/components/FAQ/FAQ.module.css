@@ -1,0 +1,104 @@
+/* FAQ Section */
+.faqSection {
+  width: 100%;
+  padding: 80px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat;
+  border-radius: 40px;
+  overflow: hidden;
+}
+
+/* Container */
+.container {
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* FAQ Title */
+.heading {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* FAQ List */
+.faqList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* FAQ Item */
+.faqItem {
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 25px 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+}
+
+/* Align Question & Arrow */
+.question {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+/* Move arrow to the right */
+.arrow {
+  margin-left: auto;
+}
+
+/* See More / See Less Button */
+.toggleButton {
+  margin-top: 20px;
+  padding: 12px 20px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.toggleButton .glareEffect {
+  position: absolute;
+  left: -100%;
+  top: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.5s ease-in-out;
+}
+
+.toggleButton:hover .glareEffect {
+  left: 100%;
+}
