@@ -145,31 +145,134 @@
   left: 150%;
 }
 
-/*  Responsive Adjustments */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .container {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     gap: 30px;
-  }
-
-  .textContainer {
-    text-align: center;
-    align-items: center;
     width: 100%;
   }
 
+  .textContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    padding: 0 5%;
+  }
+
   .description {
-    text-align: left;
+    text-align: center;
     max-width: 90%;
+    font-size: 1rem;
+    line-height: 1.6;
   }
 
   .readMoreButton {
     display: block;
     margin: 10px auto;
+    font-size: 1rem;
+  }
+
+  .imageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .welcomeImage {
+    max-width: 90%;
+    height: auto;
+    object-fit: contain;
   }
 
   .ctaButton {
+    width: 80%;
+    padding: 14px 28px;
+    font-size: 1.2rem;
+  }
+}
+
+/* Ultra-Mobile Optimization for ≤480px */
+@media (max-width: 400px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     width: 100%;
+    gap: 20px;
+    padding: 20px 5%;
+  }
+
+  .textContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    padding: 0 5%;
+  }
+
+  .mainHeading {
+    font-size: 2.2rem; /* Reduce heading size for small screens */
+    line-height: 1.2;
+  }
+
+  .highlight {
+    font-size: 2.5rem; /* Ensure highlighted text fits */
+  }
+
+  .subHeading {
+    font-size: 1.5rem;
+  }
+
+  .eventDate {
+    font-size: 1rem;
+  }
+
+  .description {
+    text-align: center;
+    max-width: 95%;
+    font-size: 0.95rem; /* Reduce text size for readability */
+    line-height: 1.6;
+  }
+
+  .readMoreButton {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+  }
+
+  .imageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .welcomeImage {
+    max-width: 95%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+
+  .ctaButton {
+    width: 90%;
+    padding: 12px 24px;
+    font-size: 1rem; /* Reduce size slightly for small screens */
+  }
+
+  .glareEffect {
+    width: 120%;
   }
 }
