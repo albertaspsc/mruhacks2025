@@ -102,3 +102,37 @@
 .toggleButton:hover .glareEffect {
   left: 100%;
 }
+
+@media (max-width: 768px) {
+  .faqList {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+  }
+
+  .faqItem {
+    width: 90%;
+    font-size: 1rem;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .question {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .arrow {
+    margin-left: 10px;
+  }
+
+  .toggleButton {
+    font-size: 1rem;
+    width: 80%;
+  }
+}
