@@ -9,6 +9,18 @@ const dmSans = DM_Sans({
 });
 
 export const metadata = {
+  title: "MRUHacks 2025",
+  description:
+    "Join the premier hackathon at Mount Royal University. 24 hours of coding, collaboration, and innovation with prizes and networking opportunities.",
+  keywords: [
+    "hackathon",
+    "MRU",
+    "Mount Royal University",
+    "coding competition",
+    "student hackathon",
+    "Calgary tech event",
+    "Calgary hackathon",
+  ],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
