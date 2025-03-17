@@ -1,125 +1,149 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav } from "react-bootstrap";
 import Image from "next/image";
-import logo from "../../assets/logos/color-logo.png";
 import styles from "./Navbar.module.css";
+import logo from "../../assets/logos/color-logo.png";
 
-function NavigationBar() {
-  const [expanded, setExpanded] = useState(false);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
-  // Handle closing the navbar when clicking outside
   useEffect(() => {
-    if (!expanded) return;
+    if (isOpen) {
+      document.body.classList.add("menu-open");
+    } else {
+      document.body.classList.remove("menu-open");
+    }
 
-    const handleOutsideClick = (e) => {
-      // If the click is on the hamburger or its children, ignore
-      if (e.target.closest(`.${styles.navbarToggler}`)) return;
+    // Cleanup on component unmount
+    return () => {
+      document.body.classList.remove("menu-open");
+    };
+  }, [isOpen]);
 
-      // If the click is outside the nav container and navbar is expanded
-      if (!e.target.closest(`.${styles.navContainer}`) && expanded) {
-        handleNavLinkClick();
+  // Track active section while scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["home", "about", "sponsors", "faq"];
+      const scrollPosition = window.scrollY + 100; // Adding offset for navbar height
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const offsetTop = element.offsetTop;
+          const offsetBottom = offsetTop + element.offsetHeight;
+
+          if (scrollPosition >= offsetTop && scrollPosition < offsetBottom) {
+            setActiveSection(section);
+            break;
+          }
+        }
       }
     };
 
-    // Add event listener
-    document.addEventListener("click", handleOutsideClick);
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Check initial position
 
     return () => {
-      document.removeEventListener("click", handleOutsideClick);
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, [expanded]);
+  }, []);
 
-  const toggleNavbar = () => {
-    const newExpandedState = !expanded;
-    setExpanded(newExpandedState);
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
 
-    // Add or remove class from body when navbar is expanded
-    if (newExpandedState) {
-      document.body.classList.add("navbar-expanded");
-      // Lock scroll when menu is open
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.classList.remove("navbar-expanded");
-      // Restore scroll when menu is closed
-      document.body.style.overflow = "";
+  // Smooth scroll function
+  const scrollToSection = (sectionId, event) => {
+    event.preventDefault();
+    setIsOpen(false); // Close the mobile menu
+
+    const section = document.getElementById(sectionId);
+    if (section) {
+      // Get the navbar height to offset the scroll position
+      const navbar = document.querySelector(`.${styles.navbarCustom}`);
+      const navbarHeight = navbar ? navbar.offsetHeight : 0;
+
+      const offsetTop = section.offsetTop - navbarHeight;
+
+      window.scrollTo({
+        top: offsetTop,
+        behavior: "smooth",
+      });
     }
   };
 
-  // Function to handle navigation link clicks
-  const handleNavLinkClick = () => {
-    setExpanded(false);
-    document.body.classList.remove("navbar-expanded");
-    document.body.style.overflow = "";
-  };
+  // Determines if a section is active
+  const isActive = (sectionId) => activeSection === sectionId;
 
   return (
-    <Navbar
-      expanded={expanded}
-      expand="md"
-      className={`${styles.navbarCustom}`}
-      fixed="top"
-    >
+    <nav className={styles.navbarCustom}>
       <div className={styles.navbarContainer}>
-        <Navbar.Brand href="#home" className={styles.navbarBrand}>
-          <Image
-            src={logo}
-            height={40}
-            width={120}
-            className="d-inline-block align-top"
-            alt="MRUHacks Logo"
-            priority
-          />
-        </Navbar.Brand>
-        <Navbar.Toggle
-          aria-controls="basic-navbar-nav"
-          onClick={toggleNavbar}
+        <a
+          href="#register"
+          className={styles.navbarBrand}
+          onClick={(e) => scrollToSection("register", e)}
+        >
+          <Image src={logo} alt="Logo" width={120} height={40} />
+        </a>
+
+        <button
           className={styles.navbarToggler}
+          type="button"
+          onClick={toggleMenu}
+          aria-label="Toggle navigation"
         >
           <div className={styles.hamburgerIcon}>
             <span></span>
             <span></span>
             <span></span>
           </div>
-        </Navbar.Toggle>
-        <Navbar.Collapse
-          id="basic-navbar-nav"
-          className={`${styles.navbarCollapse} ${expanded ? styles.show : ""}`}
+        </button>
+
+        <div
+          className={`${styles.navbarCollapse} ${isOpen ? styles.show : ""}`}
         >
-          <Nav className={styles.navContainer}>
-            <Nav.Link
-              href="#about"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
-            >
-              About
-            </Nav.Link>
-            <Nav.Link
-              href="#home"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
+          <div className={styles.navContainer}>
+            <a
+              href="#register"
+              className={`${styles.navLink} ${isActive("register") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("register", e)}
             >
               Register
-            </Nav.Link>
-            <Nav.Link
+            </a>
+            <a
+              href="#about"
+              className={`${styles.navLink} ${isActive("about") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("about", e)}
+            >
+              About
+            </a>
+            <a
+              href="#team"
+              className={`${styles.navLink} ${isActive("team") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("team", e)}
+            >
+              Meet the Team
+            </a>
+            <a
               href="#faq"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
+              className={`${styles.navLink} ${isActive("faq") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("faq", e)}
             >
               FAQ
-            </Nav.Link>
-            <Nav.Link
+            </a>
+            <a
               href="#sponsors"
-              onClick={handleNavLinkClick}
-              className={styles.navLink}
+              className={`${styles.navLink} ${isActive("sponsors") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("sponsors", e)}
             >
               Sponsors
-            </Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
+            </a>
+          </div>
+        </div>
       </div>
-    </Navbar>
+    </nav>
   );
-}
+};
 
-export default NavigationBar;
+export default Navbar;
