@@ -119,6 +119,13 @@ const Navbar = () => {
               About
             </a>
             <a
+              href="#team"
+              className={`${styles.navLink} ${isActive("team") ? styles.active : ""}`}
+              onClick={(e) => scrollToSection("team", e)}
+            >
+              Meet the Team
+            </a>
+            <a
               href="#faq"
               className={`${styles.navLink} ${isActive("faq") ? styles.active : ""}`}
               onClick={(e) => scrollToSection("faq", e)}
