@@ -1,6 +1,13 @@
 .navbarCustom {
   background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari */
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.2
+  ); /* Fallback for browswers that don't support backdrop-filter */
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   padding: 0;
   height: 70px;
@@ -81,7 +88,7 @@
 
   .hamburgerIcon span {
     display: block;
-    width: 60%;
+    width: 70%;
     height: 2px; /* thickness of lines */
     background-color: black;
     margin: 5px 0;
@@ -150,7 +157,8 @@
       opacity 0.4s ease,
       transform 0.4s ease;
     margin-left: 0;
-    padding: 12px 0;
+    margin: 8px 0;
+    padding: 12px 20px; /* Larger touch target */
     width: 100%;
     text-align: center;
   }
@@ -163,5 +171,20 @@
 
   body.menu-open {
     overflow: hidden; /* Prevent body scrolling when menu is open */
+  }
+}
+
+@media (max-width: 375px) {
+  .navbarBrand img {
+    padding-left: 15px;
+    height: 30px;
+  }
+
+  .navbarCustom {
+    height: 60px;
+  }
+
+  .mainContent {
+    padding-top: 60px;
   }
 }
