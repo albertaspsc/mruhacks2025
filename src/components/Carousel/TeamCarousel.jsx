@@ -15,26 +15,22 @@ import styles from "./carousel.module.css";
 const TeamCarousel = (props) => {
   const { teamData = [], options = { loop: true, align: "start" } } = props;
   const [carouselRef, carouselApi] = useCarousel(options, [Autoplay()]);
-  const [screenSize, setScreenSize] = useState("desktop");
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Update screen size state based on viewport width
+  // Check for mobile view on component mount and window resize
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1025) {
-        setScreenSize("desktop");
-      } else if (window.innerWidth >= 769) {
-        setScreenSize("tablet");
-      } else {
-        setScreenSize("mobile");
-      }
+    const checkForMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Standard tablet breakpoint is 768px
     };
 
-    // Initial setup
-    handleResize();
+    // Initial check
+    checkForMobile();
 
-    // Add resize listener
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    // Add event listener for resize
+    window.addEventListener("resize", checkForMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkForMobile);
   }, []);
 
   const onNavButtonClick = useCallback((carouselApi) => {
@@ -61,109 +57,99 @@ const TeamCarousel = (props) => {
     onNextButtonClick,
   } = usePrevNextButtons(carouselApi, onNavButtonClick);
 
-  // Create team groups based on screen size
-  const createTeamGroups = () => {
-    if (teamData.length === 0) return [];
-
-    const groups = [];
-
-    if (screenSize === "desktop") {
-      // Desktop view: First two slides have 4 members, rest have 3
-      // First group with 4 members
-      groups.push(teamData.slice(0, 4));
-
-      // Second group with 4 members
-      if (teamData.length > 4) {
-        groups.push(teamData.slice(4, 8));
+  // Grouping responsive to screen size
+  const createCustomGroups = (data) => {
+    if (isMobile) {
+      // For mobile: always 2 cards per slide
+      const mobileGroups = [];
+      for (let i = 0; i < data.length; i += 2) {
+        mobileGroups.push(data.slice(i, i + 2));
       }
-
-      // Rest of the groups with 3 members each
-      let processed = 8;
-      while (processed < teamData.length) {
-        groups.push(teamData.slice(processed, processed + 3));
-        processed += 3;
-      }
-    } else if (screenSize === "tablet") {
-      // Tablet view: All slides have 3 members
-      for (let i = 0; i < teamData.length; i += 3) {
-        groups.push(teamData.slice(i, i + 3));
-      }
+      return mobileGroups;
     } else {
-      // Mobile view: All slides have 2 members
-      for (let i = 0; i < teamData.length; i += 2) {
-        groups.push(teamData.slice(i, i + 2));
-      }
-    }
+      // For tablet and desktop: use the original grouping logic
+      const groupSizes = [2, 4, 3, 3, 4]; // Group sizes determined by # of people in each team
+      const groups = [];
+      let index = 0;
 
-    return groups;
+      for (const size of groupSizes) {
+        if (index < data.length) {
+          groups.push(data.slice(index, index + size));
+          index += size;
+        }
+      }
+
+      // If there are still team members left, add them to additional groups of 3
+      while (index < data.length) {
+        const remaining = data.length - index;
+        const groupSize = Math.min(remaining, 3);
+        groups.push(data.slice(index, index + groupSize));
+        index += groupSize;
+      }
+
+      return groups;
+    }
   };
 
-  // Create groups
-  const teamGroups = createTeamGroups();
+  const teamGroups = createCustomGroups(teamData);
+
+  useEffect(() => {
+    if (carouselApi) {
+      carouselApi.reInit();
+    }
+  }, [isMobile, carouselApi]);
 
   return (
-    <section className={styles.carousel}>
-      <div className="flex justify-center w-full">
-        <h2 className="text-4xl font-bold text-center mb-10 relative">
-          Meet Our Team
+    <div className={styles["carousel-background"]}>
+      <section className={styles.carousel}>
+        <h2>
+          <span>Meet Our Team</span>
         </h2>
-      </div>
 
-      <div
-        className={styles.carousel__viewport}
-        ref={carouselRef}
-        style={{
-          background: "transparent",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          padding: "2rem",
-        }}
-      >
-        <div className={styles.carousel__container}>
-          {teamGroups.map((group, index) => (
-            <div
-              className={`${styles.carousel__slide} ${
-                screenSize === "desktop" && index < 2
-                  ? styles.carousel__slide__wider
-                  : screenSize === "tablet"
-                    ? styles.carousel__slide__tablet
-                    : screenSize === "mobile"
-                      ? styles.carousel__slide__mobile
-                      : ""
-              }`}
-              key={index}
-            >
-              {group.map((member, memberIndex) => (
-                <TeamMemberCard
-                  key={`${index}-${memberIndex}`}
-                  member={member}
-                  className="team-card-container"
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className={styles.carousel__controls}>
-        <div className={styles.carousel__buttons}>
-          <PrevButton onClick={onPrevButtonClick} disabled={prevBtnDisabled} />
-          <NextButton onClick={onNextButtonClick} disabled={nextBtnDisabled} />
+        <div className={styles.carousel__viewport} ref={carouselRef}>
+          <div className={styles.carousel__container}>
+            {teamGroups.map((group, index) => (
+              <div className={styles.carousel__slide} key={index}>
+                {group.map((member, memberIndex) => (
+                  <TeamMemberCard
+                    key={`${index}-${memberIndex}`}
+                    member={member}
+                    className="team-card-container"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className={styles.carousel__dots}>
-          {scrollSnaps.map((_, index) => (
-            <DotButton
-              key={index}
-              onClick={() => onDotButtonClick(index)}
-              className={`${styles.carousel__dot} ${
-                index === selectedIndex ? styles["carousel__dot--selected"] : ""
-              }`}
+        <div className={styles.carousel__controls}>
+          <div className={styles.carousel__buttons}>
+            <PrevButton
+              onClick={onPrevButtonClick}
+              disabled={prevBtnDisabled}
             />
-          ))}
+            <NextButton
+              onClick={onNextButtonClick}
+              disabled={nextBtnDisabled}
+            />
+          </div>
+
+          <div className={styles.carousel__dots}>
+            {scrollSnaps.map((_, index) => (
+              <DotButton
+                key={index}
+                onClick={() => onDotButtonClick(index)}
+                className={`${styles.carousel__dot} ${
+                  index === selectedIndex
+                    ? styles["carousel__dot--selected"]
+                    : ""
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 };
 
