@@ -4,14 +4,20 @@ import crt from "../../assets/mascots/crt.png";
 import Image from "next/image";
 
 export default function Stats() {
-  const facts = `80+ Hackers;20+ Projects;24 Hours`;
+  const facts = [
+    { number: "80+", text: "Hackers" },
+    { number: "1000+", text: "Lines of Code" },
+    { number: "20+", text: "Projects" },
+  ];
+
   return (
     <div className={styles.container}>
       <h1 className={styles.statsHeader}>MRUHacks 2024 Stats:</h1>
       <div className={styles.stats}>
-        {facts.split(";").map((x, i) => (
+        {facts.map((fact, i) => (
           <div className="stat" key={`statistic-${i}`} style={{ "--x": i + 1 }}>
-            {x}
+            <span className={styles.number}>{fact.number}</span>
+            <span className={styles.text}>{fact.text}</span>
           </div>
         ))}
       </div>
