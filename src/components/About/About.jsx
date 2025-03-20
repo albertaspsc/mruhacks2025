@@ -67,15 +67,12 @@ const About = () => {
         >
           <h2 className={styles.heading}>About the Competition</h2>
           <p className={styles.description}>
-            <strong>
-              Sunny Parmar, Matthew Hrehirchuk, and Jaunie Williams
-            </strong>{" "}
-            established <strong>MRUHacks</strong> in <strong>2023</strong> and
-            organized the first event. They hosted one of the most{" "}
-            <strong>successful pilot events</strong> in the history of{" "}
-            <strong>Mount Royal Computing</strong>, attracting an impressive{" "}
-            <strong>60 participants</strong>. This would set the stage for a
-            series of <strong>spectacular events</strong>.
+            MRUHacks is Mount Royal University&apos;s annual intercollegiate
+            hackathon. Participants will work together in teams as large as 5
+            members, developing projects that align with our themes over the
+            course of 24 hours. Whether you&apos;re an adept coder or a curious
+            beginner, MRUHacks invites you to join a diverse community of
+            problem solvers, programmers, and builders this October.
           </p>
         </motion.div>
       </div>
