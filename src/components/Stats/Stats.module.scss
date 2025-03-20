@@ -1,79 +1,154 @@
 .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10%;
-    padding: 2em;
+    gap: 15%;
+    padding: 1.5em;
     width: 75%;
-    margin: 0 auto; /* Horizontally centering */
+    max-width: 600px; 
+    margin: 0 auto;
     justify-content: center;
-
+    
     div {
-        padding: 1em;
-        font-weight: bold;
-        font-size: min(4vh, 4vw);
-        align-content: center;
-        position: relative;
-        --x: 1;
-
-
-        &::after {
-            background: url("/background.png");
-            background-size: 100% 100%;
-            border-radius: 1em;
-            content: ' ';
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            top: 0%;
-            left: 0%;
-            z-index: -1;
-            transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
-
-        }
-        // TODO - media query for font-size to add responsiveness
+      padding: 0.75em;
+      font-weight: bold;
+      position: relative;
+      --x: 1;
+      aspect-ratio: 1 / 1; /* Forces square shape */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      
+      /* Style for the number */
+      .number {
+        font-size: min(5vh, 5vw);
+        font-weight: 800;
+        margin-bottom: 0.25em;
+      }
+      
+      /* Style for the text */
+      .text {
+        font-size: min(2.5vh, 2.5vw);
+      }
+      
+      &::after {
+        background: url("/background.png");
+        background-size: 100% 100%;
+        border-radius: 1em;
+        content: ' ';
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0%;
+        left: 0%;
+        z-index: -1;
+        transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
+      }
     }
+  }
+
+  .statsHeader {
+    font-size: 2.7rem;
+    color: #000;
+    margin-bottom: 15px;
+    font-weight: 800;
+    text-align: center;
 }
 
-
-.big-stat {
+  .big-stat {
+    margin: 20px auto;
     display: flex;
     align-items: center;
     width: 75%;
-
+    
     div {
-        height: 100%;
+      height: 100%;
+      
+      img {
+        height: 200px;
+        width: auto;
+      }
+    }
+    
+    span {
+      font-weight: bold;
+      font-size: min(4vh, 4vw);
+      text-align: start;
+    }
+  }
+  
+  
+  /* Media queries for different screen sizes */
+  @media (max-width: 1200px) {
+    .stats {
+      width: 85%;
+      gap: 15%;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .stats {
+      width: 70%;
+      gap: 8%;
+      
+      div {
+        padding: 0.5em;
+        
+        .number {
+          font-size: min(4.5vh, 4.5vw);
+        }
+        
+        .text {
+          font-size: min(2vh, 2vw);
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .stats {
+        width: 70%;
+        gap: 5%;
+      
+      div {
+        .number {
+          font-size: min(4vh, 4vw);
+        }
+        
+        .text {
+          font-size: min(1.8vh, 1.8vw);
+        }
+      }
+    }
 
-        img {
-            height: 100%;
-            width: auto;
+    .statsHeader {
+        font-size: 1.8rem;
+    }
+
+    .big-stat {
+        div {
+          img {
+            height: 150px; 
+          }
         }
     }
-
-    span {
-        font-weight: bold;
-        font-size: min(4vh, 4vw);
-        text-align: start;
+  }
+  
+  @media (max-width: 500px) {
+    .stats {
+      gap: 5%;
+      width: 90%;
+      
+      div {
+        padding: 0.4em;
+      }
     }
 
-}
-
-
-.container {
-    padding: 1em;
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-
-    h1 {
-        padding: 0em 1em;
-        font-size: 2.8rem;
+    .big-stat {
+        div {
+          img {
+            height: 130px;
+          }
+        }
     }
-
-    @media (max-width: 500px) {
-        align-items: stretch;
-        h1 {
-            font-size: 1.8rem;
-        }   
-    }
-}
+  }

@@ -13,7 +13,7 @@
 /* Container that holds the image and text content */
 .container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.8fr 1fr;
   max-width: 1300px;
   width: 100%;
   position: relative;
@@ -52,8 +52,9 @@
 .heading {
   font-size: 2.7rem;
   color: #000;
-  margin-bottom: 20px;
+  margin-bottom: 2px;
   font-weight: 800;
+  text-align: right;
 }
 
 /* Paragraph description styling */

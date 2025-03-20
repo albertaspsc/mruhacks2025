@@ -104,6 +104,9 @@
 }
 
 @media (max-width: 768px) {
+  .heading {
+    font-size: 1.8rem;
+  }
   .faqList {
     display: flex;
     flex-direction: column;

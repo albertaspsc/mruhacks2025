@@ -43,33 +43,11 @@ const Welcome = () => {
             150 innovators at the Riddell Library and Learning Centre. Whether
             you&apos;re a designer, developer, or tech enthusiast, you&apos;ll
             be part of a vibrant community ready to innovate and collaborate.
-            {!isExpanded ? (
-              <>
-                {" "}
-                Connect with experienced software...
-                <button
-                  className={styles.readMoreButton}
-                  onClick={() => setIsExpanded(true)}
-                >
-                  Read More
-                </button>
-              </>
-            ) : (
-              <>
-                {" "}
-                Connect with experienced software engineers serving as industry
-                mentors, dive into engaging hands-on workshops, and enjoy
-                complimentary food throughout the event. Your experience comes
-                first at MRUHacks–exciting activities, workshops, and plenty of
-                opportunities to network with companies and other hackers.
-                <button
-                  className={styles.readMoreButton}
-                  onClick={() => setIsExpanded(false)}
-                >
-                  Read Less
-                </button>
-              </>
-            )}
+            Connect with experienced software engineers serving as industry
+            mentors, dive into engaging hands-on workshops, and enjoy
+            complimentary food throughout the event. Your experience comes first
+            at MRUHacks–exciting activities, workshops, and plenty of
+            opportunities to network with companies and other hackers.
           </motion.p>
         </div>
 
