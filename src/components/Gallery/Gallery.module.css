@@ -3,7 +3,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 2em;
-  padding: 1em;
+  /* padding: 1em; */
   overflow-x: none;
 }
 
