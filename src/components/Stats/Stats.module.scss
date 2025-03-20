@@ -1,7 +1,7 @@
 .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8%;
+    gap: 15%;
     padding: 1.5em;
     width: 75%;
     max-width: 600px; 
@@ -82,14 +82,14 @@
   @media (max-width: 1200px) {
     .stats {
       width: 85%;
-      gap: 5%;
+      gap: 15%;
     }
   }
   
   @media (max-width: 992px) {
     .stats {
       width: 70%;
-      gap: 4%;
+      gap: 8%;
       
       div {
         padding: 0.5em;
@@ -107,7 +107,8 @@
   
   @media (max-width: 768px) {
     .stats {
-      gap: 3%;
+        width: 70%;
+        gap: 5%;
       
       div {
         .number {
@@ -135,8 +136,8 @@
   
   @media (max-width: 500px) {
     .stats {
-      gap: 2%;
-      width: 95%;
+      gap: 5%;
+      width: 90%;
       
       div {
         padding: 0.4em;
