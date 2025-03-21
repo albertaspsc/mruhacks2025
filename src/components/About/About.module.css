@@ -36,7 +36,7 @@
   height: auto;
   object-fit: contain;
   position: relative;
-  top: 0;
+  top: -15px;
   transform: translateY(-10%);
 }
 
@@ -99,6 +99,10 @@
   }
   .description {
     font-size: 0.7rem;
+  }
+
+  .aboutGraphic {
+    top: -35px;
   }
 }
 

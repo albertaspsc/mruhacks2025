@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "./TeamMemberCard.module.css";
-import fallbackImage from "../../assets/mascots/crt2.png";
+import fallbackImage from "../../assets/mascots/crt2.svg";
 
 const TeamMemberCard = ({ member }) => {
   const [imgSrc, setImgSrc] = useState("");
