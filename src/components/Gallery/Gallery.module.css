@@ -3,15 +3,40 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 2em;
-  /* padding: 1em; */
   overflow-x: none;
 }
 
 .gallery-image {
   height: auto;
-  width: 35vw;
+  width: 30vw;
   box-sizing: border-box;
   border: 1.1em solid white;
-  /* box-shadow: #0000007f 5px 5px 4px; */
   box-shadow: #0000003b 3px 3px 4px 2px;
+}
+
+/* Mobile layout - switchs to column */
+@media (max-width: 768px) {
+  .gallery-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5em;
+  }
+
+  .gallery-image {
+    width: 60vw;
+    max-width: 300px;
+    border: 0.8em solid white;
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+  .gallery-container {
+    gap: 1.2em;
+  }
+
+  .gallery-image {
+    width: 40vw;
+    border: 0.6em solid white;
+  }
 }

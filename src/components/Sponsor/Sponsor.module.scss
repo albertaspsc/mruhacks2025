@@ -14,11 +14,6 @@ div.become-sponsor-container {
 
     @media (max-width: 600px) {
         margin-bottom: 3em;
-        
-        // Hides CRT completely
-        .crt {
-            display: none;
-        }
     }
 
     /* For very small screens */
@@ -83,6 +78,14 @@ div.become-sponsor-container {
         padding: 0.5em 1.2em !important; 
     }
 }
+
+@media (max-width: 450px) {  
+    // Hides CRT completely
+    .crt {
+        display: none;
+    }
+}
+
 
 div.sponsors {
     padding: 2em;

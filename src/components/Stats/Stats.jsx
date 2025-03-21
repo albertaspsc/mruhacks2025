@@ -22,7 +22,7 @@ export default function Stats() {
         ))}
       </div>
       <span className={styles["big-stat"]}>
-        <div>
+        <div className={styles.crt}>
           <Image src={crt} alt="CRT mascot" />
         </div>
         <span>
