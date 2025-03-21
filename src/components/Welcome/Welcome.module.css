@@ -24,7 +24,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
   width: 100%;
 }
 
@@ -35,6 +34,7 @@
   color: #000;
   margin-bottom: 10px;
   line-height: 1.1;
+  text-align: left;
 }
 
 /* Highlighted 'MRUHacks' */
@@ -50,6 +50,7 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 12px;
+  text-align: left;
 }
 
 /* Event Date */
@@ -57,6 +58,7 @@
   font-size: 1.2rem;
   color: #777;
   margin-bottom: 16px;
+  text-align: left;
 }
 
 /* Description */
@@ -118,31 +120,26 @@
   border-radius: 50px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgb(0, 0, 0);
   position: relative;
   overflow: hidden;
   margin-top: 20px;
 }
 
-/* Glare Effect */
-.glareEffect {
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 150%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0) 30%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  transform: skewX(-20deg);
-  transition: left 0.5s ease-in-out;
+.ctaButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
 }
 
-.ctaButton:hover .glareEffect {
-  left: 150%;
+.ctaButton:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(255, 255, 255, 0.4); /* Slight reduction in glow when pressed */
+}
+
+.buttonText {
+  margin-right: 12px;
 }
 
 /* Responsive Adjustments */
@@ -152,7 +149,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: left;
     gap: 30px;
     width: 100%;
   }
@@ -162,13 +159,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: left;
     width: 100%;
     padding: 0 5%;
   }
 
   .description {
-    text-align: center;
+    text-align: left;
     max-width: 90%;
     font-size: 1rem;
     line-height: 1.6;
@@ -234,14 +231,16 @@
 
   .subHeading {
     font-size: 1.5rem;
+    text-align: left;
   }
 
   .eventDate {
     font-size: 1rem;
+    text-align: left;
   }
 
   .description {
-    text-align: center;
+    text-align: left;
     max-width: 95%;
     font-size: 0.95rem; /* Reduce text size for readability */
     line-height: 1.6;

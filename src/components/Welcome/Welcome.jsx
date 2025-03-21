@@ -68,7 +68,7 @@ const Welcome = () => {
             priority
           />
           <a href="#register" className={twMerge(styles.ctaButton, "group")}>
-            <span>Apply Now</span>
+            <span className={styles.buttonText}>Apply Now</span>
             <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
             <div className={styles.glareEffect}></div>
           </a>
