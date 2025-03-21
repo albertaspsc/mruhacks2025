@@ -1,7 +1,6 @@
 import React from "react";
 import Image from "next/image";
 import styles from "./Footer.module.css";
-import title from "../../assets/community/community-title.png";
 import communityImg from "../../assets/community/community-component.png";
 
 const Footer = () => {
@@ -10,11 +9,7 @@ const Footer = () => {
       <div className={styles.footerContent}>
         <div className={styles.footerLeft}>
           <div className={styles.footerTitle}>
-            <Image
-              src={title}
-              alt="Join Our Community"
-              className={styles.communityTitle}
-            />
+            <h1 className={styles.title}>Join Our Community</h1>
           </div>
           <div className={styles.socialLinks}>
             <a
