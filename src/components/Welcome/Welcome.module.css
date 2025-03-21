@@ -197,7 +197,7 @@
   }
 }
 
-/* Ultra-Mobile Optimization for ≤480px */
+/* Ultra-Mobile Optimization for <480px */
 @media (max-width: 400px) {
   .container {
     display: flex;
@@ -207,7 +207,7 @@
     text-align: center;
     width: 100%;
     gap: 20px;
-    padding: 20px 5%;
+    padding: 15px 5%;
   }
 
   .textContainer {
