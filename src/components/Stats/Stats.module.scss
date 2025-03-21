@@ -1,154 +1,239 @@
 .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15%;
-    padding: 1.5em;
-    width: 75%;
-    max-width: 600px; 
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15%;
+  padding: 1.5em;
+  width: 75%;
+  max-width: 600px;
+  margin: 0 auto;
+  justify-content: center;
+  
+  div {
+    padding: 1em;
+    width: 200px;
+    height: 200px; 
+    font-weight: bold;
+    position: relative;
+    --x: 1;
+    aspect-ratio: 1 / 1; /* Forces square shape */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     
+    /* Style for the number */
+    .number {
+      font-size: min(5vh, 5vw);
+      font-weight: 800;
+    }
+    
+    /* Style for the text */
+    .text {
+      font-size: min(2.5vh, 2.5vw);
+    }
+    
+    &::after {
+      background: url("/background.svg");
+      background-size: 100% 100%;
+      border-radius: 1em;
+      content: ' ';
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      z-index: -1;
+      transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
+    }
+  }
+}
+
+.statsHeader {
+  font-size: 2.7rem;
+  color: #000;
+  margin-bottom: 15px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.big-stat {
+  margin: 20px auto;
+  display: flex;
+  align-items: left;
+  width: 75%;
+  
+  div {
+    height: 100%;
+    
+    img {
+      height: 200px;
+      width: auto;
+    }
+  }
+  
+  span {
+    font-weight: bold;
+    font-size: min(4vh, 4vw);
+    text-align: start;
+  }
+}
+
+/* Media queries for different screen sizes */
+@media (max-width: 1200px) {
+  .stats {
+    width: 85%;
+    gap: 15%;
+  }
+}
+
+@media (max-width: 992px) {
+  .stats {
+    width: 70%;
+    gap: 8%;
+    
     div {
-      padding: 0.75em;
-      font-weight: bold;
-      position: relative;
-      --x: 1;
-      aspect-ratio: 1 / 1; /* Forces square shape */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      padding: 0.5em;
       
-      /* Style for the number */
       .number {
-        font-size: min(5vh, 5vw);
-        font-weight: 800;
-        margin-bottom: 0.25em;
+        font-size: min(4.5vh, 4.5vw);
       }
       
-      /* Style for the text */
       .text {
-        font-size: min(2.5vh, 2.5vw);
-      }
-      
-      &::after {
-        background: url("/background.svg");
-        background-size: 100% 100%;
-        border-radius: 1em;
-        content: ' ';
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0%;
-        left: 0%;
-        z-index: -1;
-        transform: rotateX(calc(mod(var(--x), 2) * 180deg)) rotateY(calc(mod(var(--x), 3) * 180deg));
+        font-size: min(2vh, 2vw);
       }
     }
   }
-
-  .statsHeader {
-    font-size: 2.7rem;
-    color: #000;
-    margin-bottom: 15px;
-    font-weight: 800;
-    text-align: center;
 }
 
-  .big-stat {
-    margin: 20px auto;
-    display: flex;
-    align-items: center;
-    width: 75%;
+@media (max-width: 768px) {
+  .crt {
+    display: none;
+  }
+
+  .stats {
+    width: 80%;
+    gap: 5%;
     
     div {
-      height: 100%;
+      .number {
+        font-size: min(5vh, 5vw);
+      }
+      
+      .text {
+        font-size: min(2.5vh, 2.5vw);
+      }
+    }
+  }
+  
+  .statsHeader {
+    font-size: 2.2rem; 
+    margin-bottom: 20px;
+  }
+  
+  .big-stat {
+    div {
+      img {
+        height: 150px;
+      }
+    }
+  }
+}
+
+/* Mobile view - Switchs to column layout */
+@media (max-width: 600px) {
+  .stats {
+    grid-template-columns: 1fr; 
+    width: 85%;
+    gap: 20px; 
+    padding: 1em;
+    
+    div {
+      padding: 1em;
+      width: 200px;
+      height: 200px; 
+      margin: 0 auto; 
+      aspect-ratio: auto; 
+      
+      .number {
+        font-size: 2.5rem; 
+      }
+      
+      .text {
+        font-size: 1.2rem; 
+        text-align: center;
+        max-width: 90%; 
+      }
+    }
+  }
+  
+  .big-stat {
+    flex-direction: column; 
+    width: 85%;
+    text-align: left; 
+    align-items: flex-start; 
+    gap: 15px;
+    
+    div {
+      width: 100%; 
+      height: auto;
       
       img {
-        height: 200px;
-        width: auto;
+        height: 150px;
+        margin: 0; 
+        display: block; 
       }
     }
     
     span {
-      font-weight: bold;
-      font-size: min(4vh, 4vw);
-      text-align: start;
+      font-size: 1.6rem; 
+      text-align: left; 
     }
   }
-  
-  
-  /* Media queries for different screen sizes */
-  @media (max-width: 1200px) {
-    .stats {
-      width: 85%;
-      gap: 15%;
-    }
-  }
-  
-  @media (max-width: 992px) {
-    .stats {
-      width: 70%;
-      gap: 8%;
-      
-      div {
-        padding: 0.5em;
-        
-        .number {
-          font-size: min(4.5vh, 4.5vw);
-        }
-        
-        .text {
-          font-size: min(2vh, 2vw);
-        }
-      }
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .stats {
-        width: 70%;
-        gap: 5%;
-      
-      div {
-        .number {
-          font-size: min(4vh, 4vw);
-        }
-        
-        .text {
-          font-size: min(1.8vh, 1.8vw);
-        }
-      }
-    }
+}
 
-    .statsHeader {
-        font-size: 1.8rem;
+/* Extra small devices */
+@media (max-width: 460px) {
+  .stats div {
+    width: 130px;
+    height: 130px; 
+    padding: 0.8em;
+    
+    .number {
+      font-size: 2.2rem;
     }
-
-    .big-stat {
-        div {
-          img {
-            height: 150px; 
-          }
-        }
+    
+    .text {
+      font-size: 1.1rem;
     }
   }
   
-  @media (max-width: 500px) {
-    .stats {
-      gap: 5%;
-      width: 90%;
-      
-      div {
-        padding: 0.4em;
-      }
+  .statsHeader {
+    font-size: 1.8rem;
+  }
+  
+  .big-stat {
+    div img {
+      height: 130px;
     }
-
-    .big-stat {
-        div {
-          img {
-            height: 130px;
-          }
-        }
+    
+    span {
+      font-size: 1.4rem;
     }
   }
+}
+
+/* Very small devices */
+@media (max-width: 320px) {
+  .stats div {
+    width: 130px; 
+    height: 130px; 
+    
+    .number {
+      font-size: 2rem;
+    }
+    
+    .text {
+      font-size: 1rem;
+    }
+  }
+}
