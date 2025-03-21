@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { DotButton, useDotButton } from "./CarouselDotButtons";
 import {
   PrevButton,
   NextButton,
@@ -44,11 +43,6 @@ const TeamCarousel = (props) => {
 
     resetOrStop();
   }, []);
-
-  const { selectedIndex, scrollSnaps, onDotButtonClick } = useDotButton(
-    carouselApi,
-    onNavButtonClick,
-  );
 
   const {
     prevBtnDisabled,
@@ -106,46 +100,37 @@ const TeamCarousel = (props) => {
           <span>Meet Our Team</span>
         </h2>
 
-        <div className={styles.carousel__viewport} ref={carouselRef}>
-          <div className={styles.carousel__container}>
-            {teamGroups.map((group, index) => (
-              <div className={styles.carousel__slide} key={index}>
-                {group.map((member, memberIndex) => (
-                  <TeamMemberCard
-                    key={`${index}-${memberIndex}`}
-                    member={member}
-                    className="team-card-container"
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.carousel__controls}>
-          <div className={styles.carousel__buttons}>
+        <div className={styles.carousel__wrapper}>
+          {/* Left Button */}
+          <div className={styles.carousel__button_left}>
             <PrevButton
               onClick={onPrevButtonClick}
               disabled={prevBtnDisabled}
             />
+          </div>
+
+          <div className={styles.carousel__viewport} ref={carouselRef}>
+            <div className={styles.carousel__container}>
+              {teamGroups.map((group, index) => (
+                <div className={styles.carousel__slide} key={index}>
+                  {group.map((member, memberIndex) => (
+                    <TeamMemberCard
+                      key={`${index}-${memberIndex}`}
+                      member={member}
+                      className="team-card-container"
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Button */}
+          <div className={styles.carousel__button_right}>
             <NextButton
               onClick={onNextButtonClick}
               disabled={nextBtnDisabled}
             />
-          </div>
-
-          <div className={styles.carousel__dots}>
-            {scrollSnaps.map((_, index) => (
-              <DotButton
-                key={index}
-                onClick={() => onDotButtonClick(index)}
-                className={`${styles.carousel__dot} ${
-                  index === selectedIndex
-                    ? styles["carousel__dot--selected"]
-                    : ""
-                }`}
-              />
-            ))}
           </div>
         </div>
       </section>
