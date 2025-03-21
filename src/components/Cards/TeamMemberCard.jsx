@@ -11,7 +11,7 @@ const TeamMemberCard = ({ member }) => {
 
   useEffect(() => {
     // Try to determine the correct image path
-    const possibleExtensions = ["png", "svg", "jpg", "jpeg", "webp"];
+    const possibleExtensions = ["svg"];
     const baseName = member.pic.split("/").pop().split(".")[0];
 
     // Function to check if image exists
