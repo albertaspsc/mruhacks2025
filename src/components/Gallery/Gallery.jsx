@@ -1,8 +1,8 @@
 import Image from "next/image";
 import React from "react";
-import photo1 from "../../assets/gallery/event-photo1.jpg";
-import photo2 from "../../assets/gallery/event-photo2.jpg";
-import photo3 from "../../assets/gallery/event-photo3.jpg";
+import photo1 from "../../assets/gallery/event-photo1.svg";
+import photo2 from "../../assets/gallery/event-photo2.svg";
+import photo3 from "../../assets/gallery/event-photo3.svg";
 import styles from "./Gallery.module.css";
 
 export default function Gallery() {

@@ -24,7 +24,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
   width: 100%;
 }
 
@@ -35,6 +34,7 @@
   color: #000;
   margin-bottom: 10px;
   line-height: 1.1;
+  text-align: left;
 }
 
 /* Highlighted 'MRUHacks' */
@@ -50,6 +50,7 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 12px;
+  text-align: left;
 }
 
 /* Event Date */
@@ -57,6 +58,7 @@
   font-size: 1.2rem;
   color: #777;
   margin-bottom: 16px;
+  text-align: left;
 }
 
 /* Description */
@@ -68,24 +70,6 @@
   max-width: 600px;
   text-align: left;
   margin: 0 auto;
-}
-
-/* Read More / Read Less */
-.readMoreButton {
-  display: inline-block;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-decoration: underline;
-  transition: opacity 0.3s ease;
-  margin-top: 5px;
-}
-
-.readMoreButton:hover {
-  opacity: 0.7;
 }
 
 /* Image Section */
@@ -118,31 +102,26 @@
   border-radius: 50px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgb(0, 0, 0);
   position: relative;
   overflow: hidden;
   margin-top: 20px;
 }
 
-/* Glare Effect */
-.glareEffect {
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 150%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0) 30%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  transform: skewX(-20deg);
-  transition: left 0.5s ease-in-out;
+.ctaButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
 }
 
-.ctaButton:hover .glareEffect {
-  left: 150%;
+.ctaButton:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(255, 255, 255, 0.4); /* Slight reduction in glow when pressed */
+}
+
+.buttonText {
+  margin-right: 12px;
 }
 
 /* Responsive Adjustments */
@@ -152,9 +131,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: left;
     gap: 30px;
     width: 100%;
+    padding: 15px 3%; /* Reduced side padding */
   }
 
   .textContainer {
@@ -162,46 +142,59 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    text-align: left;
     width: 100%;
-    padding: 0 5%;
+    padding: 0 3%; /* Reduced side padding */
   }
 
   .description {
-    text-align: center;
-    max-width: 90%;
+    text-align: left;
+    max-width: 100%; /* Increased from 90% */
+    width: 100%; /* Added width property */
     font-size: 1rem;
     line-height: 1.6;
   }
 
-  .readMoreButton {
-    display: block;
-    margin: 10px auto;
-    font-size: 1rem;
+  /* Other styles remain the same */
+}
+
+@media (min-width: 385px) and (max-width: 400px) {
+  .container {
+    padding: 15px 2%; /* Further reduced padding */
   }
 
-  .imageContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .mainHeading {
+    font-size: 2rem;
+  }
+
+  .highlight {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #000;
+  }
+
+  .subHeading {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .textContainer {
+    padding: 0 2%; /* Further reduced padding */
+  }
+
+  .description {
+    max-width: 100%;
     width: 100%;
-  }
-
-  .welcomeImage {
-    max-width: 90%;
-    height: auto;
-    object-fit: contain;
-  }
-
-  .ctaButton {
-    width: 80%;
-    padding: 14px 28px;
-    font-size: 1.2rem;
+    font-size: 1rem; /* Slightly larger font for better readability */
+    padding: 0;
   }
 }
 
-/* Ultra-Mobile Optimization for ≤480px */
-@media (max-width: 400px) {
+/* Ultra-Mobile Optimization for <385px */
+@media (max-width: 384px) {
   .container {
     display: flex;
     flex-direction: column;
@@ -210,7 +203,7 @@
     text-align: center;
     width: 100%;
     gap: 20px;
-    padding: 20px 5%;
+    padding: 15px 2%; /* Reduced from 5% */
   }
 
   .textContainer {
@@ -220,59 +213,17 @@
     justify-content: center;
     text-align: center;
     width: 100%;
-    padding: 0 5%;
-  }
-
-  .mainHeading {
-    font-size: 2.2rem; /* Reduce heading size for small screens */
-    line-height: 1.2;
-  }
-
-  .highlight {
-    font-size: 2.5rem; /* Ensure highlighted text fits */
-  }
-
-  .subHeading {
-    font-size: 1.5rem;
-  }
-
-  .eventDate {
-    font-size: 1rem;
+    padding: 0 2%; /* Reduced from 5% */
   }
 
   .description {
-    text-align: center;
-    max-width: 95%;
-    font-size: 0.95rem; /* Reduce text size for readability */
+    text-align: left;
+    max-width: 100%; /* Increased from 95% */
+    width: 100%; /* Added width property */
+    font-size: 0.95rem;
     line-height: 1.6;
+    padding: 0; /* Ensure no extra padding */
   }
 
-  .readMoreButton {
-    font-size: 0.9rem;
-    padding: 6px 12px;
-  }
-
-  .imageContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-
-  .welcomeImage {
-    max-width: 95%;
-    height: auto;
-    object-fit: contain;
-    border-radius: 12px;
-  }
-
-  .ctaButton {
-    width: 90%;
-    padding: 12px 24px;
-    font-size: 1rem; /* Reduce size slightly for small screens */
-  }
-
-  .glareEffect {
-    width: 120%;
-  }
+  /* Other styles remain the same */
 }

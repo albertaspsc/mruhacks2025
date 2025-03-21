@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./Sponsor.module.scss";
 import crt2 from "../../assets/mascots/crt2.png";
 import Image from "next/image";
@@ -8,6 +8,8 @@ import library from "../../assets/sponsors/mrulibrary.webp";
 import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
+  const [showPopup, setShowPopup] = useState(false);
+
   const sponsors = [
     { img: acurve, href: "https://www.arcurve.com" },
     {
@@ -16,6 +18,16 @@ export default function Sponsor() {
     },
     { img: library, href: "https://library.mtroyal.ca" },
   ];
+
+  const handleSponsorClick = (e) => {
+    e.preventDefault();
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
   return (
     <>
       <div className={styles.container}>
@@ -32,7 +44,7 @@ export default function Sponsor() {
           </div>
         </div>
         <div className={styles["become-sponsor-container"]}>
-          <a href="mailto:mramz980@mtroyal.ca">
+          <a href="#" onClick={handleSponsorClick}>
             <span>Become a sponsor</span>
             <Image src={arrowIcon} alt="arrow left" />
           </a>
@@ -41,6 +53,23 @@ export default function Sponsor() {
           </div>
         </div>
       </div>
+
+      {/* Email Popup */}
+      {showPopup && (
+        <div className={styles.popupOverlay} onClick={closePopup}>
+          <div className={styles.popup} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.closeButton} onClick={closePopup}>
+              ×
+            </button>
+            <h2>Interested in Sponsoring?</h2>
+            <p>Please send your sponsorship inquiry to:</p>
+            <p className={styles.email}>mramz980@mtroyal.ca</p>
+            <p className={styles.note}>
+              We'll get back to you as soon as possible!
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

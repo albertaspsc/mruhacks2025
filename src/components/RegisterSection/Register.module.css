@@ -77,7 +77,6 @@
 
 .registerButton:hover {
   transform: translateY(-3px);
-  color: gray;
   box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
 }
 
