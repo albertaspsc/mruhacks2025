@@ -113,3 +113,29 @@
     font-size: 1rem;
   }
 }
+
+/* Extra small screens (309px and below) */
+@media (max-width: 309px) {
+  .registerButton {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .dateText {
+    font-size: 0.9rem;
+  }
+
+  .logoContainer {
+    max-width: 90%;
+  }
+
+  .logo {
+    max-width: 75%;
+  }
+
+  .buttonContainer {
+    margin: 0.75rem;
+  }
+}
