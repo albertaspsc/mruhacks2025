@@ -9,7 +9,7 @@
 
 .gallery-image {
   height: auto;
-  width: 35vh;
+  width: 35vw;
   box-sizing: border-box;
   border: 1.1em solid white;
   /* box-shadow: #0000007f 5px 5px 4px; */
