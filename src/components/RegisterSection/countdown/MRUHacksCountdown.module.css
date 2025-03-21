@@ -77,3 +77,48 @@
     height: auto;
   }
 }
+
+@media (max-width: 380px) {
+  .hackathonCountdown {
+    padding: 1rem 0.5rem; /* Reduce padding */
+  }
+
+  .cardContainer {
+    flex-direction: row;
+    gap: 0.5rem; /* Tighten the gap between cards */
+    justify-content: center; /* Center the cards */
+    width: 100%; /* Full width */
+  }
+
+  .card {
+    width: 22%; /* Smaller width to fit more compactly */
+    padding: 0.5rem 0.75rem; /* Reduce padding */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .countdownValue {
+    font-size: 1.2rem; /* Smaller font size */
+    margin-bottom: 0.25rem;
+    text-align: center;
+  }
+
+  .countdownUnit {
+    font-size: 0.4rem; /* Tiny font for units */
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .countdownInfo {
+    font-size: 0.8rem; /* Smaller info text */
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .separator {
+    font-size: 1rem; /* Smaller separator */
+    margin: 0 0.25rem;
+  }
+}
