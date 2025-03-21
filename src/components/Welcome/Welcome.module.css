@@ -5,7 +5,7 @@
   align-items: center;
   padding: 30px 5%;
   color: black;
-  text-align: center;
+  text-align: left; /* Changed from center */
 }
 
 /* Grid Layout */
@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to left-align items */
   width: 100%;
 }
 
@@ -35,6 +35,7 @@
   margin-bottom: 10px;
   line-height: 1.1;
   text-align: left;
+  width: 100%; /* Ensure full width */
 }
 
 /* Highlighted 'MRUHacks' */
@@ -42,6 +43,8 @@
   font-size: 4.5rem;
   font-weight: 900;
   color: #000;
+  text-align: left;
+  width: 100%; /* Ensure full width */
 }
 
 /* Subheading */
@@ -51,6 +54,7 @@
   color: #333;
   margin-bottom: 12px;
   text-align: left;
+  width: 100%; /* Ensure full width */
 }
 
 /* Event Date */
@@ -59,6 +63,7 @@
   color: #777;
   margin-bottom: 16px;
   text-align: left;
+  width: 100%; /* Ensure full width */
 }
 
 /* Description */
@@ -66,26 +71,10 @@
   font-size: 1.1rem;
   color: #444;
   line-height: 1.8;
-  width: 90%;
+  width: 100%; /* Changed from 90% to full width */
   max-width: 600px;
   text-align: left;
-  margin: 0 auto;
-}
-
-/* Image Section */
-.imageContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Image */
-.welcomeImage {
-  width: 100%;
-  height: auto;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin: 0; /* Remove auto margin */
 }
 
 /* Call-To-Action Button */
@@ -129,7 +118,7 @@
   .container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Changed from center */
     justify-content: center;
     text-align: left;
     gap: 30px;
@@ -140,55 +129,47 @@
   .textContainer {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Changed from center */
     justify-content: center;
     text-align: left;
     width: 100%;
     padding: 0 3%; /* Reduced side padding */
   }
 
-  .description {
+  .mainHeading {
     text-align: left;
-    max-width: 100%; /* Increased from 90% */
-    width: 100%; /* Added width property */
-    font-size: 1rem;
-    line-height: 1.6;
   }
 
-  /* Other styles remain the same */
+  .description {
+    text-align: left;
+    max-width: 100%;
+    width: 100%;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0; /* Remove any auto margin */
+  }
 }
 
 @media (min-width: 385px) and (max-width: 400px) {
   .container {
     padding: 15px 2%; /* Further reduced padding */
-  }
-
-  .mainHeading {
-    font-size: 2rem;
-  }
-
-  .highlight {
-    font-size: 1.9rem;
-    font-weight: 900;
-    color: #000;
-  }
-
-  .subHeading {
-    font-size: 1.7rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 12px;
-    text-align: left;
+    align-items: flex-start; /* Ensure left alignment */
   }
 
   .textContainer {
     padding: 0 2%; /* Further reduced padding */
+    align-items: flex-start; /* Ensure left alignment */
+  }
+
+  .mainHeading {
+    text-align: left;
   }
 
   .description {
     max-width: 100%;
     width: 100%;
-    font-size: 1rem; /* Slightly larger font for better readability */
+    font-size: 1rem;
+    margin: 0; /* Remove any auto margin */
     padding: 0;
   }
 }
@@ -196,34 +177,35 @@
 /* Ultra-Mobile Optimization for <385px */
 @media (max-width: 384px) {
   .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    gap: 20px;
-    padding: 15px 2%; /* Reduced from 5% */
+    align-items: flex-start; /* Ensure left alignment */
+    padding: 10px 2%;
+  }
+
+  .mainHeading {
+    font-size: 1.5rem;
+  }
+
+  .highlight {
+    font-size: 1.8rem;
+  }
+
+  .subHeading {
+    font-size: 1.3rem;
   }
 
   .textContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    padding: 0 2%; /* Reduced from 5% */
+    align-items: flex-start; /* Ensure left alignment */
+    text-align: left;
+    padding: 0 2%;
   }
 
   .description {
     text-align: left;
-    max-width: 100%; /* Increased from 95% */
-    width: 100%; /* Added width property */
+    max-width: 100%;
+    width: 100%;
     font-size: 0.95rem;
     line-height: 1.6;
-    padding: 0; /* Ensure no extra padding */
+    margin: 0; /* Remove any auto margin */
+    padding: 0;
   }
-
-  /* Other styles remain the same */
 }
