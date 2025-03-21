@@ -8,10 +8,8 @@ div.become-sponsor-container {
     @media (max-width: 500px) {
         margin-bottom: 3em;
         div {
-        top: 50%;
-            
+            top: 50%;    
         }
-        
     }
 
     @media (max-width: 600px) {
@@ -23,14 +21,22 @@ div.become-sponsor-container {
         }
     }
 
+    /* For very small screens */
+    @media (max-width: 360px) {
+        a {
+            font-size: 1rem !important; 
+            padding: 0.5em 1.5em !important; 
+            white-space: nowrap; 
+            letter-spacing: normal; 
+        }
+    }
+
     div {
         position: absolute;
         height: 20vw;
         width: auto;
         right: min(10%, 5vw);
         
-
-
         img {
             height: max(100%, 25vh);
             width: auto;
@@ -41,17 +47,22 @@ div.become-sponsor-container {
         appearance: none;
         background: linear-gradient(0.25turn, #4050FF, #A47CFF);
         border: none;
-        padding: 1em 2em;
-        border-radius: 10em;
+        padding: 0.5em 2em;
+        border-radius: 30px;
         color: white;
+        font-size: 1.5rem;
+        font-weight: 300;
         box-shadow: 0px -1px 20px 4px #C3AFFF;
         cursor: pointer;
         transition: all 0.3s ease-in-out;
         display: flex;
+        align-items: center; 
         gap: 5px;
         text-decoration: none;
+
         span {
-            align-content: center;
+            display: flex; 
+            align-items: center;
         }
 
         &:hover {
@@ -64,9 +75,14 @@ div.become-sponsor-container {
             filter: brightness(10) drop-shadow( 0px 0px 2px white);
         }
     }
-
 }
 
+@media (max-width: 320px) {
+    div.become-sponsor-container a {
+        font-size: 0.9rem !important; 
+        padding: 0.5em 1.2em !important; 
+    }
+}
 
 div.sponsors {
     padding: 2em;
@@ -88,10 +104,9 @@ div.sponsors {
         background-color: white;
         box-shadow: #0000003b 3px 3px 4px 2px;
         border-radius: 0.7em;
-        padding: 1em;
+        padding: 1.5em;
         display: flex;
         align-items: center;
-        padding: 1.5em;
         transition: all ease-in-out 0.4s;
 
         img {
@@ -104,9 +119,19 @@ div.sponsors {
             translate: -3px -3px;
             box-shadow: rgba(0, 0, 0, 0.231372549) 6px 6px 4px 2px;
         }
+        
+        /* Mobile view */
+        @media (max-width: 400px) {
+            .a {
+                border-radius: 20px;
+                padding: 0.5rem 1.75rem;
+                font-size: 0.5rem;
+            }
+        }
     }
 }
 
+/* Container styles */
 div.container {
     display: flex;
     flex-direction: column;
@@ -118,6 +143,7 @@ div.container {
         padding: 0 1em;
         font-size: 2.8rem;
     }
+    
     @media (max-width: 500px) {
         h1 {
             font-size: 1.8rem;
@@ -139,10 +165,10 @@ div.container {
     z-index: 1000;
     backdrop-filter: blur(5px);
     animation: fadeIn 0.3s ease-in-out;
-  }
+}
   
-  // Popup container
-  .popup {
+// Popup container
+.popup {
     background: white;
     border-radius: 16px;
     padding: 2rem;
@@ -155,20 +181,20 @@ div.container {
     border: 2px solid #A47CFF;
     
     h2 {
-      color: #4050FF;
-      margin-bottom: 1.5rem;
-      font-size: 1.8rem;
+        color: #4050FF;
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
     }
     
     p {
-      margin-bottom: 0.8rem;
-      font-size: 1.1rem;
-      line-height: 1.5;
+        margin-bottom: 0.8rem;
+        font-size: 1.1rem;
+        line-height: 1.5;
     }
-  }
+}
   
-  // Close button
-  .closeButton {
+// Close button
+.closeButton {
     position: absolute;
     top: 15px;
     right: 15px;
@@ -185,13 +211,13 @@ div.container {
     border-radius: 50%;
     
     &:hover {
-      background-color: #f0f0f0;
-      color: #4050FF;
+        background-color: #f0f0f0;
+        color: #4050FF;
     }
-  }
+}
   
-  // Email address styling
-  .email {
+// Email address styling
+.email {
     font-weight: bold;
     font-size: 1.3rem !important;
     color: #4050FF;
@@ -204,51 +230,51 @@ div.container {
     margin: 1rem 0;
     border-radius: 8px;
     border: 1px dashed #A47CFF;
-  }
+}
   
-  // Note at the bottom
-  .note {
+// Note at the bottom
+.note {
     color: #666;
     font-size: 0.95rem !important;
     margin-top: 1rem;
-  }
+}
   
-  // Animations
-  @keyframes fadeIn {
+// Animations
+@keyframes fadeIn {
     from {
-      opacity: 0;
+        opacity: 0;
     }
     to {
-      opacity: 1;
+        opacity: 1;
     }
-  }
+}
   
-  @keyframes scaleIn {
+@keyframes scaleIn {
     from {
-      transform: scale(0.9);
-      opacity: 0;
+        transform: scale(0.9);
+        opacity: 0;
     }
     to {
-      transform: scale(1);
-      opacity: 1;
+        transform: scale(1);
+        opacity: 1;
     }
-  }
+}
   
-  // Media queries for mobile responsiveness
-  @media (max-width: 500px) {
+// Media queries for mobile responsiveness
+@media (max-width: 500px) {
     .popup {
-      padding: 1.5rem;
-      
-      h2 {
-        font-size: 1.5rem;
-      }
-      
-      p {
-        font-size: 1rem;
-      }
-      
-      .email {
-        font-size: 1.1rem !important;
-      }
+        padding: 1.5rem;
+        
+        h2 {
+            font-size: 1.5rem;
+        }
+        
+        p {
+            font-size: 1rem;
+        }
+        
+        .email {
+            font-size: 1.1rem !important;
+        }
     }
-  }
+}
