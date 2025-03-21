@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./Stats.module.scss";
-import crt from "../../assets/mascots/crt.png";
+import crt from "../../assets/mascots/crt.svg";
 import Image from "next/image";
 
 export default function Stats() {

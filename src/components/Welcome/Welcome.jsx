@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./Welcome.module.css";
-import welcomeImage from "../../assets/graphics/welcome-component.png";
+import welcomeImage from "../../assets/graphics/welcome-component.svg";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 import AOS from "aos";

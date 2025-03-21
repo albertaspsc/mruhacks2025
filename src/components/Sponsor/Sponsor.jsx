@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "./Sponsor.module.scss";
-import crt2 from "../../assets/mascots/crt2.png";
+import crt2 from "../../assets/mascots/crt2.svg";
 import Image from "next/image";
 import acurve from "../../assets/sponsors/arcurve_logo_2024_color_large.webp";
 import institute from "../../assets/sponsors/Institute.webp";
