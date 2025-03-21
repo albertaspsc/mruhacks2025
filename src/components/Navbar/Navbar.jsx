@@ -105,13 +105,6 @@ const Navbar = () => {
         >
           <div className={styles.navContainer}>
             <a
-              href="#register"
-              className={`${styles.navLink} ${isActive("register") ? styles.active : ""}`}
-              onClick={(e) => scrollToSection("register", e)}
-            >
-              Register
-            </a>
-            <a
               href="#about"
               className={`${styles.navLink} ${isActive("about") ? styles.active : ""}`}
               onClick={(e) => scrollToSection("about", e)}
