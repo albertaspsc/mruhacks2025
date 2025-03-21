@@ -54,7 +54,7 @@
   color: #000;
   margin-bottom: 2px;
   font-weight: 800;
-  text-align: right;
+  text-align: left;
 }
 
 /* Paragraph description styling */
@@ -62,7 +62,7 @@
   font-size: 1rem;
   line-height: 1.8;
   color: #333;
-  text-align: right;
+  text-align: left;
 }
 
 /* Background image container - positioned centrally behind content */
@@ -133,7 +133,7 @@
     position: relative;
     padding: 20px;
     order: -1;
-    text-align: center;
+    text-align: left;
     color: #000; /* Ensures text readability over gradient */
   }
 
@@ -145,7 +145,7 @@
   .description {
     font-size: 1rem;
     line-height: 1.6;
-    text-align: right;
+    text-align: left;
   }
 
   /* Completely hides decorative horizontal background image */
