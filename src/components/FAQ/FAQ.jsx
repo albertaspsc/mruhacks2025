@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./FAQ.module.css";
@@ -23,7 +23,7 @@ const faqs = [
   {
     question: "Who can participate?",
     answer:
-      "MRUHacks is open to any and all post-secondary students! Graduated recently? No worries, you’re invited too!",
+      "MRUHacks is open to any and all post-secondary students! Graduated recently? No worries, you're invited too!",
   },
   {
     question: "How many people can be on a team?",
@@ -38,7 +38,7 @@ const faqs = [
   {
     question: "What if I've never hackathon'd before?",
     answer:
-      "MRUHacks is open to everyone no matter their skill level. This is the place for you, whether you’re new to coding or a seasoned veteran. Still worried? Stay tuned for a series of workshops to help you brush up on your skills.",
+      "MRUHacks is open to everyone no matter their skill level. This is the place for you, whether you're new to coding or a seasoned veteran. Still worried? Stay tuned for a series of workshops to help you brush up on your skills.",
   },
   {
     question: "When do applications open?",
@@ -53,21 +53,7 @@ const faqs = [
 ];
 
 const FAQ = () => {
-  const [openIndex, setOpenIndex] = useState(null);
-  const [showAll, setShowAll] = useState(false);
-  const [isSingleColumn, setIsSingleColumn] = useState(false);
-  const faqContainerRef = useRef(null); // Reference to FAQ section
-
-  //  Ensure GSAP only applies animation when elements exist
-  useEffect(() => {
-    const updateLayout = () => {
-      setIsSingleColumn(window.innerWidth <= 900);
-    };
-
-    updateLayout();
-    window.addEventListener("resize", updateLayout);
-    return () => window.removeEventListener("resize", updateLayout);
-  }, []);
+  const faqContainerRef = useRef(null);
 
   useEffect(() => {
     if (!faqContainerRef.current) return;
@@ -76,16 +62,16 @@ const FAQ = () => {
     if (faqItems.length > 0) {
       gsap.fromTo(
         faqItems,
-        { opacity: 0, y: 20 },
+        { opacity: 0, y: 10 }, // Reduced y value for faster appearance
         {
           opacity: 1,
           y: 0,
-          stagger: 0.1,
-          duration: 0.8,
+          stagger: 0.05, // Reduced stagger time
+          duration: 0.4, // Reduced duration
           scrollTrigger: {
             trigger: faqContainerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
+            start: "top 90%", // Show sooner
+            toggleActions: "play none none none",
             once: true,
           },
         },
@@ -93,73 +79,39 @@ const FAQ = () => {
     }
   }, []);
 
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-
   return (
     <section
       ref={faqContainerRef}
       className={styles.faqSection}
       style={{ backgroundImage: `url(${faqBackground.src})` }}
+      id="faq"
     >
       <div className={styles.container}>
         <motion.h2
           className={styles.heading}
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.4 }} // Faster animation
         >
           FAQ
         </motion.h2>
 
         <div className={styles.faqList}>
-          {faqs
-            .slice(0, isSingleColumn && !showAll ? 4 : faqs.length)
-            .map((faq, index) => (
-              <motion.div
-                key={index}
-                className={`${styles.faqItem} faqItem ${openIndex === index ? styles.open : ""}`}
-                onClick={() => toggleFAQ(index)}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <div className={styles.question}>
-                  <span
-                    className={styles.singleLine}
-                    dangerouslySetInnerHTML={{ __html: faq.question }}
-                  ></span>
-                  <span className={styles.arrow}>
-                    {openIndex === index ? "▲" : "▼"}
-                  </span>
-                </div>
-                <AnimatePresence>
-                  {openIndex === index && (
-                    <motion.p
-                      className={styles.answer}
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      dangerouslySetInnerHTML={{ __html: faq.answer }}
-                    />
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
+          {faqs.map((faq, index) => (
+            <details key={index} className={`${styles.faqItem} faqItem`}>
+              <summary className={styles.question}>
+                <span
+                  className={styles.questionText}
+                  dangerouslySetInnerHTML={{ __html: faq.question }}
+                />
+              </summary>
+              <div
+                className={styles.answer}
+                dangerouslySetInnerHTML={{ __html: faq.answer }}
+              />
+            </details>
+          ))}
         </div>
-
-        {isSingleColumn && (
-          <motion.button
-            className={`${styles.toggleButton} ${styles.glareEffectButton}`}
-            onClick={() => setShowAll(!showAll)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {showAll ? "Show Less ▲" : "Show More ▼"}
-            <div className={styles.glareEffect}></div>
-          </motion.button>
-        )}
       </div>
     </section>
   );
