@@ -7,43 +7,22 @@ import fallbackImage from "../../assets/mascots/crt2.svg";
 
 const TeamMemberCard = ({ member }) => {
   const [imgSrc, setImgSrc] = useState("");
-  const [imgError, setImgError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Try to determine the correct image path
-    const possibleExtensions = ["svg"];
-    const baseName = member.pic.split("/").pop().split(".")[0];
+    // Reset state when member changes
+    setIsLoading(true);
 
-    // Function to check if image exists
-    const checkImageExists = async (ext) => {
-      const testPath = `/team/${baseName}.${ext}`;
-      try {
-        const response = await fetch(testPath, { method: "HEAD" });
-        return response.ok;
-      } catch {
-        return false;
-      }
-    };
+    // Use the filename directly from the member data
+    const imagePath = `/team/${member.pic}`;
 
-    // Find the first existing image
-    const findValidImage = async () => {
-      for (const ext of possibleExtensions) {
-        const exists = await checkImageExists(ext);
-        if (exists) {
-          setImgSrc(`/team/${baseName}.${ext}`);
-          return;
-        }
-      }
-      // Fallback if no image found
-      setImgSrc(fallbackImage.src);
-      setImgError(true);
-    };
-
-    findValidImage();
-  }, [member.pic]);
+    // Set the image source directly
+    setImgSrc(imagePath);
+    setIsLoading(false);
+  }, [member]);
 
   const handleImageError = () => {
-    setImgError(true);
+    console.log(`Failed to load image for ${member.name}: ${member.pic}`);
     setImgSrc(fallbackImage.src);
   };
 
@@ -52,7 +31,7 @@ const TeamMemberCard = ({ member }) => {
       <div className={styles.memberCardWrapper}>
         <div className={styles.memberCardInner}>
           <div className={styles.imageContainer}>
-            {imgSrc && (
+            {!isLoading && (
               <Image
                 src={imgSrc}
                 alt={member.name}
@@ -61,7 +40,8 @@ const TeamMemberCard = ({ member }) => {
                 width={150}
                 height={150}
                 style={{ objectFit: "cover" }}
-                unoptimized={imgError}
+                priority={true}
+                key={`${member.name}-${member.pic}`} // Include pic in key for better uniqueness
               />
             )}
           </div>
