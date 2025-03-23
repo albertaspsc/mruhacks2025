@@ -12,8 +12,9 @@ try {
 
 const sharp = require("sharp");
 
-const SVG_DIR = "src/assets/mascots";
-const OUTPUT_DIR = "src/assets/mascots-op";
+// Update to your correct paths
+const SVG_DIR = "src/assets/gallery";
+const OUTPUT_DIR = "src/assets/gallery-op";
 
 // Create output directory if it doesn't exist
 if (!fs.existsSync(OUTPUT_DIR)) {
@@ -53,34 +54,84 @@ async function processFiles() {
       // Decode base64 to buffer
       const imageBuffer = Buffer.from(base64Match[1], "base64");
 
-      // Optimize the PNG using sharp
+      // Get image dimensions
+      const metadata = await sharp(imageBuffer).metadata();
+
+      // Calculate target size based on original size
+      let quality = 75; // Start with good quality
+      let targetWidth = 700; // Decent resolution for team photos
+
+      // Adjust settings to target <300KB
+      if (originalSize > 2000000) {
+        // >2MB files
+        targetWidth = 650;
+        quality = 65;
+      } else if (originalSize > 1000000) {
+        // >1MB files
+        targetWidth = 700;
+        quality = 70;
+      }
+
+      // Optimize with adaptive settings
       const optimizedBuffer = await sharp(imageBuffer)
-        .resize(800) // Resize to a reasonable size for mobile
-        .png({ quality: 75, compressionLevel: 9 })
+        .resize(targetWidth)
+        .png({ quality: quality, compressionLevel: 9 })
         .toBuffer();
 
-      // Re-encode to base64
-      const optimizedBase64 = optimizedBuffer.toString("base64");
+      // Check final size and adjust again if needed
+      if (optimizedBuffer.length > 307200) {
+        // If still >300KB
+        const furtherOptimizedBuffer = await sharp(optimizedBuffer)
+          .resize(Math.round(targetWidth * 0.9)) // Reduce by 10%
+          .png({ quality: quality - 5, compressionLevel: 9 })
+          .toBuffer();
 
-      // Replace the base64 data in the SVG
-      const optimizedSvgContent = svgContent.replace(
-        /xlink:href="data:image\/png;base64,[^"]+"/,
-        `xlink:href="data:image/png;base64,${optimizedBase64}"`,
-      );
+        // Use the further optimized version
+        const optimizedBase64 = furtherOptimizedBuffer.toString("base64");
 
-      // Write the optimized SVG
-      fs.writeFileSync(outputPath, optimizedSvgContent);
+        // Replace the base64 data in the SVG
+        const optimizedSvgContent = svgContent.replace(
+          /xlink:href="data:image\/png;base64,[^"]+"/,
+          `xlink:href="data:image/png;base64,${optimizedBase64}"`,
+        );
 
-      // Get optimized file size
-      const optimizedSize = fs.statSync(outputPath).size;
+        // Write the optimized SVG
+        fs.writeFileSync(outputPath, optimizedSvgContent);
 
-      // Calculate savings
-      const savings = originalSize - optimizedSize;
-      const percent = ((savings / originalSize) * 100).toFixed(2);
+        // Get optimized file size
+        const optimizedSize = fs.statSync(outputPath).size;
 
-      console.log(
-        `  ${file}: ${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(optimizedSize / 1024 / 1024).toFixed(2)}MB (saved ${(savings / 1024 / 1024).toFixed(2)}MB, ${percent}%)`,
-      );
+        // Calculate savings
+        const savings = originalSize - optimizedSize;
+        const percent = ((savings / originalSize) * 100).toFixed(2);
+
+        console.log(
+          `  ${file}: ${(originalSize / 1024).toFixed(2)}KB → ${(optimizedSize / 1024).toFixed(2)}KB (saved ${(savings / 1024).toFixed(2)}KB, ${percent}%)`,
+        );
+      } else {
+        // Re-encode to base64
+        const optimizedBase64 = optimizedBuffer.toString("base64");
+
+        // Replace the base64 data in the SVG
+        const optimizedSvgContent = svgContent.replace(
+          /xlink:href="data:image\/png;base64,[^"]+"/,
+          `xlink:href="data:image/png;base64,${optimizedBase64}"`,
+        );
+
+        // Write the optimized SVG
+        fs.writeFileSync(outputPath, optimizedSvgContent);
+
+        // Get optimized file size
+        const optimizedSize = fs.statSync(outputPath).size;
+
+        // Calculate savings
+        const savings = originalSize - optimizedSize;
+        const percent = ((savings / originalSize) * 100).toFixed(2);
+
+        console.log(
+          `  ${file}: ${(originalSize / 1024).toFixed(2)}KB → ${(optimizedSize / 1024).toFixed(2)}KB (saved ${(savings / 1024).toFixed(2)}KB, ${percent}%)`,
+        );
+      }
     } catch (error) {
       console.error(`  Error processing ${file}:`, error.message);
     }
