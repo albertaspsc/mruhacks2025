@@ -48,5 +48,5 @@ void main() {
 
   color = linearToSrgb(color);
   float noiseValue = step(0.5, random(pixelatedUV + mod(time, 2.0))) / 10.0;
-  fragColor = vec4(mix(baseColor, color + noiseValue, 0.8), 1.0);
+  fragColor = vec4(mix(baseColor, color, 0.8), 1.0);
 }
