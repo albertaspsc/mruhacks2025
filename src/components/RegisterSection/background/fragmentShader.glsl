@@ -26,7 +26,8 @@ vec3 lightColors[numLights] =
 
 void main() {
   vec2 pos = uv * resolution;
-  float pixelSize = resolution[0] / 2.0;
+  // Pixel size based on screen width (smaller for mobile)
+  float pixelSize = resolution[0] < 768.0 ? resolution[0] / 0.08 : resolution[0] / 2.0;
   vec2 pixelatedUV = floor(uv * pixelSize) / pixelSize;
   vec3 baseColor = srgbToLinear(vec3(252., 251., 244.) / 255.);
   vec3 color = baseColor;
