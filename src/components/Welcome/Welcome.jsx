@@ -5,15 +5,13 @@ import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./Welcome.module.css";
-import welcomeImage from "../../assets/graphics/welcome-component.svg";
+import welcomeImage from "../../assets/graphics/welcome-component.webp";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
 const Welcome = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
   }, []);
