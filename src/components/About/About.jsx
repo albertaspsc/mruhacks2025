@@ -7,7 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./About.module.css";
 import background from "../../assets/backgrounds/horizontal-bkg.svg";
-import aboutGraphic from "../../assets/graphics/about-component.svg";
+import aboutGraphic from "../../assets/graphics/about-component.webp";
 
 // Register GSAP plugin
 gsap.registerPlugin(ScrollTrigger);
