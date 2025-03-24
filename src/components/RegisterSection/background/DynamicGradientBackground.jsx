@@ -18,7 +18,7 @@ function createShader(gl, type, source) {
   return shader;
 }
 
-function createProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
+function createWebGlProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
   const fragmentShader = createShader(
     gl,
@@ -41,27 +41,24 @@ function createProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
 export default function Gradient({ ...props }) {
   const canvasRef = useRef(null);
   const glRef = useRef(null);
-  const programRef = useRef(null);
   const timeLocRef = useRef(null);
   const resLocRef = useRef(null);
 
-  // Resize handling with debounce
-  const resizeCanvas = useCallback(() => {
-    if (!canvasRef.current || !glRef.current) return;
+  const resizeCanvas = () => {
     const canvas = canvasRef.current;
     const gl = glRef.current;
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
 
-    // Update resolution uniform
+    gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     gl.uniform2f(resLocRef.current, canvas.width, canvas.height);
-  }, []);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const gl = (glRef.current ||= canvas?.getContext("webgl2"));
+    glRef.current = canvas.getContext("webgl2");
+    const gl = glRef.current;
 
     if (!gl) {
       console.error("Failed to init WebGL2 context");
@@ -69,11 +66,7 @@ export default function Gradient({ ...props }) {
     }
 
     // Set up shaders and program once
-    const program = (programRef.current ||= createProgram(
-      gl,
-      vertexShaderSrc,
-      fragmentShaderSrc,
-    ));
+    const program = createWebGlProgram(gl, vertexShaderSrc, fragmentShaderSrc);
 
     if (!program) {
       console.error("Failed to create WebGL2 program");
@@ -90,11 +83,13 @@ export default function Gradient({ ...props }) {
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Uniform locations
+    // Pass the variables into the shader
     timeLocRef.current = gl.getUniformLocation(program, "time");
     resLocRef.current = gl.getUniformLocation(program, "resolution");
 
-    resizeCanvas(); // Set initial canvas size
+    window.addEventListener("resize", resizeCanvas);
+    // Set initial canvas size
+    resizeCanvas();
 
     function render(time) {
       gl.uniform1f(timeLocRef.current, time * 0.001);
@@ -106,8 +101,9 @@ export default function Gradient({ ...props }) {
 
     return () => {
       gl.deleteProgram(program);
+      window.removeEventListener("resize", resizeCanvas);
     };
-  }, [resizeCanvas]);
+  }, []);
 
   return <canvas ref={canvasRef} {...props} />;
 }
