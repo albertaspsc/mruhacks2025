@@ -54,6 +54,8 @@
   backdrop-filter: blur(12px);
   border-radius: 8px;
   height: 100%;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .faqItem:hover {
@@ -68,12 +70,43 @@
   width: 100%;
   align-items: center;
   outline: none;
-  list-style: none; /* Remove default marker */
+  list-style: none !important; /* Force remove list style */
   font-weight: 600;
   position: relative;
   padding-right: 24px; /* Space for custom arrow */
   text-align: left;
   margin-bottom: 0;
+  -webkit-appearance: none; /* Safari appearance fix */
+}
+
+/* Hide the default marker in WebKit browsers (Safari, Chrome) */
+.question::-webkit-details-marker {
+  display: none !important;
+  content: "" !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+}
+
+/* Safari fix using class selectors for CSS modules compatibility */
+.faqItem .question {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style-type: none;
+  list-style-image: none;
+}
+
+.faqItem {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Question text */
+.questionText {
+  flex: 1;
 }
 
 /* Custom arrow indicator */
@@ -85,16 +118,12 @@
   transform: translateY(-50%);
   transition: transform 0.2s ease;
   font-size: 0.8rem;
+  pointer-events: none;
 }
 
 /* Rotate arrow when open - with proper CSS module scoping */
 .faqItemOpen .question::after {
   transform: translateY(-50%) rotate(180deg);
-}
-
-/* Question text */
-.questionText {
-  flex: 1;
 }
 
 /* Answer styles */
@@ -182,5 +211,17 @@
 
   .question {
     width: 100%;
+    margin-bottom: 0;
+    align-self: flex-start;
+  }
+
+  .faqList > div {
+    width: 100%;
+    align-self: start;
+  }
+
+  .faqItemOpen {
+    position: relative;
+    z-index: 2;
   }
 }
