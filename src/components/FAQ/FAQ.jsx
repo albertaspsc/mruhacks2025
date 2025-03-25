@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -54,6 +54,16 @@ const faqs = [
 
 const FAQ = () => {
   const faqContainerRef = useRef(null);
+  // Tracks which FAQ items are open
+  const [openItems, setOpenItems] = useState({});
+
+  // Handle toggle events for the FAQ items
+  const handleToggle = (index, isOpen) => {
+    setOpenItems((prev) => ({
+      ...prev,
+      [index]: isOpen,
+    }));
+  };
 
   useEffect(() => {
     if (!faqContainerRef.current) return;
@@ -98,18 +108,23 @@ const FAQ = () => {
 
         <div className={styles.faqList}>
           {faqs.map((faq, index) => (
-            <details key={index} className={`${styles.faqItem} faqItem`}>
-              <summary className={styles.question}>
-                <span
-                  className={styles.questionText}
-                  dangerouslySetInnerHTML={{ __html: faq.question }}
+            <div key={index}>
+              <details
+                className={`${styles.faqItem} faqItem ${openItems[index] ? styles.faqItemOpen : ""}`}
+                onToggle={(e) => handleToggle(index, e.target.open)}
+              >
+                <summary className={styles.question}>
+                  <span
+                    className={styles.questionText}
+                    dangerouslySetInnerHTML={{ __html: faq.question }}
+                  />
+                </summary>
+                <div
+                  className={styles.answer}
+                  dangerouslySetInnerHTML={{ __html: faq.answer }}
                 />
-              </summary>
-              <div
-                className={styles.answer}
-                dangerouslySetInnerHTML={{ __html: faq.answer }}
-              />
-            </details>
+              </details>
+            </div>
           ))}
         </div>
       </div>

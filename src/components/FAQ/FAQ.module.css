@@ -34,25 +34,26 @@
 
 /* FAQ List */
 .faqList {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 20px;
   width: 100%;
 }
 
-/* FAQ Item (now using <details>) */
+/* FAQ Item (using <details>) */
 .faqItem {
   font-size: 1.2rem;
   font-weight: 600;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start; /* Changed to flex-start */
   cursor: pointer;
   padding: 25px 20px;
-  transition: all 0.5s ease; /* Faster transition */
+  transition: all 0.3s ease;
   backdrop-filter: blur(12px);
   border-radius: 8px;
+  height: 100%;
 }
 
 .faqItem:hover {
@@ -72,10 +73,7 @@
   position: relative;
   padding-right: 24px; /* Space for custom arrow */
   text-align: left;
-}
-
-.question::-webkit-details-marker {
-  display: none; /* Hide default marker in WebKit browsers */
+  margin-bottom: 0;
 }
 
 /* Custom arrow indicator */
@@ -85,12 +83,12 @@
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  transition: transform 0.2s ease; /* Faster transition */
+  transition: transform 0.2s ease;
   font-size: 0.8rem;
 }
 
-/* Rotate arrow when open */
-details[open] .question::after {
+/* Rotate arrow when open - with proper CSS module scoping */
+.faqItemOpen .question::after {
   transform: translateY(-50%) rotate(180deg);
 }
 
@@ -108,7 +106,8 @@ details[open] .question::after {
   text-align: left;
   padding-left: 5px;
   opacity: 0;
-  animation: fadeIn 0.2s ease forwards 0.1s; /* Much faster animation */
+  animation: fadeIn 0.2s ease forwards;
+  position: relative;
 }
 
 @keyframes fadeIn {
@@ -122,8 +121,44 @@ details[open] .question::after {
   }
 }
 
-details[open] .answer {
+.faqItemOpen .answer {
   display: block;
+}
+
+@media (min-width: 769px) {
+  .faqList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    width: 100%;
+    /* Added to prevent layout shifts */
+    grid-auto-flow: row;
+    grid-template-rows: auto;
+  }
+
+  /* Set a fixed layout for FAQ grid items */
+  .faqList > div {
+    height: 100%;
+    align-self: start;
+  }
+
+  .faqItem {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .question {
+    margin-bottom: 0;
+    align-self: flex-start;
+  }
+
+  .faqItemOpen {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 @media (max-width: 768px) {
