@@ -2,6 +2,14 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans+Mono:wght@400;500;700&display=swap"); /* DM Sans Mono */
 
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 /* Root Variables */
 :root {
   --background-color: #fcfbf4;
