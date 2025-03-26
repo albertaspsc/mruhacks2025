@@ -35,9 +35,10 @@
 /* FAQ List */
 .faqList {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   width: 100%;
+  align-items: start;
 }
 
 /* FAQ Item (now using <details>) */
@@ -47,12 +48,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   cursor: pointer;
   padding: 25px 20px;
-  transition: all 0.5s ease; /* Faster transition */
+  transition: all 0.5s ease;
   backdrop-filter: blur(12px);
   border-radius: 8px;
+  height: fit-content;
+  width: 100%;
 }
 
 .faqItem:hover {
@@ -124,6 +127,12 @@ details[open] .question::after {
 
 details[open] .answer {
   display: block;
+}
+
+@media (max-width: 900px) {
+  .faqList {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
