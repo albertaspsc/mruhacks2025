@@ -14,7 +14,6 @@ Registration Completion:
 POST /api/registration/complete-account
 
 - Purpose: Complete hackathon registration (second screen)
-- Headers: Authorization: Bearer{token}
 - Request: {
   // Profile details
   dateOfBirth: date, // format: YYYY-MM-DD
