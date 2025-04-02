@@ -5,9 +5,9 @@ POST /api/auth/create-account
 - Request: { email, password, firstName, lastName }
 - Response: {
   userId: string,
-  token: string,
   message: "Account made successfully"
   }
+- Cookies Set: HTTP-only secure cookie that contains authentication token
 - Status Codes: 201 (Created), 400(Bad Request), 409 (Conflict- Email exists)
 
 Registration Completion:
@@ -39,5 +39,17 @@ POST /api/auth/login
 
 - Purpose: Authenticate user
 - Request: { email, password }
-- Response: { userId, token, role }
+- Response: {
+  userId: String,
+  role: String
+  }
+- Cookies Set: HTTP-only secure cookie containing authentication token
 - Status Codes: 200 (OK), 401 (Unauthorized)
+
+POST /api/auth/logout
+
+- Purpose: Logs out user
+- Authentication: Uses HTTP-only cookie
+- Response: { message: "Logout successful" }
+- Cookies: Clears the authentication cookie
+- Status Codes: 200 (OK)
