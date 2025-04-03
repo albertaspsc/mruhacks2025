@@ -23,7 +23,7 @@ POST /api/registration/complete-account
   dietaryRestrictions: string[] (Vegetarian, Vegan, Kosher, Halal, Gluten Free, Other(string)),
 
 // Hackathon info
-skillset: string[],
+interest: string[],
 experience: string, // Level of Programming (Beginner, intermediate, Expert)  
  }
 
