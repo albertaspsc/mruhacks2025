@@ -8,6 +8,9 @@ import library from "../../assets/sponsors/mrulibrary.webp";
 import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
+  const sponsorFormLink =
+    "https://docs.google.com/forms/d/e/1FAIpQLSdLJibHIC662j9-rTOG31qJ8iaTBgSk-Rk3LXAD0l9TL7MYpQ/viewform?usp=header";
+
   const sponsors = [
     { img: acurve, href: "https://www.arcurve.com" },
     {
@@ -36,11 +39,7 @@ export default function Sponsor() {
       </div>
 
       <div className={styles["become-sponsor-container"]}>
-        <a
-          href="https://docs.google.com/forms/d/1OCDidMsWzHUENgOTz8fJA2B82gTdR3XfUSCOtUKr6Co/edit"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href={sponsorFormLink} target="_blank" rel="noopener noreferrer">
           <span>Become a sponsor</span>
           <Image src={arrowIcon} alt="arrow right" />
         </a>
