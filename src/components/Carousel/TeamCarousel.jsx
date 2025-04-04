@@ -62,7 +62,7 @@ const TeamCarousel = (props) => {
       return mobileGroups;
     } else {
       // For tablet and desktop: use the original grouping logic
-      const groupSizes = [2, 4, 3, 3, 4]; // Group sizes determined by # of people in each team
+      const groupSizes = [2, 4, 2, 3, 4]; // Group sizes determined by # of people in each team
       const groups = [];
       let index = 0;
 
