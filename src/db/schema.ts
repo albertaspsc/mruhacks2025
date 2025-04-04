@@ -1,11 +1,3 @@
-// dateOfBirth: date, // format: YYYY-MM-DD
-// gender: string // Options: Female, Male, Non-binary, Prefer not to say
-// school: string, // Would probably need an additional API file if you want to do the autocomplete functionality
-// yearOfStudy: int,
-// dietaryRestrictions: string[] (Vegetarian, Vegan, Kosher, Halal, Gluten Free, Other(string)),
-// skillset: string[],
-// experience: string, // Level of Programming (Beginner, intermediate, Expert)
-
 import {
   date,
   integer,
@@ -25,16 +17,31 @@ const authUsers = authSchema.table("users", {
   email: varchar({ length: 255 }),
 });
 
-// const profiles = pgTable('profiles', {
-//   id: uuid("id").primaryKey(),
-//   email: varchar({ length: 255 }).notNull(),
-//   firstName: varchar('f_name', { length: 255 }),
-//   lastName: varchar('l_name', { length: 255 }),
-// })
-
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
   restriction: text().notNull(),
+});
+
+export const interests = pgTable("interests", {
+  id: integer().generatedAlwaysAsIdentity(),
+  interest: varchar({ length: 255 }),
+});
+
+export const userInterests = pgTable("user_interests", {
+  id: integer().generatedAlwaysAsIdentity(),
+  user: uuid("id").references(() => authUsers.id),
+  interest: integer().references(() => interests.id),
+});
+
+// TODO Trigger for google, github
+
+export const profiles = pgTable("profile", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => authUsers.id),
+  email: varchar({ length: 255 }).notNull(),
+  firstName: varchar("f_name", { length: 255 }).notNull(),
+  lastName: varchar("l_name", { length: 255 }).notNull(),
 });
 
 // TODO - set non-null constraints
@@ -42,28 +49,9 @@ export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
     .references(() => authUsers.id),
-  firstName: varchar("f_name", { length: 255 }),
-  lastName: varchar("l_name", { length: 255 }),
-  dob: date(),
-  gender: text(),
-  school: text(),
-  yearOfStudy: integer("year_of_study"),
-  experience: text(),
-  //   tShirtSize:
-});
-
-export const skills = pgTable("skills", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
-  skill: text().notNull(),
-});
-
-// each user can have multiple skills, thus we need a table to attribute multiple skills to each user
-export const skillsetAttributions = pgTable("skills_attr", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
-  user: integer()
-    .references(() => users.id)
-    .notNull(),
-  skill: integer()
-    .references(() => skills.id)
-    .notNull(),
+  dob: date().notNull(),
+  gender: text().notNull(),
+  school: text().notNull(),
+  yearOfStudy: integer("year_of_study").notNull(),
+  accomodations: text(),
 });

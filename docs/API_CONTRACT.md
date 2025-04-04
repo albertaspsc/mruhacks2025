@@ -23,10 +23,10 @@ POST /api/registration/complete-account
   yearOfStudy: int,
   dietaryRestrictions: string[] (Vegetarian, Vegan, Kosher, Halal, Gluten Free, Other(string)),
 
-// Hackathon info
-skillset: string[],
-experience: string, // Level of Programming (Beginner, intermediate, Expert)  
- }
+  // Hackathon info
+  skillset: string[],
+  experience: string, // Level of Programming (Beginner, intermediate, Expert)  
+  }
 
 - Response: {
   registrationId: string,
