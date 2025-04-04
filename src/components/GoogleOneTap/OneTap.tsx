@@ -4,7 +4,6 @@ import { createClient } from "../../../utils/supabase/client";
 import { CredentialResponse } from "google-one-tap";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-// import { google } from 'googleapis'
 
 const OneTapComponent = () => {
   const supabase = createClient();
@@ -67,7 +66,7 @@ const OneTapComponent = () => {
     };
     initializeGoogleOneTap();
     return () => window.removeEventListener("load", initializeGoogleOneTap);
-  }, []);
+  });
   return (
     <>
       <Script src="https://accounts.google.com/gsi/client" />

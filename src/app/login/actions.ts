@@ -5,23 +5,6 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "../../../utils/supabase/server";
 
-export async function loginGoogle(formData: FormData) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: "http://localhost:3000/register",
-    },
-  });
-
-  if (error) {
-    redirect("/error");
-  }
-
-  redirect(data.url);
-}
-
 export async function login(formData: FormData) {
   const supabase = await createClient();
 

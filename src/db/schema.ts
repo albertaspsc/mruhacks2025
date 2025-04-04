@@ -25,35 +25,26 @@ const authUsers = authSchema.table("users", {
   email: varchar({ length: 255 }),
 });
 
-// const profileInfo = pgTable('profiles', {
-
+// const profiles = pgTable('profiles', {
+//   id: uuid("id").primaryKey(),
+//   email: varchar({ length: 255 }).notNull(),
+//   firstName: varchar('f_name', { length: 255 }),
+//   lastName: varchar('l_name', { length: 255 }),
 // })
-
-await db.execute(sql`
-create function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = ''
-as $$
-begin
-  insert into public.profiles (id, first_name, last_name)
-  values (new.id, new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data ->> 'last_name');
-  return new;
-end;
-$$;
--- trigger the function every time a user is created
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();`);
 
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
   restriction: text().notNull(),
 });
 
+// TODO - set non-null constraints
 export const users = pgTable("users", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
-  dob: date().notNull(),
+  id: uuid("id")
+    .primaryKey()
+    .references(() => authUsers.id),
+  firstName: varchar("f_name", { length: 255 }),
+  lastName: varchar("l_name", { length: 255 }),
+  dob: date(),
   gender: text(),
   school: text(),
   yearOfStudy: integer("year_of_study"),
