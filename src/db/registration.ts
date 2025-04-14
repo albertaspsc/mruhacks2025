@@ -20,21 +20,6 @@ export async function isRegistered() {
   return { data: data.length == 1 };
 }
 
-export async function getRegistration() {
-  const supabase = await createClient();
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    return { error: authError };
-  }
-
-  const data = await db
-    .select(/* TODO */)
-    .from(users)
-    .where(eq(users.id, auth.user.id));
-
-  return { data: data[0] };
-}
-
 const registrationSchema = createInsertSchema(users).omit({ id: true });
 type RegistrationSchema = z.infer<typeof registrationSchema>;
 

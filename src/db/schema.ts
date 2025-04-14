@@ -48,10 +48,6 @@ export const userInterests = pgTable("user_interests", {
     .notNull(),
 });
 
-// TODO Trigger for google, github
-
-// select users.email, users.raw_user_meta_data->>'name', users.raw_app_meta_data->>'provider' as name from auth.users;
-
 export const profiles = pgTable("profile", {
   id: uuid("id")
     .primaryKey()
@@ -123,15 +119,6 @@ export const parkingSituation = pgEnum("parking_state", [
   "Not sure",
 ]);
 
-// Do we still want them to confirm their school emails?
-// We're still timestamping, right?
-// How do we handle unfinished registrations?
-// - Just cache unfinshed registration on the frontend
-// - Store unfinished registration on the backend
-// - 'registered' table has non-null constraints on everything, whereas 'unregistered' with same fields does not
-// - Have one table with relevant fields, all nullable, and then join
-
-// TODO - trigger for timestamp
 export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
