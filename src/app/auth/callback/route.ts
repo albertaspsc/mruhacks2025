@@ -15,6 +15,8 @@ export async function GET(request: Request) {
     }
   }
 
-  // TODO - return the user to an error page with instructions
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70 - return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/error`);
 }

@@ -18,11 +18,13 @@ export async function GET(request: NextRequest) {
       token_hash,
     });
     if (!error) {
-      // redirect user to specified redirect URL or root of app
+      // redirect user to specified redirect URL
       redirect(next);
     }
   }
 
-  // redirect the user to an error page with some instructions
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
   redirect("/error");
 }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { headers as getHeaders } from "next/headers";
 import { createClient } from "../../../utils/supabase/server";
 import { z } from "zod";
+import { isRegistered } from "../../db/registration";
 
 export async function loginWithGoogle() {
   const headers = await getHeaders();
@@ -18,6 +19,9 @@ export async function loginWithGoogle() {
     },
   });
 
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
   if (error) {
     redirect("/error");
   }
@@ -25,35 +29,59 @@ export async function loginWithGoogle() {
   redirect(data.url);
 }
 
+const loginSchema = z.object({
+  email: z.string().nonempty().email(),
+  password: z.string(),
+});
+
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
-  const loginSchema = z.object({
-    email: z.string().nonempty().email(),
-    password: z.string().min(10),
-  });
-
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email: formData.get("email"),
+    password: formData.get("password"),
   };
 
-  // data.
+  const { data: login, error: loginError } = loginSchema.safeParse(data);
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
+  if (loginError) {
+    redirect("/error");
+  }
 
+  const { error } = await supabase.auth.signInWithPassword(login);
+
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
   if (error) {
     redirect("/error");
   }
 
+  // redirect path needs:
+  // a. to revalidate auth token when loaded
+  // b. to re-render with information relevant to user (provided after auth)
+  // hence the revalidatePath and emptying of nextJs cache.
+  //
+  // The layout is emptied instead of the page,
+  // because the dashboard (and potentially other pages)
+  // have the same needs.
   revalidatePath("/register", "layout");
-  redirect("/register");
+
+  const { data: registered } = await isRegistered();
+
+  if (registered) {
+    redirect("/dashboard");
+  } else {
+    redirect("/register");
+  }
 }
 
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
-  // TODO - validate input (with zod or something)
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -61,10 +89,13 @@ export async function signup(formData: FormData) {
 
   const { error } = await supabase.auth.signUp(data);
 
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
   if (error) {
     redirect("/error");
   }
 
-  // revalidatePath("/register", "layout");
+  revalidatePath("/register", "layout");
   redirect("/register");
 }
