@@ -21,7 +21,7 @@ const MRUHacksCountdown = () => {
 
     // Clean up on unmount
     return () => clearInterval(timer);
-  });
+  }, []);
 
   const updateCountdown = () => {
     const now = new Date();
