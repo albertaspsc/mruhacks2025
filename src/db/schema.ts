@@ -57,7 +57,7 @@ export const profiles = pgTable("profile", {
   lastName: varchar("l_name", { length: 255 }),
 });
 
-await db.execute(sql`
+db.execute(sql`
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS trigger
 language plpgsql
@@ -148,7 +148,7 @@ export const users = pgTable("users", {
   timestamp: timestamp(),
 });
 
-await db.execute(sql`
+db.execute(sql`
 CREATE OR REPLACE FUNCTION update_users_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
