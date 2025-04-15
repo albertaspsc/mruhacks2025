@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import styles from "./FAQ.module.css";
-import faqBackground from "../../assets/backgrounds/faq-background.svg";
+import faqBackground from "@/assets/backgrounds/faq-background.svg";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,7 +53,7 @@ const faqs = [
 ];
 
 const FAQ = () => {
-  const faqContainerRef = useRef(null);
+  const faqContainerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!faqContainerRef.current) return;

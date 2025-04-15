@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import styles from "./Sponsor.module.scss";
-import crt2 from "../../assets/mascots/crt2.svg";
+import crt2 from "@/assets/mascots/crt2.svg";
 import Image from "next/image";
-import acurve from "../../assets/sponsors/arcurve_logo_2024_color_large.webp";
-import institute from "../../assets/sponsors/Institute.webp";
-import library from "../../assets/sponsors/mrulibrary.webp";
-import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
+import acurve from "@/assets/sponsors/arcurve_logo_2024_color_large.webp";
+import institute from "@/assets/sponsors/Institute.webp";
+import library from "@/assets/sponsors/mrulibrary.webp";
+import arrowIcon from "@/assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
   const [showPopup, setShowPopup] = useState(false);
@@ -19,7 +19,7 @@ export default function Sponsor() {
     { img: library, href: "https://library.mtroyal.ca" },
   ];
 
-  const handleSponsorClick = (e) => {
+  const handleSponsorClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setShowPopup(true);
   };
@@ -65,7 +65,7 @@ export default function Sponsor() {
             <p>Please send your sponsorship inquiry to:</p>
             <p className={styles.email}>mramz980@mtroyal.ca</p>
             <p className={styles.note}>
-              We'll get back to you as soon as possible!
+              We&#39;ll get back to you as soon as possible!
             </p>
           </div>
         </div>

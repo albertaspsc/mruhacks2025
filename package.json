@@ -16,6 +16,7 @@
     "bootstrap": "^5.3.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "embla-carousel": "^8.5.2",
     "embla-carousel-autoplay": "^8.5.2",
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.4.10",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/aos": "^3.0.7",
     "@types/node": "22.13.10",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
