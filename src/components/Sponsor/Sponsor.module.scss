@@ -8,7 +8,7 @@ div.become-sponsor-container {
     @media (max-width: 500px) {
         margin-bottom: 3em;
         div {
-            top: 50%;    
+            top: 50%;
         }
     }
 
@@ -16,13 +16,12 @@ div.become-sponsor-container {
         margin-bottom: 3em;
     }
 
-    /* For very small screens */
     @media (max-width: 360px) {
         a {
-            font-size: 1rem !important; 
-            padding: 0.5em 1.5em !important; 
-            white-space: nowrap; 
-            letter-spacing: normal; 
+            font-size: 1rem !important;
+            padding: 0.5em 1.5em !important;
+            white-space: nowrap;
+            letter-spacing: normal;
         }
     }
 
@@ -31,7 +30,7 @@ div.become-sponsor-container {
         height: 20vw;
         width: auto;
         right: min(10%, 5vw);
-        
+
         img {
             height: max(100%, 25vh);
             width: auto;
@@ -51,12 +50,12 @@ div.become-sponsor-container {
         cursor: pointer;
         transition: all 0.3s ease-in-out;
         display: flex;
-        align-items: center; 
+        align-items: center;
         gap: 5px;
         text-decoration: none;
 
         span {
-            display: flex; 
+            display: flex;
             align-items: center;
         }
 
@@ -67,25 +66,23 @@ div.become-sponsor-container {
         }
 
         img {
-            filter: brightness(10) drop-shadow( 0px 0px 2px white);
+            filter: brightness(10) drop-shadow(0px 0px 2px white);
         }
     }
 }
 
 @media (max-width: 320px) {
     div.become-sponsor-container a {
-        font-size: 0.9rem !important; 
-        padding: 0.5em 1.2em !important; 
+        font-size: 0.9rem !important;
+        padding: 0.5em 1.2em !important;
     }
 }
 
-@media (max-width: 450px) {  
-    // Hides CRT completely
+@media (max-width: 450px) {
     .crt {
         display: none;
     }
 }
-
 
 div.sponsors {
     padding: 2em;
@@ -113,7 +110,6 @@ div.sponsors {
         transition: all ease-in-out 0.4s;
 
         img {
-            // visibility: hidden;
             height: auto;
             width: 100%;
         }
@@ -122,8 +118,7 @@ div.sponsors {
             translate: -3px -3px;
             box-shadow: rgba(0, 0, 0, 0.231372549) 6px 6px 4px 2px;
         }
-        
-        /* Mobile view */
+
         @media (max-width: 400px) {
             .a {
                 border-radius: 20px;
@@ -134,7 +129,6 @@ div.sponsors {
     }
 }
 
-/* Container styles */
 div.container {
     display: flex;
     flex-direction: column;
@@ -146,138 +140,10 @@ div.container {
         padding: 0 1em;
         font-size: 2.8rem;
     }
-    
+
     @media (max-width: 500px) {
         h1 {
             font-size: 1.8rem;
-        }
-    }
-}
-
-// Popup overlay - darkens the background
-.popupOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-    animation: fadeIn 0.3s ease-in-out;
-}
-  
-// Popup container
-.popup {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    width: 90%;
-    max-width: 500px;
-    position: relative;
-    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    animation: scaleIn 0.3s ease-in-out;
-    border: 2px solid #A47CFF;
-    
-    h2 {
-        color: #4050FF;
-        margin-bottom: 1.5rem;
-        font-size: 1.8rem;
-    }
-    
-    p {
-        margin-bottom: 0.8rem;
-        font-size: 1.1rem;
-        line-height: 1.5;
-    }
-}
-  
-// Close button
-.closeButton {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 1.8rem;
-    cursor: pointer;
-    color: #666;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    
-    &:hover {
-        background-color: #f0f0f0;
-        color: #4050FF;
-    }
-}
-  
-// Email address styling
-.email {
-    font-weight: bold;
-    font-size: 1.3rem !important;
-    color: #4050FF;
-    background: linear-gradient(90deg, #4050FF, #A47CFF);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-    padding: 0.5rem 1.5rem;
-    margin: 1rem 0;
-    border-radius: 8px;
-    border: 1px dashed #A47CFF;
-}
-  
-// Note at the bottom
-.note {
-    color: #666;
-    font-size: 0.95rem !important;
-    margin-top: 1rem;
-}
-  
-// Animations
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-  
-@keyframes scaleIn {
-    from {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-  
-// Media queries for mobile responsiveness
-@media (max-width: 500px) {
-    .popup {
-        padding: 1.5rem;
-        
-        h2 {
-            font-size: 1.5rem;
-        }
-        
-        p {
-            font-size: 1rem;
-        }
-        
-        .email {
-            font-size: 1.1rem !important;
         }
     }
 }
