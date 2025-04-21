@@ -1,24 +1,23 @@
-// File: src/app/register/step-1/page.tsx
 "use client";
 
-//  React Hook Form + Next router
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
-//  UI components
+import {
+  useRegisterForm,
+  RegistrationData,
+} from "@/context/RegisterFormContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-type PersonalForm = {
-  attendedBefore: "yes" | "no";
-  gender: "male" | "female" | "other" | "preferNot";
-  institution: string;
-  major: string;
-  year: string;
-};
+type PersonalForm = Pick<
+  RegistrationData,
+  "attendedBefore" | "gender" | "institution" | "major" | "year"
+>;
 
 export default function Step1Page() {
   const router = useRouter();
+  const { setValues } = useRegisterForm();
   const { register, handleSubmit } = useForm<PersonalForm>();
 
   const institutions = [
@@ -30,8 +29,6 @@ export default function Step1Page() {
     "St. Mary's University",
     "Other…",
   ];
-
-  // MRU PRograms
   const majors = [
     "Bachelor of Arts - Policy Studies",
     "Bachelor of Computer Information Systems",
@@ -46,23 +43,14 @@ export default function Step1Page() {
   ];
 
   const onSubmit: SubmitHandler<PersonalForm> = (data) => {
-    // TODO: persist into context/state
+    setValues(data);
     router.push("/register/step-2");
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6"
-      role="form"
-      aria-labelledby="personal-details-heading"
-    >
-      {/*  Accessible heading */}
-      <h1 id="personal-details-heading" className="text-2xl font-semibold">
-        Personal Details
-      </h1>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <h1 className="text-2xl font-semibold">Personal Details</h1>
 
-      {/*  Attended before */}
       <div>
         <Label htmlFor="attendedBefore">
           Have you attended MRUHacks before?
@@ -70,20 +58,19 @@ export default function Step1Page() {
         <select
           id="attendedBefore"
           {...register("attendedBefore", { required: true })}
-          className="w-full border border-gray-300 rounded px-3 py-2"
+          className="w-full border rounded px-3 py-2"
         >
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
       </div>
 
-      {/*  Gender */}
       <div>
         <Label htmlFor="gender">Gender</Label>
         <select
           id="gender"
           {...register("gender", { required: true })}
-          className="w-full border border-gray-300 rounded px-3 py-2"
+          className="w-full border rounded px-3 py-2"
         >
           <option value="male">Male</option>
           <option value="female">Female</option>
@@ -92,23 +79,21 @@ export default function Step1Page() {
         </select>
       </div>
 
-      {/*  Institution with datalist for autocomplete */}
       <div>
         <Label htmlFor="institution">University / Institution</Label>
         <Input
           id="institution"
           list="institution-list"
-          placeholder="Start typing to search…"
+          placeholder="Start typing…"
           {...register("institution", { required: true })}
         />
         <datalist id="institution-list">
-          {institutions.map((inst) => (
-            <option key={inst} value={inst} />
+          {institutions.map((i) => (
+            <option key={i} value={i} />
           ))}
         </datalist>
       </div>
 
-      {/*  Major / Program with datalist */}
       <div>
         <Label htmlFor="major">Major / Program</Label>
         <Input
@@ -124,13 +109,12 @@ export default function Step1Page() {
         </datalist>
       </div>
 
-      {/* Year selection */}
       <div>
         <Label htmlFor="year">What year will you be in as of Fall?</Label>
         <select
           id="year"
           {...register("year", { required: true })}
-          className="w-full border border-gray-300 rounded px-3 py-2"
+          className="w-full border rounded px-3 py-2"
         >
           <option>1st</option>
           <option>2nd</option>
@@ -140,7 +124,6 @@ export default function Step1Page() {
         </select>
       </div>
 
-      {/* Next button */}
       <Button type="submit" className="w-full">
         Next: Final Questions
       </Button>

@@ -1,10 +1,8 @@
-// src/app/register/complete/page.tsx
 "use client";
-
 import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Mascot from "@/assets/mascots/crt.svg";
+import MascotUrl from "@/assets/mascots/crt.svg";
 
 export default function CompletePage() {
   const router = useRouter();
@@ -41,10 +39,11 @@ export default function CompletePage() {
       </button>
 
       <Image
-        src={Mascot}
+        src={MascotUrl}
         alt="MRUHacks Mascot"
         width={120}
         height={120}
+        className="w-auto h-32"
         priority
       />
     </div>

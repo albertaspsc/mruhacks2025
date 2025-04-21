@@ -1,48 +1,41 @@
+"use client";
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type RegisterFormData = Partial<{
-  // Account step
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
+export type RegistrationData = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  attendedBefore?: "yes" | "no";
+  gender?: "male" | "female" | "other" | "preferNot";
+  institution?: string;
+  major?: string;
+  year?: string;
+  programmingExperience?: string;
+  interests?: string[];
+  dietary?: string[];
+  accommodations?: string;
+  parking?: string;
+  heardFrom?: string;
+};
 
-  // Personal step
-  attendedBefore: "yes" | "no";
-  gender: "male" | "female" | "other" | "preferNot";
-  institution: string;
-  major: string;
-  year: string;
+type ContextType = {
+  data: RegistrationData;
+  setValues: (partial: Partial<RegistrationData>) => void;
+};
 
-  // Final step
-  programmingExperience: string;
-  interests: string[];
-  dietary: string[];
-  accommodations: string;
-  parking: string;
-  heardFrom: string;
-}>;
-
-export interface RegisterFormContextType {
-  data: RegisterFormData;
-  setFormValues: (values: Partial<RegisterFormData>) => void;
-}
-
-const RegisterFormContext = createContext<RegisterFormContextType>({
+const RegisterFormContext = createContext<ContextType>({
   data: {},
-  setFormValues: () => {},
+  setValues: () => {},
 });
 
 export function RegisterFormProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<RegisterFormData>({});
-
-  const setFormValues = (values: Partial<RegisterFormData>) => {
-    setData((prev) => ({ ...prev, ...values }));
-  };
-
+  const [data, setData] = useState<RegistrationData>({});
+  const setValues = (partial: Partial<RegistrationData>) =>
+    setData((prev) => ({ ...prev, ...partial }));
   return (
-    <RegisterFormContext.Provider value={{ data, setFormValues }}>
+    <RegisterFormContext.Provider value={{ data, setValues }}>
       {children}
     </RegisterFormContext.Provider>
   );
