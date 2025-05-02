@@ -11,8 +11,8 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@components", // ← point at src/components
-    "utils": "@components/lib/utils", // ← point at your utils file
+    "components": "@components",
+    "utils": "@components/lib/utils",
     "ui": "@components/ui",
     "hooks": "@components/hooks"
   },
