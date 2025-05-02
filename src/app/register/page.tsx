@@ -1,22 +1,34 @@
+"use client";
 import { redirect } from "next/navigation";
-import { createClient } from "../../../utils/supabase/server";
+import { createClient } from "../../../utils/supabase/client";
 import { register } from "./actions";
-export default async function PrivatePage() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) {
-    redirect("/login");
-  }
+import { useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
+export default function PrivatePage() {
+  const supabase = createClient();
+  const [user, setUser] = useState<User>();
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (!user) {
+        console.log(error);
+        redirect("/error?no_auth");
+      }
+      console.log(user);
+    };
+    getUser();
+  });
 
   return (
     <>
       <p>
-        Hello {data.user.email}
+        Hello {user?.email}
         {/* TODO put in actual form */}
       </p>
-      <form>
-        <button formAction={register}>register</button>
-      </form>
+      <form></form>
     </>
   );
 }

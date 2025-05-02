@@ -1,7 +1,9 @@
+import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
-import { redirect } from "next/navigation";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url);
+  const next = searchParams.get("next") ?? "/";
   const supabase = await createClient();
   const { error } = await supabase.auth.getUser();
 
@@ -9,5 +11,5 @@ export async function GET() {
     supabase.auth.signOut();
   }
 
-  redirect("/");
+  return NextResponse.redirect(`${origin}${next}`);
 }

@@ -34,32 +34,7 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-export async function login(formData: FormData) {
-  const supabase = await createClient();
-
-  const data = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-
-  const { data: login, error: loginError } = loginSchema.safeParse(data);
-
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
-  if (loginError) {
-    redirect("/error");
-  }
-
-  const { error } = await supabase.auth.signInWithPassword(login);
-
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
-  if (error) {
-    redirect("/error");
-  }
-
+async function postAuthRedirect(): Promise<never> {
   // redirect path needs:
   // a. to revalidate auth token when loaded
   // b. to re-render with information relevant to user (provided after auth)
@@ -72,30 +47,60 @@ export async function login(formData: FormData) {
 
   const { data: registered } = await isRegistered();
 
-  if (registered) {
+  if (false && registered) {
     redirect("/dashboard");
   } else {
     redirect("/register");
   }
 }
 
-export async function signup(formData: FormData) {
+export async function login(formData: FormData) {
   const supabase = await createClient();
 
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email: formData.get("email"),
+    password: formData.get("password"),
   };
 
-  const { error } = await supabase.auth.signUp(data);
+  const {
+    data: login,
+    error: loginError,
+    success,
+  } = loginSchema.safeParse(data);
 
   // TODO - redirect the user to an error page with some instructions
   //
   // See github issue #70
-  if (error) {
-    redirect("/error");
+  if (!success) {
+    redirect("/error?you-are-not");
   }
 
-  revalidatePath("/register", "layout");
-  redirect("/register");
+  const { error: signInError } = await supabase.auth.signInWithPassword(login);
+
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
+  if (!signInError) {
+    revalidatePath("/register", "layout");
+
+    // const { data: registered } = await isRegistered();
+
+    if (false) {
+      redirect("/dashboard");
+    } else {
+    }
+    console.log("here");
+    redirect("/register");
+  }
+
+  const { error: signUpError } = await supabase.auth.signUp(login);
+
+  if (!signUpError) {
+    redirect(`/auth/confirm?email=${login.email}`);
+  }
+
+  // TODO - redirect the user to an error page with some instructions
+  //
+  // See github issue #70
+  redirect("/error?end");
 }

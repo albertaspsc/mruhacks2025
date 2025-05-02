@@ -23,30 +23,30 @@ const authUsers = authSchema.table("users", {
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   restriction: varchar({ length: 255 }).notNull(),
-});
+}).enableRLS();
 
-export const userRestrictions = pgTable("user_dietary_restrictions", {
+export const userRestrictions = pgTable("user_diet_restrictions", {
   user: uuid("id")
-    .references(() => authUsers.id)
+    .references(() => profiles.id)
     .notNull(),
   restriction: integer()
     .references(() => dietaryRestrictions.id)
     .notNull(),
-});
+}).enableRLS();
 
 export const interests = pgTable("interests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   interest: varchar({ length: 255 }).notNull(),
-});
+}).enableRLS();
 
 export const userInterests = pgTable("user_interests", {
   user: uuid("id")
-    .references(() => authUsers.id)
+    .references(() => profiles.id)
     .notNull(),
   interest: integer()
     .references(() => interests.id)
     .notNull(),
-});
+}).enableRLS();
 
 export const profiles = pgTable("profile", {
   id: uuid("id")
@@ -55,7 +55,7 @@ export const profiles = pgTable("profile", {
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }),
   lastName: varchar("l_name", { length: 255 }),
-});
+}).enableRLS();
 
 db.execute(sql`
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -91,27 +91,27 @@ export const yearOfStudy = pgEnum("year_of_study", [
 export const universities = pgTable("universities", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   university: varchar("uni", { length: 255 }),
-});
+}).enableRLS();
 
 export const majors = pgTable("majors", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   major: varchar({ length: 255 }),
-});
+}).enableRLS();
 
 export const marketingTypes = pgTable("marketing_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   marketing: varchar({ length: 255 }),
-});
+}).enableRLS();
 
 export const experienceTypes = pgTable("experience_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   experience: varchar({ length: 255 }),
-});
+}).enableRLS();
 
 export const gender = pgTable("gender", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   gender: varchar({ length: 255 }),
-});
+}).enableRLS();
 
 export const parkingSituation = pgEnum("parking_state", [
   "Yes",
@@ -122,7 +122,7 @@ export const parkingSituation = pgEnum("parking_state", [
 export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
-    .references(() => authUsers.id)
+    .references(() => profiles.id)
     .notNull(),
   dob: date().notNull(),
   gender: integer()
@@ -146,7 +146,7 @@ export const users = pgTable("users", {
     .references(() => marketingTypes.id)
     .notNull(),
   timestamp: timestamp(),
-});
+}).enableRLS();
 
 db.execute(sql`
 CREATE OR REPLACE FUNCTION update_users_timestamp()

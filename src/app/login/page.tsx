@@ -1,18 +1,33 @@
 "use client";
-import { login, loginWithGoogle, signup } from "./actions";
+import Image from "next/image";
+import { login, loginWithGoogle } from "./actions";
+import "./styles.scss";
+
 export default function LoginPage() {
   return (
     <>
       <form>
-        <label htmlFor="email">Email:</label>
-        <input id="email" name="email" type="email" required />
-        <label htmlFor="password">Password:</label>
-        <input id="password" name="password" type="password" required />
-        <button formAction={login}>Log in</button>
-        <button formAction={signup}>Sign up</button>
-      </form>
-      <form>
-        <button formAction={loginWithGoogle}>Sign up</button>
+        <h1 className="text-2xl font-semibold">Sign Up</h1>
+
+        <div>
+          <label htmlFor="email">Email Address</label>
+          <input
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password">Password</label>
+          <input name="password" type="password" required />
+          <a href="/auth/reset-password">Forgot Password?</a>
+        </div>
+
+        <button type="submit" className="w-full" formAction={login}>
+          Sign Up / Login
+        </button>
       </form>
     </>
   );
