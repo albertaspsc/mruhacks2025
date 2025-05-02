@@ -1,19 +1,32 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  FunctionComponent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import {
   PrevButton,
   NextButton,
   usePrevNextButtons,
 } from "./CarouselArrowButtons";
 import Autoplay from "embla-carousel-autoplay";
-import useCarousel from "embla-carousel-react";
-import TeamMemberCard from "../Cards/TeamMemberCard";
+import useCarousel, { UseEmblaCarouselType } from "embla-carousel-react";
+import TeamMemberCard, { MemberData } from "../Cards/TeamMemberCard";
 import styles from "./carousel.module.css";
+import { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 
-const TeamCarousel = (props) => {
+type Props = {
+  teamData: MemberData[];
+  options: EmblaOptionsType;
+};
+
+const TeamCarousel: FunctionComponent<Props> = (props) => {
   const { teamData = [], options = { loop: true, align: "start" } } = props;
-  const [carouselRef, carouselApi] = useCarousel(options, [Autoplay()]);
+  const [carouselRef, carouselApi] = useCarousel(options as EmblaOptionsType, [
+    Autoplay(),
+  ]);
   const [isMobile, setIsMobile] = useState(false);
 
   // Check for mobile view on component mount and window resize
@@ -32,7 +45,7 @@ const TeamCarousel = (props) => {
     return () => window.removeEventListener("resize", checkForMobile);
   }, []);
 
-  const onNavButtonClick = useCallback((carouselApi) => {
+  const onNavButtonClick = useCallback((carouselApi: EmblaCarouselType) => {
     const autoplay = carouselApi?.plugins()?.autoplay;
     if (!autoplay) return;
 
@@ -52,7 +65,7 @@ const TeamCarousel = (props) => {
   } = usePrevNextButtons(carouselApi, onNavButtonClick);
 
   // Grouping responsive to screen size
-  const createCustomGroups = (data) => {
+  const createCustomGroups = (data: MemberData[]) => {
     if (isMobile) {
       // For mobile: always 2 cards per slide
       const mobileGroups = [];

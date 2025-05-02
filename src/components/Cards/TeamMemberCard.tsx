@@ -1,11 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  FunctionComponent,
+  HTMLAttributes,
+} from "react";
 import Image from "next/image";
 import styles from "./TeamMemberCard.module.css";
-import fallbackImage from "../../assets/mascots/crt2.svg";
+import fallbackImage from "@/assets/mascots/crt2.svg";
 
-const TeamMemberCard = ({ member }) => {
+export type MemberData = {
+  name: string;
+  title: string;
+  pic: string;
+};
+
+const TeamMemberCard: FunctionComponent<
+  { member: MemberData } & HTMLAttributes<{}>
+> = ({ member }) => {
   const [imgSrc, setImgSrc] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 

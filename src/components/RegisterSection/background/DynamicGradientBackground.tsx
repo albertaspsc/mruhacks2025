@@ -6,8 +6,16 @@ import vertexShaderSrc from "./vertexShader.glsl";
 
 const quad = new Float32Array([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]);
 
-function createShader(gl, type, source) {
+function createShader(
+  gl: WebGL2RenderingContext,
+  type: GLenum,
+  source: string,
+) {
   const shader = gl.createShader(type);
+  if (!shader) {
+    console.error(`Shader of type ${type} could not be created`);
+    return null;
+  }
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -18,13 +26,22 @@ function createShader(gl, type, source) {
   return shader;
 }
 
-function createWebGlProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
+function createWebGlProgram(
+  gl: WebGL2RenderingContext,
+  vertexShaderSrc: string,
+  fragmentShaderSrc: string,
+) {
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
   const fragmentShader = createShader(
     gl,
     gl.FRAGMENT_SHADER,
     fragmentShaderSrc,
   );
+
+  if (!vertexShader || !fragmentShader) {
+    console.error("WebGL vertex and fragment shaders could not be created");
+    return null;
+  }
 
   const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
@@ -39,14 +56,21 @@ function createWebGlProgram(gl, vertexShaderSrc, fragmentShaderSrc) {
 }
 
 export default function Gradient({ ...props }) {
-  const canvasRef = useRef(null);
-  const glRef = useRef(null);
-  const timeLocRef = useRef(null);
-  const resLocRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const glRef = useRef<WebGL2RenderingContext>(null);
+  const timeLocRef = useRef<WebGLUniformLocation>(null);
+  const resLocRef = useRef<WebGLUniformLocation>(null);
 
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
     const gl = glRef.current;
+
+    if (!canvas || !gl) {
+      console.error(
+        "Couldn't resize canvas due to empty canvasRef or empty glRef",
+      );
+      return;
+    }
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -56,7 +80,7 @@ export default function Gradient({ ...props }) {
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = canvasRef.current!;
     glRef.current = canvas.getContext("webgl2");
     const gl = glRef.current;
 
@@ -91,8 +115,10 @@ export default function Gradient({ ...props }) {
     // Set initial canvas size
     resizeCanvas();
 
-    function render(time) {
+    function render(time: DOMHighResTimeStamp) {
+      // @ts-ignore gl has already been checked for validity
       gl.uniform1f(timeLocRef.current, time * 0.001);
+      // @ts-ignore
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
     }
