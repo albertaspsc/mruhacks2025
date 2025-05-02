@@ -8,6 +8,8 @@ import { BindInput } from "../../../components/BindInput/BindInput";
 
 export default function Page() {
   return (
+    // Since function uses useSearchParams hook,
+    // it needs to be wrapped in suspense to avoid being marked as a dynamic path
     <>
       <Suspense>
         <EmailConfirmation></EmailConfirmation>
