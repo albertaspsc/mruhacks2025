@@ -20,7 +20,12 @@ type AccountForm = Pick<
 export default function AccountPage() {
   const router = useRouter();
   const { setValues } = useRegisterForm();
-  const { register, handleSubmit } = useForm<AccountForm>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<AccountForm>();
 
   const onSubmit: SubmitHandler<AccountForm> = (data) => {
     const { confirmPassword, ...rest } = data;
@@ -28,54 +33,106 @@ export default function AccountPage() {
     router.push("/register/step-1");
   };
 
+  const password = watch("password", "");
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <h1 className="text-2xl font-semibold">Create Your Account</h1>
 
+      {/* First Name */}
       <div>
-        <Label htmlFor="firstName">First Name</Label>
+        <Label htmlFor="firstName">
+          First Name <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="firstName"
-          {...register("firstName", { required: true })}
+          {...register("firstName", { required: "First name is required" })}
           placeholder="John"
         />
+        {errors.firstName && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.firstName.message}
+          </p>
+        )}
       </div>
 
+      {/* Last Name */}
       <div>
-        <Label htmlFor="lastName">Last Name</Label>
+        <Label htmlFor="lastName">
+          Last Name <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="lastName"
-          {...register("lastName", { required: true })}
+          {...register("lastName", { required: "Last name is required" })}
           placeholder="Doe"
         />
+        {errors.lastName && (
+          <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+        )}
       </div>
 
+      {/* Student Email */}
       <div>
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="email">
+          Student Email Address <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="email"
           type="email"
-          {...register("email", { required: true })}
-          placeholder="you@example.com"
+          {...register("email", {
+            required: "Email is required",
+            pattern: {
+              value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+              message: "Enter a valid email",
+            },
+          })}
+          placeholder="you@student.mru.ca"
         />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+        )}
       </div>
 
+      {/* Password */}
       <div>
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">
+          Password <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="password"
           type="password"
-          {...register("password", { required: true })}
+          {...register("password", {
+            required: "Password is required",
+            minLength: { value: 8, message: "At least 8 characters" },
+            pattern: {
+              value: /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W)/,
+              message: "Must include upper, lower, number & special",
+            },
+          })}
         />
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+        )}
       </div>
 
+      {/* Confirm Password */}
       <div>
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label htmlFor="confirmPassword">
+          Confirm Password <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="confirmPassword"
           type="password"
-          {...register("confirmPassword", { required: true })}
+          {...register("confirmPassword", {
+            required: "Please confirm your password",
+            validate: (val) => val === password || "Passwords do not match",
+          })}
         />
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.confirmPassword.message}
+          </p>
+        )}
       </div>
 
       <Button type="submit" className="w-full">

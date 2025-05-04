@@ -1,51 +1,121 @@
+// src/app/register/complete/page.tsx
 "use client";
-import React from "react";
+
+import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRegisterForm } from "@/context/RegisterFormContext";
+import { Button } from "@/components/ui/button";
 import MascotUrl from "@/assets/mascots/crt.svg";
+
+// tiny confetti helper
+const fireConfetti = (canvas: HTMLCanvasElement) => {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const w = (canvas.width = canvas.parentElement?.clientWidth || 300);
+  const h = (canvas.height = 200);
+  const pieces = Array.from({ length: 60 }).map(() => ({
+    x: Math.random() * w,
+    y: Math.random() * -h,
+    r: Math.random() * 6 + 4,
+    d: Math.random() * 10 + 10,
+    tilt: Math.random() * 10 - 10,
+    color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+  }));
+  let angle = 0;
+  const draw = () => {
+    ctx.clearRect(0, 0, w, h);
+    pieces.forEach((p) => {
+      p.y += Math.cos(angle + p.d) + 2 + p.r / 2;
+      p.x += Math.sin(angle);
+      p.tilt += Math.sin(angle) * 0.5;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+      ctx.lineTo(p.x + p.tilt - p.r / 2, p.y);
+      ctx.fill();
+    });
+    angle += 0.02;
+    requestAnimationFrame(draw);
+  };
+  draw();
+};
 
 export default function CompletePage() {
   const router = useRouter();
+  const { data } = useRegisterForm();
+  const hasLogged = useRef(false);
+  const confettiRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!hasLogged.current) {
+      console.log("User registered:", data);
+      hasLogged.current = true;
+    }
+    if (confettiRef.current) fireConfetti(confettiRef.current);
+  }, [data]);
 
   return (
-    <div className="flex flex-col items-center justify-center text-center space-y-6 py-12 max-w-sm mx-auto">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-16 w-16 text-green-600"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2l4-4"
+    <div className="flex items-start justify-center min-h-screen bg-white pt-8 px-4">
+      <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-xl px-6 py-8 space-y-6 z-10">
+        {/* confetti canvas inside the card */}
+        <canvas
+          ref={confettiRef}
+          className="pointer-events-none absolute inset-x-0 top-0 h-40"
         />
-      </svg>
 
-      <h1 className="text-2xl font-semibold">Registration Complete</h1>
+        {/* ✔️ bouncing check */}
+        <div className="flex justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-12 w-12 text-green-500 animate-bounce z-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M9 12l2 2l4-4"
+            />
+          </svg>
+        </div>
 
-      <p className="text-gray-600">
-        Thank you! We’ve received your information and look forward to seeing
-        you at MRUHacks.
-      </p>
+        {/* Title */}
+        <h1 className="text-center text-2xl font-semibold z-10">
+          Registration Complete
+        </h1>
 
-      <button
-        onClick={() => router.push("/")}
-        className="px-6 py-2 border border-gray-800 rounded shadow-sm hover:bg-gray-900 hover:text-white transition"
-      >
-        Take Me Home
-      </button>
+        {/* Personalized message */}
+        <p className="text-center text-gray-700 z-10">
+          Thanks{" "}
+          <span className="font-medium text-indigo-600">{data.firstName}</span>!
+          We’ve got your details and can’t wait to see you at MRUHacks.
+        </p>
 
-      <Image
-        src={MascotUrl}
-        alt="MRUHacks Mascot"
-        width={120}
-        height={120}
-        className="w-auto h-32"
-        priority
-      />
+        {/* Dashboard button */}
+        <Button
+          type="button"
+          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white py-2 rounded-lg transition z-10"
+          onClick={() => router.push("/hackathon-dashboard")}
+        >
+          Take Me to Dashboard
+        </Button>
+
+        {/* Mascot */}
+        <div className="flex justify-center pt-4 z-10">
+          <Image
+            src={MascotUrl}
+            alt="MRUHacks Mascot"
+            width={120}
+            height={120}
+            className="object-contain"
+            priority
+          />
+        </div>
+      </div>
     </div>
   );
 }
