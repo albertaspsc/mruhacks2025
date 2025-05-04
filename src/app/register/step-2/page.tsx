@@ -1,4 +1,3 @@
-// src/app/register/step-2/page.tsx
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";

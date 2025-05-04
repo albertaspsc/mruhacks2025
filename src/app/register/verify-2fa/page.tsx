@@ -9,7 +9,6 @@ export default function Verify2FAPage() {
   const router = useRouter();
   const search = useSearchParams();
 
-  // **Require** the email query-param
   const email = search.get("email");
   useEffect(() => {
     if (!email) {
@@ -51,6 +50,7 @@ export default function Verify2FAPage() {
     e.preventDefault();
     const code = digits.join("");
     if (code === "123456") {
+      // still gotta add logic for this
       router.push("/register/complete");
     } else {
       setError("🚫 Invalid code, please try again. (dev code 123456)");
@@ -103,7 +103,7 @@ export default function Verify2FAPage() {
           Didn’t get a code?{" "}
           <button
             onClick={() => {
-              /* TODO: trigger your resend-code API */
+              /* TODO: trigger API */
             }}
             className="text-indigo-600 hover:underline"
           >

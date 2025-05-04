@@ -1,4 +1,3 @@
-// src/app/register/layout.tsx
 "use client";
 
 import React, { ReactNode } from "react";
