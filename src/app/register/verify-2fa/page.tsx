@@ -1,4 +1,3 @@
-// src/app/register/verify-2fa/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -52,7 +51,7 @@ export default function Verify2FAPage() {
     if (code === "123456") {
       router.push("/register/complete");
     } else {
-      setError("🚫 Invalid code, please try again.");
+      setError("🚫 Invalid code, please try again. Dev code: 123456");
       setDigits(Array(6).fill(""));
       inputsRef.current[0]?.focus();
     }
@@ -105,7 +104,7 @@ export default function Verify2FAPage() {
           Didn’t get a code?{" "}
           <button
             onClick={() => {
-              // TODO: trigger your resend-code API
+              // TODO: trigger API
             }}
             className="text-indigo-600 hover:underline"
           >
