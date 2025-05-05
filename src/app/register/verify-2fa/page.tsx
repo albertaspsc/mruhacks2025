@@ -1,23 +1,28 @@
+// src/app/register/verify-2fa/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 export default function Verify2FAPage() {
   const router = useRouter();
-  const search = useSearchParams();
 
-  const email = search.get("email");
+  // grab email from query in a browser-only effect
+  const [email, setEmail] = useState<string | null>(null);
   useEffect(() => {
-    if (!email) {
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("email");
+    if (!e) {
       router.push("/register");
+    } else {
+      setEmail(e);
     }
-  }, [email, router]);
+  }, [router]);
 
   // six single-digit inputs
-  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string>("");
 
@@ -26,38 +31,35 @@ export default function Verify2FAPage() {
     inputsRef.current[0]?.focus();
   }, []);
 
-  // handle individual digit entry
   function handleChange(idx: number, val: string) {
     if (!/^\d?$/.test(val)) return;
     const next = [...digits];
     next[idx] = val;
     setDigits(next);
     setError("");
-    if (val && idx < 5) {
-      inputsRef.current[idx + 1]?.focus();
-    }
+    if (val && idx < 5) inputsRef.current[idx + 1]?.focus();
   }
 
-  // backspace to previous box
   function handleKeyDown(idx: number, e: React.KeyboardEvent) {
     if (e.key === "Backspace" && !digits[idx] && idx > 0) {
       inputsRef.current[idx - 1]?.focus();
     }
   }
 
-  // on submit: check code, show error or continue
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const code = digits.join("");
     if (code === "123456") {
-      // still gotta add logic for this
       router.push("/register/complete");
     } else {
-      setError("🚫 Invalid code, please try again. (dev code 123456)");
-      setDigits(Array(6).fill("")); // clear all boxes
-      inputsRef.current[0]?.focus(); // reset focus
+      setError("🚫 Invalid code, please try again.");
+      setDigits(Array(6).fill(""));
+      inputsRef.current[0]?.focus();
     }
   }
+
+  // wait until we have email before rendering
+  if (email === null) return null;
 
   return (
     <div className="max-w-md mx-auto py-12 px-4 space-y-6">
@@ -103,7 +105,7 @@ export default function Verify2FAPage() {
           Didn’t get a code?{" "}
           <button
             onClick={() => {
-              /* TODO: trigger API */
+              // TODO: trigger your resend-code API
             }}
             className="text-indigo-600 hover:underline"
           >
