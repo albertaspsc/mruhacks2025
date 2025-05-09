@@ -1,5 +1,5 @@
 "use client";
-import { redirect } from "next/navigation";
+import { unauthorized } from "next/navigation";
 import { createClient } from "../../../utils/supabase/client";
 import { register } from "./actions";
 import { useEffect, useState } from "react";
@@ -14,10 +14,8 @@ export default function PrivatePage() {
         error,
       } = await supabase.auth.getUser();
       if (!user) {
-        console.log(error);
-        redirect("/error?no_auth");
+        unauthorized();
       }
-      console.log(user);
     };
     getUser();
   });

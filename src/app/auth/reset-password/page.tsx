@@ -4,6 +4,7 @@ import { createClient } from "../../../../utils/supabase/client";
 import { Dispatch, SetStateAction, use, useEffect, useState } from "react";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 import { BindInput } from "../../../components/BindInput/BindInput";
+import { changePassword } from "./actions";
 
 export default function ResetPassword() {
   const supabase = createClient();
@@ -18,7 +19,7 @@ export default function ResetPassword() {
         // TODO - redirect the user to an error page with some instructions
         //
         // See github issue #70
-        redirect("/error?noemail");
+        redirect("/error?cause=not using an email provider");
       }
 
       if (user) {
@@ -27,7 +28,7 @@ export default function ResetPassword() {
     };
 
     getUser();
-  });
+  }, []);
 
   return (
     <>
@@ -44,41 +45,35 @@ type Props = {
   supabase: SupabaseClient;
 };
 function AuthorizedResetPassword({ supabase, user }: Props & { user: User }) {
-  const [passw, setPassw] = useState<string>();
-  const [passwConfirm, setPasswConfirm] = useState<string>();
-  // let usere = use(supabase.auth.getUser())
-  console.log({ user });
+  // const [passw, setPassw] = useState<string>();
+  // const [passwConfirm, setPasswConfirm] = useState<string>();
+  // // let usere = use(supabase.auth.getUser())
+  // ;
 
-  const onSubmit = async () => {
-    if (passw == passwConfirm) {
-      prompt();
-      const { error } = await supabase.auth.updateUser({ password: passw });
-      if (error) {
-        // TODO - redirect the user to an error page with some instructions
-        //
-        // See github issue #70
-        redirect("/error");
-      }
+  // const onSubmit = async () => {
+  //   if (passw == passwConfirm) {
+  //     const { error } = await supabase.auth.updateUser({ password: passw });
+  //     if (error) {
+  //       // TODO - redirect the user to an error page with some instructions
+  //       //
+  //       // See github issue #70
+  //       redirect("/error");
+  //     }
 
-      redirect("/");
-      alert(1);
-    } else {
-      prompt("passwords don't match!");
-    }
-  };
+  //     redirect("/");
+  //   } else {
+  //     prompt("passwords don't match!");
+  //   }
+  // };
   return (
     <>
       <form>
         <h1>Change password for {user.email}</h1>
         <label>New Password:</label>
-        <BindInput type="password" getState={passw} setState={setPassw} />
+        <input type="password" name="password" />
         <label>Confirm Password:</label>
-        <BindInput
-          type="password"
-          getState={passwConfirm}
-          setState={setPasswConfirm}
-        />
-        <button onClick={onSubmit}>Change Password</button>
+        <input type="password" name="confirm" />
+        <button formAction={changePassword}>Change Password</button>
       </form>
     </>
   );
@@ -103,7 +98,6 @@ function PreAuthorizationResetPassword({
   }, []);
   const onClick = async () => {
     if (email) {
-      console.log(origin);
       // zod validate
       supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${origin}/auth/reset-password`,

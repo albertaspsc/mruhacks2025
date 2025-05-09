@@ -1,6 +1,6 @@
 import { use } from "react";
 import { createClient } from "../../../utils/supabase/client";
-import { redirect } from "next/navigation";
+import { unauthorized } from "next/navigation";
 
 export default function Page() {
   const supabase = createClient();
@@ -8,7 +8,7 @@ export default function Page() {
     data: { user },
   } = use(supabase.auth.getUser());
   if (!user) {
-    redirect("/error?no_auth");
+    unauthorized();
   }
   return <p>Some dashboard</p>;
 }

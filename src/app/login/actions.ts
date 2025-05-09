@@ -34,26 +34,6 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-async function postAuthRedirect(): Promise<never> {
-  // redirect path needs:
-  // a. to revalidate auth token when loaded
-  // b. to re-render with information relevant to user (provided after auth)
-  // hence the revalidatePath and emptying of nextJs cache.
-  //
-  // The layout is emptied instead of the page,
-  // because the dashboard (and potentially other pages)
-  // have the same needs.
-  revalidatePath("/register", "layout");
-
-  const { data: registered } = await isRegistered();
-
-  if (false && registered) {
-    redirect("/dashboard");
-  } else {
-    redirect("/register");
-  }
-}
-
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
@@ -72,7 +52,7 @@ export async function login(formData: FormData) {
   //
   // See github issue #70
   if (!success) {
-    redirect("/error?you-are-not");
+    redirect("/error?cause=misformatted login");
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword(login);
@@ -81,26 +61,33 @@ export async function login(formData: FormData) {
   //
   // See github issue #70
   if (!signInError) {
+    // redirect path needs:
+    // a. to revalidate auth token when loaded
+    // b. to re-render with information relevant to user (provided after auth)
+    // hence the revalidatePath and emptying of nextJs cache.
+    //
+    // The layout is emptied instead of the page,
+    // because the dashboard (and potentially other pages)
+    // have the same needs.
     revalidatePath("/register", "layout");
 
-    // const { data: registered } = await isRegistered();
+    const { data: registered } = await isRegistered();
 
-    if (false) {
+    if (registered) {
       redirect("/dashboard");
     } else {
+      redirect("/register");
     }
-    console.log("here");
-    redirect("/register");
   }
 
   const { error: signUpError } = await supabase.auth.signUp(login);
 
-  if (!signUpError) {
-    redirect(`/auth/confirm?email=${login.email}`);
+  if (signUpError) {
+    redirect(`/error?cause=${signUpError.cause ?? "unable to sign up"}`);
   }
+  redirect(`/auth/confirm?email=${login.email}`);
 
   // TODO - redirect the user to an error page with some instructions
   //
   // See github issue #70
-  redirect("/error?end");
 }

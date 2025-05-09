@@ -8,7 +8,7 @@
    ![alt text](images/connect.png)
 3. Copy the database URL
    ![alt text](images/databaseUrl.png)
-   Note that the database password is missing. While most secrets are availible via the dashboard, the supabase password is only availibe when creating the project.
+   Note that the database password is missing. While most secrets are available via the dashboard, the supabase password is only available when creating the project.
 
 If you forgot the password, you can reset your database password from [the database settings](https://supabase.com/dashboard/project/_/settings/database) page on the project dashboard.
 

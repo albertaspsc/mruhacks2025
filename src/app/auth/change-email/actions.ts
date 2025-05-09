@@ -26,6 +26,11 @@ export async function changeEmail(formData: FormData) {
   };
   const oldEmail = getEmail("old");
   if (oldEmail != user.email) {
+  } else {
+    // TODO - redirect the user to an error page with some instructions
+    //
+    // See github issue #70
+    redirect("/error");
   }
   const newEmail = getEmail("new");
 
