@@ -21,10 +21,6 @@ export async function createClient() {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
-            // [Error: @supabase/ssr: createBrowserClient in non-browser runtimes (including Next.js pre-rendering mode)
-            // was not initialized cookie options that specify getAll and setAll functions (deprecated: alternatively use get, set and remove),
-            // but they were needed]
-            // TODO - catch that (See middleware.ts)
           }
         },
       },

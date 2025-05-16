@@ -4,81 +4,85 @@ import {
   pgTable,
   text,
   varchar,
-  pgSchema,
   uuid,
   boolean,
   pgEnum,
   timestamp,
+  pgPolicy,
 } from "drizzle-orm/pg-core";
-import { db } from "./drizzle";
 import { sql } from "drizzle-orm";
-
-const authSchema = pgSchema("auth");
-
-const authUsers = authSchema.table("users", {
-  id: uuid("id").primaryKey(),
-  email: varchar({ length: 255 }),
-});
+import { authUsers, authenticatedRole } from "drizzle-orm/supabase";
+import { setupDB } from "./setup";
 
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  restriction: varchar({ length: 255 }).notNull(),
-}).enableRLS();
+  restriction: varchar({ length: 255 }).notNull().unique(),
+});
 
-export const userRestrictions = pgTable("user_diet_restrictions", {
-  user: uuid("id")
-    .references(() => profiles.id)
-    .notNull(),
-  restriction: integer()
-    .references(() => dietaryRestrictions.id)
-    .notNull(),
-}).enableRLS();
+export const userRestrictions = pgTable(
+  "user_diet_restrictions",
+  {
+    user: uuid("id")
+      .references(() => profiles.id)
+      .notNull(),
+    restriction: integer()
+      .references(() => dietaryRestrictions.id)
+      .notNull(),
+  },
+  (t) => [
+    pgPolicy("policy", {
+      as: "restrictive",
+      to: authenticatedRole,
+      for: "all",
+      using: sql`((select auth.uid()) = ${t.user}) OR ((select auth.uid()) = ${admins.id})`,
+    }),
+  ],
+).enableRLS();
 
 export const interests = pgTable("interests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  interest: varchar({ length: 255 }).notNull(),
-}).enableRLS();
+  interest: varchar({ length: 255 }).notNull().unique(),
+});
 
-export const userInterests = pgTable("user_interests", {
-  user: uuid("id")
-    .references(() => profiles.id)
-    .notNull(),
-  interest: integer()
-    .references(() => interests.id)
-    .notNull(),
-}).enableRLS();
+export const userInterests = pgTable(
+  "user_interests",
+  {
+    user: uuid("id")
+      .references(() => profiles.id)
+      .notNull(),
+    interest: integer()
+      .references(() => interests.id)
+      .notNull(),
+  },
+  (t) => [
+    pgPolicy("policy", {
+      as: "restrictive",
+      to: authenticatedRole,
+      for: "all",
+      using: sql`((select auth.uid()) = ${t.user}) OR ((select auth.uid()) = ${admins.id})`,
+    }),
+  ],
+).enableRLS();
 
-export const profiles = pgTable("profile", {
-  id: uuid("id")
-    .primaryKey()
-    .references(() => authUsers.id),
-  email: varchar({ length: 255 }).notNull(),
-  firstName: varchar("f_name", { length: 255 }),
-  lastName: varchar("l_name", { length: 255 }),
-}).enableRLS();
-
-db.execute(sql`
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-language plpgsql
-security definer set search_path = ''
-as $$
-
-BEGIN
-  INSERT INTO ${profiles} (${profiles.id}, ${profiles.firstName}, ${profiles.lastName}, ${profiles.email})
-    VALUES (
-      new.id, 
-      SPLIT_PART(new.raw_user_meta_data ->> 'full_name', ' ', 1), 
-      SPLIT_PART(new.raw_user_meta_data ->> 'full_name', ' ', 2),
-      new.email
-    );
-  RETURN new;
-END;
-$$;
-
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE handle_new_user();`);
+export const profiles = pgTable(
+  "profile",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .references(() => authUsers.id),
+    email: varchar({ length: 255 }).notNull(),
+    firstName: varchar("f_name", { length: 255 }),
+    lastName: varchar("l_name", { length: 255 }),
+  },
+  (t) => [
+    pgPolicy("policy", {
+      as: "restrictive",
+      to: authenticatedRole,
+      for: "all",
+      using: sql`((select auth.uid()) = ${t.id})`,
+    }),
+  ],
+).enableRLS();
 
 export const yearOfStudy = pgEnum("year_of_study", [
   "1st",
@@ -90,28 +94,28 @@ export const yearOfStudy = pgEnum("year_of_study", [
 
 export const universities = pgTable("universities", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  university: varchar("uni", { length: 255 }),
-}).enableRLS();
+  university: varchar("uni", { length: 255 }).unique(),
+});
 
 export const majors = pgTable("majors", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  major: varchar({ length: 255 }),
-}).enableRLS();
+  major: varchar({ length: 255 }).unique(),
+});
 
 export const marketingTypes = pgTable("marketing_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  marketing: varchar({ length: 255 }),
-}).enableRLS();
+  marketing: varchar({ length: 255 }).unique(),
+});
 
 export const experienceTypes = pgTable("experience_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  experience: varchar({ length: 255 }),
-}).enableRLS();
+  experience: varchar({ length: 255 }).unique(),
+});
 
 export const gender = pgTable("gender", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  gender: varchar({ length: 255 }),
-}).enableRLS();
+  gender: varchar({ length: 255 }).unique(),
+});
 
 export const parkingSituation = pgEnum("parking_state", [
   "Yes",
@@ -119,44 +123,71 @@ export const parkingSituation = pgEnum("parking_state", [
   "Not sure",
 ]);
 
-export const users = pgTable("users", {
-  id: uuid("id")
-    .primaryKey()
-    .references(() => profiles.id)
-    .notNull(),
-  dob: date().notNull(),
-  gender: integer()
-    .references(() => gender.id)
-    .notNull(),
-  university: integer()
-    .references(() => universities.id)
-    .notNull(),
-  previousAttendance: boolean("prev_attendance").notNull(),
-  major: integer()
-    .references(() => majors.id)
-    .notNull(),
-  parking: parkingSituation().notNull(),
-  schoolEmail: varchar("school_email", { length: 255 }).notNull(),
-  yearOfStudy: yearOfStudy().notNull(),
-  experience: integer()
-    .references(() => experienceTypes.id)
-    .notNull(),
-  accomodations: text().notNull(),
-  marketing: integer()
-    .references(() => marketingTypes.id)
-    .notNull(),
-  timestamp: timestamp(),
-}).enableRLS();
+export const participantStatus = pgEnum("participant_status", [
+  "confirmed",
+  "pending",
+  "waitlisted",
+]);
 
-db.execute(sql`
-CREATE OR REPLACE FUNCTION update_users_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-  new.timestamp := CURRENT_TIMESTAMP;
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql;
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .references(() => profiles.id)
+      .notNull(),
+    dob: date().notNull(),
+    gender: integer()
+      .references(() => gender.id)
+      .notNull(),
+    university: integer()
+      .references(() => universities.id)
+      .notNull(),
+    previousAttendance: boolean("prev_attendance").notNull(),
+    major: integer()
+      .references(() => majors.id)
+      .notNull(),
+    parking: parkingSituation().notNull(),
+    schoolEmail: varchar("school_email", { length: 255 }).notNull(),
+    yearOfStudy: yearOfStudy().notNull(),
+    experience: integer()
+      .references(() => experienceTypes.id)
+      .notNull(),
+    accomodations: text().notNull(),
+    marketing: integer()
+      .references(() => marketingTypes.id)
+      .notNull(),
+    timestamp: timestamp(),
+    status: participantStatus().default(participantStatus.enumValues[2]),
+  },
+  (t) => [
+    pgPolicy("policy", {
+      as: "restrictive",
+      to: authenticatedRole,
+      for: "all",
+      using: sql`((select auth.uid()) = ${t.id}) OR ((select auth.uid()) = ${admins.id})`,
+    }),
+  ],
+).enableRLS();
 
-CREATE TRIGGER set_users_timestamp
-BEFORE INSERT ON users
-FOR EACH ROW EXECUTE PROCEDURE update_users_timestamp();`);
+export const admins = pgTable(
+  "admins",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .references(() => profiles.id)
+      .notNull(),
+    email: varchar({ length: 255 }).notNull(),
+  },
+  (t) => [
+    pgPolicy("policy", {
+      as: "restrictive",
+      to: authenticatedRole,
+      for: "all",
+      using: sql`true`,
+      withCheck: sql`((select auth.uid()) = ${t.id})`,
+    }),
+  ],
+).enableRLS();
+
+setupDB();
