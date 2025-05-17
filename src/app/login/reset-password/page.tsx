@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,7 +58,7 @@ const fireConfetti = (canvas: HTMLCanvasElement) => {
   draw();
 };
 
-export default function ResetPasswordPage() {
+const ResetPasswordPageContent = () => {
   const router = useRouter();
   const params = useSearchParams();
   const userName = params.get("name") || "User";
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
         setError("");
       }
     }
-  }, [password, confirmPassword]);
+  }, [password, confirmPassword, error]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -270,5 +270,13 @@ export default function ResetPasswordPage() {
         </div>
       </form>
     </div>
+  );
+};
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
