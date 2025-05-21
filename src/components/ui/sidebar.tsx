@@ -46,10 +46,11 @@ export function Sidebar({ className, user, ...props }: SidebarProps) {
     // Add logout logic here
   };
 
+  // Profile, Discord, and Support items
   const topNavItems: NavItem[] = [
     {
       title: "Profile",
-      href: "/dashboard/profile",
+      href: "/user/profile",
       icon: <User className="h-5 w-5" />,
     },
     {
@@ -66,10 +67,11 @@ export function Sidebar({ className, user, ...props }: SidebarProps) {
     },
   ];
 
+  // Settings and Logout items
   const bottomNavItems: NavItem[] = [
     {
       title: "Settings",
-      href: "/dashboard/settings",
+      href: "/user/settings",
       icon: <Settings className="h-5 w-5" />,
     },
     {

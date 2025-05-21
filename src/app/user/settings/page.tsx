@@ -1,362 +1,432 @@
-// "use client"
+"use client";
 
-// import { zodResolver } from "@hookform/resolvers/zod"
-// import { useForm } from "react-hook-form"
-// import { z } from "zod"
-// import { useEffect, useState } from "react"
-// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-// import { Button } from "@/components/ui/button"
-// import {
-//   Form,
-//   FormControl,
-//   FormDescription,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form"
-// import { Input } from "@/components/ui/input"
-// import { Loader2 } from "lucide-react"
-// import { toast } from "@/components/hooks/use-toast"
+import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-// // Profile form schema
-// const profileFormSchema = z.object({
-//   firstName: z.string().min(2, {
-//     message: "First name must be at least 2 characters.",
-//   }),
-//   lastName: z.string().min(2, {
-//     message: "Last name must be at least 2 characters.",
-//   }),
-//   email: z.string().email({
-//     message: "Please enter a valid email address.",
-//   }),
-// })
+// Mocked toast function
+const toast = ({ title, description, variant = "default" }) => {
+  console.log(`Toast: ${title} - ${description} (${variant})`);
+  alert(`${title}: ${description}`);
+};
 
-// // Password form schema
-// const passwordFormSchema = z.object({
-//   currentPassword: z.string().min(6, {
-//     message: "Current password must be at least 6 characters.",
-//   }),
-//   newPassword: z.string().min(8, {
-//     message: "New password must be at least 8 characters.",
-//   }),
-//   confirmPassword: z.string().min(8, {
-//     message: "Confirm password must be at least 8 characters.",
-//   }),
-// }).refine((data) => data.newPassword === data.confirmPassword, {
-//   message: "New passwords don't match",
-//   path: ["confirmPassword"],
-// })
+// Email preferences form type
+type EmailPreferencesValues = {
+  marketingEmails: boolean;
+  eventUpdates: boolean;
+  hackathonReminders: boolean;
+};
 
-// type ProfileFormValues = z.infer<typeof profileFormSchema>
-// type PasswordFormValues = z.infer<typeof passwordFormSchema>
+// Password form type
+type PasswordFormValues = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
 
-// export default function SettingsPage() {
-//   const [isLoading, setIsLoading] = useState(true)
-//   const [user, setUser] = useState<any>(null)
-//   const supabase = createClientComponentClient()
+export default function SettingsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-//   // Profile form
-//   const profileForm = useForm<ProfileFormValues>({
-//     resolver: zodResolver(profileFormSchema),
-//     defaultValues: {
-//       firstName: "",
-//       lastName: "",
-//       email: "",
-//     },
-//   })
+  // Email preferences form
+  const emailPreferencesForm = useForm<EmailPreferencesValues>({
+    defaultValues: {
+      marketingEmails: false,
+      eventUpdates: true,
+      hackathonReminders: true,
+    },
+  });
 
-//   // Password form
-//   const passwordForm = useForm<PasswordFormValues>({
-//     resolver: zodResolver(passwordFormSchema),
-//     defaultValues: {
-//       currentPassword: "",
-//       newPassword: "",
-//       confirmPassword: "",
-//     },
-//   })
+  // Password form
+  const passwordForm = useForm<PasswordFormValues>({
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
-//   // Fetch user data
-//   useEffect(() => {
-//     const fetchUserData = async () => {
-//       try {
-//         const { data: { session } } = await supabase.auth.getSession()
+  // Fetch mock user data
+  useEffect(() => {
+    // Simulate API delay
+    const timeout = setTimeout(() => {
+      const mockUser = {
+        id: "asia123",
+        email: "asia@mtroyal.ca",
+        emailPreferences: {
+          marketingEmails: false,
+          eventUpdates: true,
+          hackathonReminders: true,
+        },
+      };
 
-//         if (!session) {
-//           return
-//         }
+      setUser(mockUser);
 
-//         const { data: profile, error } = await supabase
-//           .from('profile')
-//           .select('id, email, f_name, l_name')
-//           .eq('id', session.user.id)
-//           .single()
+      // Email preference form values
+      emailPreferencesForm.reset({
+        marketingEmails: mockUser.emailPreferences.marketingEmails,
+        eventUpdates: mockUser.emailPreferences.eventUpdates,
+        hackathonReminders: mockUser.emailPreferences.hackathonReminders,
+      });
 
-//         if (error) {
-//           throw error
-//         }
+      setIsLoading(false);
+    }, 1000);
 
-//         setUser({
-//           id: profile.id,
-//           email: profile.email,
-//           firstName: profile.f_name || '',
-//           lastName: profile.l_name || '',
-//         })
+    return () => clearTimeout(timeout);
+  }, [emailPreferencesForm]);
 
-//         profileForm.reset({
-//           firstName: profile.f_name || '',
-//           lastName: profile.l_name || '',
-//           email: profile.email,
-//         })
-//       } catch (error) {
-//         console.error('Error fetching profile:', error)
-//         toast({
-//           title: "Error",
-//           description: "Failed to load profile data",
-//           variant: "destructive",
-//         })
-//       } finally {
-//         setIsLoading(false)
-//       }
-//     }
+  // Handle email preferences form submission
+  function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
+    setIsLoading(true);
 
-//     fetchUserData()
-//   }, [supabase, profileForm])
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Email preferences submitted:", data);
+      setIsLoading(false);
+      toast({
+        title: "Preferences updated",
+        description: "Your email preferences have been updated successfully.",
+        variant: "default",
+      });
+    }, 1000);
+  }
 
-//   // Handle profile form submission
-//   async function onProfileSubmit(data: ProfileFormValues) {
-//     setIsLoading(true)
+  // Handle password form submission
+  function onPasswordSubmit(data: PasswordFormValues) {
+    setIsLoading(true);
 
-//     try {
-//       // Update profile in database
-//       const { error: profileError } = await supabase
-//         .from('profile')
-//         .update({
-//           f_name: data.firstName,
-//           l_name: data.lastName,
-//           email: data.email,
-//         })
-//         .eq('id', user.id)
+    // Validate password match
+    if (data.newPassword !== data.confirmPassword) {
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: "New passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
 
-//       if (profileError) {
-//         throw profileError
-//       }
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Password data submitted:", data);
+      setIsLoading(false);
 
-//       // Update email in auth if changed
-//       if (data.email !== user.email) {
-//         const { error: emailError } = await supabase.auth.updateUser({
-//           email: data.email,
-//         })
+      passwordForm.reset({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
 
-//         if (emailError) {
-//           throw emailError
-//         }
-//       }
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+        variant: "default",
+      });
+    }, 1000);
+  }
 
-//       toast({
-//         title: "Profile updated",
-//         description: "Your profile information has been updated successfully.",
-//       })
-//     } catch (error: any) {
-//       toast({
-//         title: "Error",
-//         description: error.message || "Failed to update profile",
-//         variant: "destructive",
-//       })
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
+  // Handle profile deletion
+  function handleDeleteProfile() {
+    setIsDeleting(true);
 
-//   // Handle password form submission
-//   async function onPasswordSubmit(data: PasswordFormValues) {
-//     setIsLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Profile deleted");
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      toast({
+        title: "Profile deleted",
+        description:
+          "Your profile has been deleted successfully. You will be redirected to the home page.",
+        variant: "default",
+      });
 
-//     try {
-//       const { error } = await supabase.auth.updateUser({
-//         password: data.newPassword,
-//       })
+      // Redirect would happen here in a real implementation
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    }, 1500);
+  }
 
-//       if (error) {
-//         throw error
-//       }
+  // Show loading state
+  if (isLoading && !user) {
+    return <LoadingSpinner />;
+  }
 
-//       passwordForm.reset({
-//         currentPassword: "",
-//         newPassword: "",
-//         confirmPassword: "",
-//       })
+  return (
+    <div className="container max-w-4xl py-10">
+      <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
 
-//       toast({
-//         title: "Password updated",
-//         description: "Your password has been changed successfully.",
-//       })
-//     } catch (error: any) {
-//       toast({
-//         title: "Error",
-//         description: error.message || "Failed to update password",
-//         variant: "destructive",
-//       })
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
+      <Tabs defaultValue="email" className="w-full">
+        <TabsList className="mb-8">
+          <TabsTrigger value="email">Email Preferences</TabsTrigger>
+          <TabsTrigger value="password">Password</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
+        </TabsList>
 
-//   if (isLoading && !user) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen">
-//         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-//       </div>
-//     )
-//   }
+        {/* Email Preferences Tab */}
+        <TabsContent value="email">
+          <Card>
+            <CardHeader>
+              <CardTitle>Email Preferences</CardTitle>
+              <CardDescription>
+                Control what types of emails you receive from us.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...emailPreferencesForm}>
+                <form
+                  onSubmit={emailPreferencesForm.handleSubmit(
+                    onEmailPreferencesSubmit,
+                  )}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <FormField
+                      control={emailPreferencesForm.control}
+                      name="marketingEmails"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Marketing Emails</FormLabel>
+                            <FormDescription>
+                              Receive emails about our services, partners, and
+                              other opportunities.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
 
-//   return (
-//     <div className="container max-w-4xl py-10">
-//       <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+                    <FormField
+                      control={emailPreferencesForm.control}
+                      name="eventUpdates"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Event Updates</FormLabel>
+                            <FormDescription>
+                              Receive updates about upcoming hackathons and
+                              events.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
 
-//       <Tabs defaultValue="profile" className="w-full">
-//         <TabsList className="mb-8">
-//           <TabsTrigger value="profile">Profile Information</TabsTrigger>
-//           <TabsTrigger value="password">Password</TabsTrigger>
-//         </TabsList>
+                    <FormField
+                      control={emailPreferencesForm.control}
+                      name="hackathonReminders"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Hackathon Reminders</FormLabel>
+                            <FormDescription>
+                              Receive reminders about hackathons you&apos;ve
+                              registered for.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-//         {/* Profile Tab */}
-//         <TabsContent value="profile">
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Profile Information</CardTitle>
-//               <CardDescription>
-//                 Update your personal information and email address.
-//               </CardDescription>
-//             </CardHeader>
-//             <CardContent>
-//               <Form {...profileForm}>
-//                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-//                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-//                     <FormField
-//                       control={profileForm.control}
-//                       name="firstName"
-//                       render={({ field }) => (
-//                         <FormItem>
-//                           <FormLabel>First Name</FormLabel>
-//                           <FormControl>
-//                             <Input placeholder="First Name" {...field} />
-//                           </FormControl>
-//                           <FormMessage />
-//                         </FormItem>
-//                       )}
-//                     />
-//                     <FormField
-//                       control={profileForm.control}
-//                       name="lastName"
-//                       render={({ field }) => (
-//                         <FormItem>
-//                           <FormLabel>Last Name</FormLabel>
-//                           <FormControl>
-//                             <Input placeholder="Last Name" {...field} />
-//                           </FormControl>
-//                           <FormMessage />
-//                         </FormItem>
-//                       )}
-//                     />
-//                   </div>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save Preferences
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-//                   <FormField
-//                     control={profileForm.control}
-//                     name="email"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel>Email</FormLabel>
-//                         <FormControl>
-//                           <Input placeholder="Email" type="email" {...field} />
-//                         </FormControl>
-//                         <FormDescription>
-//                           This is the email used for communication and login.
-//                         </FormDescription>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
+        {/* Password Tab */}
+        <TabsContent value="password">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+              <CardDescription>
+                Update your password for enhanced security.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...passwordForm}>
+                <form
+                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={passwordForm.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Current Password"
+                            type="password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-//                   <Button type="submit" disabled={isLoading}>
-//                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-//                     Save Changes
-//                   </Button>
-//                 </form>
-//               </Form>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
+                  <FormField
+                    control={passwordForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="New Password"
+                            type="password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Password must be at least 8 characters long.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-//         {/* Password Tab */}
-//         <TabsContent value="password">
-//           <Card>
-//             <CardHeader>
-//               <CardTitle>Change Password</CardTitle>
-//               <CardDescription>
-//                 Update your password for enhanced security.
-//               </CardDescription>
-//             </CardHeader>
-//             <CardContent>
-//               <Form {...passwordForm}>
-//                 <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-//                   <FormField
-//                     control={passwordForm.control}
-//                     name="currentPassword"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel>Current Password</FormLabel>
-//                         <FormControl>
-//                           <Input placeholder="Current Password" type="password" {...field} />
-//                         </FormControl>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
+                  <FormField
+                    control={passwordForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Confirm New Password"
+                            type="password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-//                   <FormField
-//                     control={passwordForm.control}
-//                     name="newPassword"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel>New Password</FormLabel>
-//                         <FormControl>
-//                           <Input placeholder="New Password" type="password" {...field} />
-//                         </FormControl>
-//                         <FormDescription>
-//                           Password must be at least 8 characters long.
-//                         </FormDescription>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Change Password
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-//                   <FormField
-//                     control={passwordForm.control}
-//                     name="confirmPassword"
-//                     render={({ field }) => (
-//                       <FormItem>
-//                         <FormLabel>Confirm New Password</FormLabel>
-//                         <FormControl>
-//                           <Input placeholder="Confirm New Password" type="password" {...field} />
-//                         </FormControl>
-//                         <FormMessage />
-//                       </FormItem>
-//                     )}
-//                   />
+        {/* Account Tab */}
+        <TabsContent value="account">
+          <Card>
+            <CardHeader>
+              <CardTitle>Delete Account</CardTitle>
+              <CardDescription>
+                Permanently delete your account and all associated data.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Warning: This action cannot be undone</AlertTitle>
+                <AlertDescription>
+                  Deleting your account will permanently remove all your data,
+                  including your profile, registration information, and
+                  hackathon history.
+                </AlertDescription>
+              </Alert>
 
-//                   <Button type="submit" disabled={isLoading}>
-//                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-//                     Change Password
-//                   </Button>
-//                 </form>
-//               </Form>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-//       </Tabs>
-//     </div>
-//   )
-// }
+              {showDeleteConfirm ? (
+                <div className="border border-red-200 rounded-md p-6 bg-red-50">
+                  <h3 className="text-lg font-medium text-red-800 mb-4">
+                    Are you absolutely sure?
+                  </h3>
+                  <p className="text-red-700 mb-6">
+                    This action cannot be undone. This will permanently delete
+                    your account and remove your data from our servers.
+                  </p>
+                  <div className="flex space-x-4">
+                    <Button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleDeleteProfile} disabled={isDeleting}>
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Yes, Delete My Account"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button onClick={() => setShowDeleteConfirm(true)}>
+                  Delete Account
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

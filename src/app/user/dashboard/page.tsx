@@ -7,12 +7,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
-
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-600"></div>
-  </div>
-);
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Status banner component
 const StatusBanner = ({
@@ -82,15 +77,14 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        //
         // TODO - replace with actual auth check
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Mock user data
         const mockUser: User = {
-          id: "user123",
+          id: "asia123",
           name: "Asia Hacker",
-          email: "asia@example.com",
+          email: "asia@mtroyal.ca",
           status: "confirmed", // Change to test different statuses
         };
 
