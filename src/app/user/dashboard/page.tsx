@@ -107,6 +107,13 @@ export default function DashboardPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  // Handle logout
+  const handleLogout = () => {
+    // Redirects to logout route with next parameter pointing to main site
+    // Route handles Supabase logout and redirect automatically
+    window.location.href = "/auth/logout?next=/";
+  };
+
   // Show loading state
   if (isLoading) {
     return <LoadingSpinner />;
@@ -122,7 +129,7 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-gray-100">
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-white border-r">
-        <Sidebar user={user} />
+        <Sidebar user={user} onLogout={handleLogout} />
       </div>
 
       {/* Main Content */}
@@ -140,7 +147,7 @@ export default function DashboardPage() {
               className="p-0 w-64 bg-white !backdrop-blur-none"
               style={{ backgroundColor: "white" }}
             >
-              <Sidebar user={user} />
+              <Sidebar user={user} onLogout={handleLogout} />
             </SheetContent>
           </Sheet>
 

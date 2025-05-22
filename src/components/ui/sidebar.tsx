@@ -11,21 +11,21 @@ import {
   MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-// Define an interface for navigation items
+// Interface for navigation items
 interface NavItem {
   title: string;
   href: string;
   icon: React.ReactNode;
   external?: boolean;
   onClick?: () => void;
-  isPopover?: boolean; // New property to identify popover items
+  isPopover?: boolean;
 }
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -34,23 +34,17 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     name: string;
     [key: string]: any;
   };
+  onLogout?: () => void; // Logout handler prop
 }
 
-export function Sidebar({ className, user, ...props }: SidebarProps) {
+export function Sidebar({ className, user, onLogout, ...props }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const userName = user?.name?.split(" ")[0] || "Hacker";
 
-  // Handle logout securely
-  const handleLogout = async () => {
-    // Add logout logic here
-  };
-
-  // Profile, Discord, and Support items
   const topNavItems: NavItem[] = [
     {
       title: "Profile",
-      href: "/user/profile",
+      href: "/dashboard/profile",
       icon: <User className="h-5 w-5" />,
     },
     {
@@ -67,7 +61,6 @@ export function Sidebar({ className, user, ...props }: SidebarProps) {
     },
   ];
 
-  // Settings and Logout items
   const bottomNavItems: NavItem[] = [
     {
       title: "Settings",
@@ -76,9 +69,9 @@ export function Sidebar({ className, user, ...props }: SidebarProps) {
     },
     {
       title: "Logout",
-      href: "#",
+      href: "/",
       icon: <LogOut className="h-5 w-5" />,
-      onClick: handleLogout,
+      onClick: onLogout,
     },
   ];
 
