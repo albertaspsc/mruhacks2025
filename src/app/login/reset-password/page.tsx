@@ -86,7 +86,7 @@ const ResetPasswordPageContent = () => {
     }
     setError("");
     setSuccess(true);
-    setTimeout(() => router.push("/hackathon-dashboard"), 1800);
+    setTimeout(() => router.push("/user/dashboard"), 1800);
   };
 
   useEffect(() => {

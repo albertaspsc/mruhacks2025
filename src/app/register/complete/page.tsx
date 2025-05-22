@@ -97,8 +97,8 @@ export default function CompletePage() {
         {/* Dashboard button */}
         <Button
           type="button"
-          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white py-2 rounded-lg transition z-10"
-          onClick={() => router.push("/hackathon-dashboard")}
+          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition z-10" // Changed to black button style
+          onClick={() => router.push("/user/dashboard")}
         >
           Take Me to Dashboard
         </Button>

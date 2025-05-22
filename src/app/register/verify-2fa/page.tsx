@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import MascotUrl from "@/assets/mascots/crt.svg";
 
 export default function Verify2FAPage() {
   const router = useRouter();
-
-  // grab email from query in a browser-only effect
   const [email, setEmail] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  const [error, setError] = useState<string>("");
+  const [cooldown, setCooldown] = useState(0);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+
+  // Get email from query param
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const e = params.get("email");
@@ -20,97 +27,140 @@ export default function Verify2FAPage() {
     }
   }, [router]);
 
-  // six single-digit inputs
-  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
-  const [error, setError] = useState<string>("");
-
-  // focus first box on mount
-  useEffect(() => {
-    inputsRef.current[0]?.focus();
-  }, []);
-
-  function handleChange(idx: number, val: string) {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...digits];
-    next[idx] = val;
-    setDigits(next);
+  // Simulate sending email (backend call)
+  const sendVerificationEmail = async () => {
+    if (!email) return;
+    setStatus("sending");
     setError("");
-    if (val && idx < 5) inputsRef.current[idx + 1]?.focus();
-  }
 
-  function handleKeyDown(idx: number, e: React.KeyboardEvent) {
-    if (e.key === "Backspace" && !digits[idx] && idx > 0) {
-      inputsRef.current[idx - 1]?.focus();
+    try {
+      // await fetch(`/api/send-verify-email?email=${encodeURIComponent(email)}`);
+      await new Promise((res) => setTimeout(res, 1200)); // Simulate network
+      setStatus("sent");
+      setCooldown(30);
+
+      // Clear any existing interval
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+
+      // Set new interval
+      const id = setInterval(() => {
+        setCooldown((c) => {
+          if (c <= 1) {
+            clearInterval(id);
+            setIntervalId(null);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
+
+      setIntervalId(id);
+    } catch (e) {
+      setStatus("error");
+      setError("Failed to send verification email. Please try again.");
     }
-  }
+  };
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const code = digits.join("");
-    if (code === "123456") {
-      router.push("/register/complete");
-    } else {
-      setError("🚫 Invalid code, please try again. Dev code: 123456");
-      setDigits(Array(6).fill(""));
-      inputsRef.current[0]?.focus();
-    }
-  }
+  useEffect(() => {
+    if (email) sendVerificationEmail();
 
-  // wait until we have email before rendering
+    // Cleanup
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email]);
   if (email === null) return null;
 
   return (
-    <div className="max-w-md mx-auto py-12 px-4 space-y-6">
-      <h1 className="text-center text-3xl font-bold">MRUHacks</h1>
-      <div className="border-b border-gray-300" />
-
-      <div className="bg-white p-6 rounded-lg shadow-lg space-y-4">
-        <h2 className="text-xl font-semibold text-center">
-          Two-Factor Authentication
-        </h2>
-        <p className="text-center text-gray-600">
-          Enter the 6-digit code sent to{" "}
-          <span className="font-medium text-indigo-600">{email}</span>
-        </p>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="flex justify-center space-x-2">
-            {digits.map((d, i) => (
-              <input
-                key={i}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={d}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                ref={(el) => {
-                  inputsRef.current[i] = el;
-                }}
-                className="w-12 h-12 border border-gray-300 rounded text-center text-lg focus:border-indigo-500 focus:outline-none"
+    <div className="flex items-start justify-center min-h-screen bg-white pt-8 px-4">
+      <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-2xl px-6 py-8 space-y-6 z-10 shadow-xl">
+        {" "}
+        {/* Added shadow-xl, changed rounded-xl to rounded-2xl */}
+        {/* Email icon */}
+        <div className="flex justify-center">
+          <div className="bg-black/5 rounded-full p-3">
+            {" "}
+            {/* Changed bg-gray-100 to bg-black/5 */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-9 w-9 text-black" // Changed from text-green-500 to text-black
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
-            ))}
+            </svg>
           </div>
-
-          {error && <p className="text-center text-red-600 text-sm">{error}</p>}
-
-          <Button type="submit" className="w-full">
-            Verify &amp; Continue
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500">
-          Didn’t get a code?{" "}
-          <button
-            onClick={() => {
-              // TODO: trigger API
-            }}
-            className="text-indigo-600 hover:underline"
-          >
-            Resend code
-          </button>
+        </div>
+        <h1 className="text-2xl font-semibold text-center">
+          Verify Your Email
+        </h1>
+        <p className="text-gray-700 text-base leading-relaxed text-center">
+          We sent a verification link to{" "}
+          <span className="font-medium text-black">{email}</span>.{" "}
+          {/* Removed break-all class */}
+          Please check your inbox to continue registration.
         </p>
+        {status === "sent" && (
+          <p className="text-black text-sm font-medium text-center">
+            Verification email sent! Check your inbox.
+          </p>
+        )}{" "}
+        {status === "error" && (
+          <p className="text-red-600 text-sm font-medium text-center">
+            {error}
+          </p>
+        )}
+        <Button
+          type="button"
+          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition hover:scale-[1.02] active:scale-[0.98]" /* Added hover and active scale */
+          onClick={sendVerificationEmail}
+          disabled={status === "sending" || cooldown > 0}
+        >
+          {status === "sending"
+            ? "Sending..."
+            : cooldown > 0
+              ? `Resend Email (${cooldown}s)`
+              : "Resend Email"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-black hover:bg-gray-100"
+          onClick={() => router.push("/register")}
+        >
+          Back to Register
+        </Button>
+        {/* Mascot */}
+        <div className="flex justify-center pt-4">
+          <Image
+            src={MascotUrl}
+            alt="MRUHacks Mascot"
+            width={100}
+            height={100}
+            className="object-contain opacity-90" /* Changed opacity-80 to opacity-90 */
+            priority
+          />
+        </div>
+        {/* dev button */}
+        <button
+          type="button"
+          onClick={() => router.push("/register/complete")}
+          className="absolute bottom-2.5 right-[18px] text-[11px] text-black opacity-35 bg-transparent border-none cursor-pointer tracking-[1.5px] z-1"
+          tabIndex={-1}
+        >
+          dev complete &rarr;
+        </button>
       </div>
     </div>
   );

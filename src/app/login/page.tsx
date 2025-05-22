@@ -18,7 +18,7 @@ export default function LoginPage() {
     e.preventDefault();
     // Mock login logic
     if (email && password) {
-      router.push("/hackathon-dashboard");
+      router.push("/user/dashboard");
     } else {
       setError("Please enter your email and password.");
     }
