@@ -1,12 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 import logo from "../../assets/logos/color-logo.svg";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -132,6 +134,29 @@ const Navbar = () => {
             >
               Sponsors
             </a>
+
+            {/* Temporary login button for testing */}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push("/login");
+              }}
+              style={{
+                marginLeft: "20px",
+                padding: "8px 16px",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+              onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
+              onMouseOut={(e) => (e.target.style.backgroundColor = "#007bff")}
+            >
+              Login (Test)
+            </button>
           </div>
         </div>
       </div>
