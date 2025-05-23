@@ -44,7 +44,7 @@ export function Sidebar({ className, user, onLogout, ...props }: SidebarProps) {
   const topNavItems: NavItem[] = [
     {
       title: "Profile",
-      href: "/dashboard/profile",
+      href: "/user/profile",
       icon: <User className="h-5 w-5" />,
     },
     {
