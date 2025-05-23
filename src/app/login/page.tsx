@@ -73,6 +73,21 @@ export default function LoginPage() {
         >
           Forgot password?
         </button>
+
+        {/* Don't have an account link */}
+        <div className="w-full text-center pt-2">
+          <p className="text-sm text-gray-600">
+            Don&apos;t have an account?{" "}
+            <button
+              type="button"
+              onClick={() => router.push("/register")}
+              className="text-black font-semibold hover:underline focus:outline-none focus:underline"
+            >
+              Create one
+            </button>
+          </p>
+        </div>
+
         {/* Mascot inside the card, below the buttons */}
         <div className="flex justify-center pt-4">
           <Image
