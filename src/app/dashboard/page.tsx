@@ -1,4 +1,4 @@
-import { use } from "react";
+import React, { use } from "react";
 import { createClient } from "../../../utils/supabase/client";
 import { redirect, unauthorized } from "next/navigation";
 

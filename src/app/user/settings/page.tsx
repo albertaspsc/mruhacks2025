@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -27,8 +27,26 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
+interface User {
+  id: string;
+  email: string;
+  emailPreferences: {
+    marketingEmails: boolean;
+    eventUpdates: boolean;
+    hackathonReminders: boolean;
+  };
+}
+
 // Mocked toast function
-const toast = ({ title, description, variant = "default" }) => {
+const toast = ({
+  title,
+  description,
+  variant = "default",
+}: {
+  title: string;
+  description: string;
+  variant?: string;
+}) => {
   console.log(`Toast: ${title} - ${description} (${variant})`);
   alert(`${title}: ${description}`);
 };
@@ -49,7 +67,7 @@ type PasswordFormValues = {
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

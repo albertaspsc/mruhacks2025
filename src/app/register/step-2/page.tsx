@@ -8,7 +8,7 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 type FinalForm = Pick<
   RegistrationData,
@@ -106,7 +106,7 @@ export default function Step2Page() {
           <select
             id="interests"
             {...register("interests", {
-              validate: (v) => v.length <= 3 || "Select at most 3",
+              validate: (v) => (v || []).length <= 3 || "Select at most 3",
             })}
             multiple
             size={5}

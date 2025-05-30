@@ -57,8 +57,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "22.13.10",
+    "@types/react-dom": "^19.1.5",
     "autoprefixer": "^10.4.21",
-    "drizzle-kit": "^0.30.6",
+    "drizzle-kit": "^0.18.1",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
     "husky": "^9.1.7",

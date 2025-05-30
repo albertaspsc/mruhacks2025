@@ -129,7 +129,7 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-gray-100">
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-white border-r">
-        <Sidebar user={user} onLogout={handleLogout} />
+        <Sidebar user={user || undefined} onLogout={handleLogout} />
       </div>
 
       {/* Main Content */}
@@ -147,7 +147,7 @@ export default function DashboardPage() {
               className="p-0 w-64 bg-white !backdrop-blur-none"
               style={{ backgroundColor: "white" }}
             >
-              <Sidebar user={user} onLogout={handleLogout} />
+              <Sidebar user={user || undefined} onLogout={handleLogout} />
             </SheetContent>
           </Sheet>
 
