@@ -8,7 +8,7 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 type FinalForm = Pick<
   RegistrationData,
@@ -49,7 +49,10 @@ export default function Step2Page() {
     formState: { errors },
   } = useForm<FinalForm>({ defaultValues: { interests: [], dietary: [] } });
 
-  const interests = watch("interests") || [];
+  const interests = useMemo(
+    () => watch("interests") || [],
+    [watch("interests")],
+  );
 
   // enforce max 3 interests
   useEffect(() => {
@@ -106,7 +109,7 @@ export default function Step2Page() {
           <select
             id="interests"
             {...register("interests", {
-              validate: (v) => v.length <= 3 || "Select at most 3",
+              validate: (v) => (v?.length ?? 0) <= 3 || "Select at most 3",
             })}
             multiple
             size={5}

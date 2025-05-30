@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
+import { login, loginWithGoogle } from "./actions";
+import { FcGoogle } from "react-icons/fc";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,13 +15,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login logic
-    if (email && password) {
-      router.push("/user/dashboard");
-    } else {
-      setError("Please enter your email and password.");
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    try {
+      await login(formData);
+    } catch (err) {
+      setError("Login failed. Please try again.");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setError("Google login failed. Please try again.");
     }
   };
 
@@ -34,7 +45,9 @@ export default function LoginPage() {
           Log In
         </h1>
         <div className="w-full">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-black">
+            Email
+          </Label>
           <Input
             id="email"
             type="email"
@@ -42,11 +55,13 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@mtroyal.ca"
             required
-            className="mt-1 pr-10"
+            className="mt-1 pr-10 text-black"
           />
         </div>
         <div className="w-full">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-black">
+            Password
+          </Label>
           <Input
             id="password"
             type="password"
@@ -54,7 +69,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             required
-            className="mt-1 pr-10"
+            className="mt-1 pr-10 text-black"
           />
         </div>
         {error && (
@@ -66,6 +81,14 @@ export default function LoginPage() {
         >
           Log In
         </Button>
+        <Button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 flex items-center justify-center gap-2"
+          style={{ color: "#000" }}
+        >
+          <FcGoogle size={20} /> Sign in with Google
+        </Button>
         <button
           type="button"
           className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 block"
@@ -73,8 +96,6 @@ export default function LoginPage() {
         >
           Forgot password?
         </button>
-
-        {/* Don't have an account link */}
         <div className="w-full text-center pt-2">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{" "}
@@ -87,8 +108,6 @@ export default function LoginPage() {
             </button>
           </p>
         </div>
-
-        {/* Mascot inside the card, below the buttons */}
         <div className="flex justify-center pt-4">
           <Image
             src={mascot}
@@ -103,49 +122,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-/*
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16px); }
-}
-.animate-bounce-slow {
-  animation: bounce-slow 2.5s infinite;
-}
-*/
-        
-/* BACKEND REFERENCE =======
-import Image from "next/image";
-import { login, loginWithGoogle } from "./actions";
-import "./styles.scss";
-
-export default function LoginPage() {
-  return (
-    <>
-      <form>
-        <h1 className="text-2xl font-semibold">Sign Up</h1>
-
-        <div>
-          <label htmlFor="email">Email Address</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password">Password</label>
-          <input name="password" type="password" required />
-          <a href="/auth/reset-password">Forgot Password?</a>
-        </div>
-
-        <button type="submit" className="w-full" formAction={login}>
-          Sign Up / Login
-        </button>
-      </form>
-    </>
-  );
-}
-========= END BACKEND REFERENCE */
