@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+"use server";
+import { eq, sql } from "drizzle-orm";
 import { db } from "./drizzle";
 import { admins, profiles as profilesTable, users } from "./schema";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -31,7 +32,11 @@ export async function listUsers() {
 export async function grantAdmin(email: string) {
   db.insert(admins).select(
     db
-      .select({ id: profilesTable.id, email: profilesTable.email })
+      .select({
+        id: profilesTable.id,
+        email: profilesTable.email,
+        status: sql<string>`waitlisted`.as("status"),
+      })
       .from(profilesTable)
       .where(eq(profilesTable.email, email)),
   );

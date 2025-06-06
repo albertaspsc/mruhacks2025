@@ -1,4 +1,4 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+"use server";
 import {
   experienceTypes,
   gender,
@@ -10,17 +10,22 @@ import {
   interests as interestsTable,
   userRestrictions,
   profiles,
-  parkingSituation,
-  yearOfStudy,
+  userInterests,
 } from "./schema";
-import { z } from "zod";
 import { createClient } from "../../utils/supabase/server";
 import { db } from "./drizzle";
-import { and, AnyTable, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { PgColumn, PgTable, TableConfig } from "drizzle-orm/pg-core";
+import {
+  RegistrationInput,
+  RegistrationSchema,
+} from "@context/RegisterFormContext";
 
-export async function isRegistered(supabase?: SupabaseClient) {
+export type Registration = NonNullable<
+  Awaited<ReturnType<typeof getRegistration>>["data"]
+>;
+
+export async function getRegistration(supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
   }
@@ -30,37 +35,16 @@ export async function isRegistered(supabase?: SupabaseClient) {
     return { error: authError };
   }
 
-  const data = await db
-    .select()
-    .from(users)
-    .where(and(eq(users.id, auth.user.id), isNotNull(users.timestamp)));
+  const data = await db.select().from(users).where(eq(users.id, auth.user.id));
 
-  return { data: data.length == 1 };
+  return { data: data[0] };
 }
-
-export const UserInputSchema = z.object({
-  dob: z.date(),
-  gender: z.string(),
-  university: z.string(),
-  previousAttendance: z.boolean(),
-  major: z.string(),
-  parking: createSelectSchema(parkingSituation),
-  schoolEmail: z.string().email(),
-  yearOfStudy: createSelectSchema(yearOfStudy),
-  experience: z.string(),
-  accomodations: z.string(),
-  marketing: z.string(),
-  dietaryRestrictions: z.array(z.string()),
-  interests: z.array(z.string()),
-});
-
-export type UserInput = z.infer<typeof UserInputSchema>;
 
 async function registerInterestsAndRestrictions(
   userId: string,
-  user: UserInput,
+  user: RegistrationInput,
 ) {
-  const { error, success } = await UserInputSchema.safeParseAsync(user);
+  const { error, success } = await RegistrationSchema.safeParseAsync(user);
   if (!success) {
     return { error };
   }
@@ -83,10 +67,18 @@ async function registerInterestsAndRestrictions(
   if (interests.length != user.interests.length) {
     return { error: "request contains invalid user interests" };
   }
+
+  db.insert(userInterests).values(
+    interests.map(({ id }) => ({ interest: id, user: userId })),
+  );
+
   return {};
 }
 
-export async function register(user: UserInput, supabase?: SupabaseClient) {
+export async function register(
+  user: RegistrationInput,
+  supabase?: SupabaseClient,
+) {
   if (!supabase) {
     supabase = await createClient();
   }
@@ -94,6 +86,10 @@ export async function register(user: UserInput, supabase?: SupabaseClient) {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
     return { error: authError };
+  }
+
+  if (!auth.user.email) {
+    return { error: "user not registered with email" };
   }
 
   const id = auth.user.id;
@@ -111,19 +107,21 @@ export async function register(user: UserInput, supabase?: SupabaseClient) {
     id,
     gender: genderId,
     ...otherIds[0],
-    dob: user.dob.toDateString(),
     previousAttendance: user.previousAttendance,
     parking: user.parking,
     schoolEmail: user.schoolEmail,
     yearOfStudy: user.yearOfStudy,
-    accomodations: user.accomodations,
+    accommodations: user.accommodations,
+    email: auth.user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
     timestamp: new Date(),
   });
 
   return await registerInterestsAndRestrictions(id, user);
 }
 
-async function getOtherIds(user: UserInput) {
+async function getOtherIds(user: RegistrationInput) {
   return await db
     .select({
       marketing: marketingTypes.id,
@@ -138,7 +136,7 @@ async function getOtherIds(user: UserInput) {
     .where(eq(marketingTypes.marketing, user.marketing));
 }
 
-async function getOrInsertGenderId(user: UserInput) {
+async function getOrInsertGenderId(user: RegistrationInput) {
   // We have an "other" option for gender in the google form that models this interaction,
   // hence the insert if not exists
   await db.insert(gender).values({ gender: user.gender }).onConflictDoNothing();
@@ -151,4 +149,16 @@ async function getOrInsertGenderId(user: UserInput) {
 
   const genderId = entry[0].id;
   return genderId;
+}
+
+export async function getDegreeOptions() {
+  const universitiesList = await db
+    .select({ university: universities.university })
+    .from(universities);
+  const majorsList = await db.select({ major: majors.major }).from(majors);
+
+  return {
+    universities: universitiesList.map(({ university }) => university),
+    majors: majorsList.map(({ major }) => major),
+  };
 }

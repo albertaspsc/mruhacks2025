@@ -1,14 +1,36 @@
 "use client";
 
-import React, { ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import React, { ReactNode, useEffect, useState } from "react";
+import { redirect, usePathname } from "next/navigation";
 import ProgressBar from "@/components/Register/ProgressBar";
 import Image from "next/image";
 import { RegisterFormProvider } from "@/context/RegisterFormContext";
+import { createClient } from "utils/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { getRegistration } from "src/db/registration";
 
 type Props = { children: ReactNode };
 
 export default function RegisterLayout({ children }: Props) {
+  const supabase = createClient();
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (!user) {
+        console.error(error);
+        redirect("/login?next=/register");
+      }
+      const { data: isUserRegistered } = await getRegistration();
+      if (isUserRegistered) {
+        redirect("/user");
+      }
+    };
+    getUser();
+  });
+
   const path = usePathname() ?? "";
   let step = 1;
   if (path.includes("step-1")) step = 2;

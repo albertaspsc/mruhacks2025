@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import { db } from "./drizzle";
 import {
   dietaryRestrictions,
@@ -10,7 +9,7 @@ import {
   universities,
 } from "./schema";
 
-async function insertSampleValues() {
+export async function insertSampleValues() {
   await db
     .insert(dietaryRestrictions)
     .values(
@@ -76,38 +75,4 @@ async function insertSampleValues() {
       })),
     )
     .onConflictDoNothing();
-}
-
-async function createTriggers() {
-  await db.execute(sql`CREATE OR REPLACE FUNCTION public.copy_user_to_profiles()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profile (id, email, f_name, l_name)
-  VALUES (NEW.id, NEW.email, SPLIT_PART(NEW.raw_user_meta_data ->> 'full_name', ' ', 1), SPLIT_PART(NEW.raw_user_meta_data ->> 'full_name', ' ', 2))
-  ON CONFLICT (id) DO NOTHING;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE TRIGGER trigger_copy_user_to_profiles
-AFTER INSERT OR UPDATE ON auth.users
-FOR EACH ROW
-EXECUTE FUNCTION public.copy_user_to_profiles();`);
-
-  await db.execute(sql`CREATE OR REPLACE FUNCTION update_users_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-new.timestamp := CURRENT_TIMESTAMP;
-RETURN new;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER set_users_timestamp
-BEFORE INSERT ON users
-FOR EACH ROW EXECUTE PROCEDURE update_users_timestamp();`);
-}
-
-export async function setupDB() {
-  insertSampleValues();
-  createTriggers();
 }

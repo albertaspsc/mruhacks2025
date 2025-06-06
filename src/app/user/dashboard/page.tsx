@@ -8,6 +8,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { RegistrationInput } from "@context/RegisterFormContext";
+import { Registration, getRegistration } from "src/db/registration";
 
 // Status banner component
 const StatusBanner = ({
@@ -60,38 +62,16 @@ const StatusBanner = ({
   );
 };
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  status: "confirmed" | "pending" | "waitlisted";
-}
-
 export default function DashboardPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Registration>();
 
   // Check authentication
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // TODO - replace with actual auth check
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Mock user data
-        const mockUser: User = {
-          id: "asia123",
-          name: "Asia Hacker",
-          email: "asia@mtroyal.ca",
-          status: "confirmed", // Change to test different statuses
-        };
-
-        setUser(mockUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error("Authentication error:", error);
+        const { data: registration } = await getRegistration();
+        setUser(registration);
       } finally {
         setIsLoading(false);
       }
@@ -99,13 +79,6 @@ export default function DashboardPage() {
 
     checkAuth();
   }, []);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace("/login");
-    }
-  }, [isLoading, isAuthenticated, router]);
 
   // Handle logout
   const handleLogout = () => {
@@ -117,11 +90,6 @@ export default function DashboardPage() {
   // Show loading state
   if (isLoading) {
     return <LoadingSpinner />;
-  }
-
-  // Don't render anything while redirecting
-  if (!isAuthenticated) {
-    return null;
   }
 
   // Render dashboard with sidebar

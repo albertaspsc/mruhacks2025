@@ -3,9 +3,16 @@
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useRegisterForm } from "@/context/RegisterFormContext";
+import {
+  RegistrationSchema,
+  useRegisterForm,
+} from "@/context/RegisterFormContext";
 import { Button } from "@/components/ui/button";
 import MascotUrl from "@/assets/mascots/crt.svg";
+import z from "zod";
+import { createSelectSchema } from "drizzle-zod";
+import { parkingSituation, yearOfStudy } from "src/db/schema";
+import { register } from "src/db/registration";
 
 // tiny confetti helper
 const fireConfetti = (canvas: HTMLCanvasElement) => {
@@ -48,11 +55,25 @@ export default function CompletePage() {
   const confettiRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!hasLogged.current) {
-      console.log("User registered:", data);
-      hasLogged.current = true;
-    }
-    if (confettiRef.current) fireConfetti(confettiRef.current);
+    const sendRegistration = async () => {
+      if (!hasLogged.current) {
+        const { data: registration, error: validationError } =
+          RegistrationSchema.safeParse(data);
+        if (validationError) {
+          console.error(validationError);
+          router.push("/register?error");
+        } else {
+          const { error } = await register(registration);
+          if (error) {
+            console.error(error);
+          }
+        }
+        hasLogged.current = true;
+      }
+      if (confettiRef.current) fireConfetti(confettiRef.current);
+    };
+
+    sendRegistration();
   }, [data]);
 
   return (

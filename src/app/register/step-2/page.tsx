@@ -4,20 +4,20 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
   useRegisterForm,
-  RegistrationData,
+  RegistrationInput,
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useEffect } from "react";
 
 type FinalForm = Pick<
-  RegistrationData,
-  | "programmingExperience"
+  RegistrationInput,
+  | "experience"
   | "interests"
-  | "dietary"
+  | "dietaryRestrictions"
   | "accommodations"
   | "parking"
-  | "heardFrom"
+  | "marketing"
 >;
 
 const INTEREST_OPTIONS = [
@@ -47,7 +47,9 @@ export default function Step2Page() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<FinalForm>({ defaultValues: { interests: [], dietary: [] } });
+  } = useForm<FinalForm>({
+    defaultValues: { interests: [], dietaryRestrictions: [] },
+  });
 
   const interests = watch("interests") || [];
 
@@ -63,9 +65,7 @@ export default function Step2Page() {
     // build full payload
     const full = { ...data, ...partial };
     // always forward to 2fa with the saved email
-    router.push(
-      `/register/verify-2fa?email=${encodeURIComponent(full.email ?? "")}`,
-    );
+    router.push(`/register/complete`);
   };
 
   return (
@@ -74,12 +74,12 @@ export default function Step2Page() {
 
       {/* Programming Experience */}
       <div>
-        <Label htmlFor="programmingExperience">
+        <Label htmlFor="experience">
           Programming Experience <span className="text-red-500">*</span>
         </Label>
         <select
-          id="programmingExperience"
-          {...register("programmingExperience", { required: "Required" })}
+          id="experience"
+          {...register("experience", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
           <option>Beginner – What is a computer?</option>
@@ -89,9 +89,9 @@ export default function Step2Page() {
           <option>Advanced – Firewalls disabled, mainframes bypassed.</option>
           <option>Expert – I know what a computer is.</option>
         </select>
-        {errors.programmingExperience && (
+        {errors.experience && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.programmingExperience.message}
+            {errors.experience.message}
           </p>
         )}
       </div>
@@ -149,12 +149,12 @@ export default function Step2Page() {
 
       {/* Dietary Restrictions */}
       <div>
-        <Label htmlFor="dietary">Dietary Restrictions</Label>
+        <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
         {/* desktop */}
         <div className="hidden sm:block">
           <select
-            id="dietary"
-            {...register("dietary")}
+            id="dietaryRestrictions"
+            {...register("dietaryRestrictions")}
             multiple
             size={7}
             className="w-full border rounded px-3 py-2"
@@ -174,7 +174,7 @@ export default function Step2Page() {
               <input
                 type="checkbox"
                 value={opt}
-                {...register("dietary")}
+                {...register("dietaryRestrictions")}
                 className="border rounded"
               />
               <span className="text-sm">{opt}</span>
@@ -215,12 +215,12 @@ export default function Step2Page() {
 
       {/* Heard From */}
       <div>
-        <Label htmlFor="heardFrom">
+        <Label htmlFor="marketing">
           How did you hear about us? <span className="text-red-500">*</span>
         </Label>
         <select
-          id="heardFrom"
-          {...register("heardFrom", { required: "Required" })}
+          id="marketing"
+          {...register("marketing", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
           <option>Poster</option>
@@ -230,15 +230,15 @@ export default function Step2Page() {
           <option>Attended the event before</option>
           <option>Other…</option>
         </select>
-        {errors.heardFrom && (
+        {errors.marketing && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.heardFrom.message}
+            {errors.marketing.message}
           </p>
         )}
       </div>
 
       <Button type="submit" className="w-full">
-        Submit &amp; Verify 2FA
+        Submit
       </Button>
     </form>
   );

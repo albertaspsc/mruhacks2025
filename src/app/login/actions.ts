@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { headers as getHeaders } from "next/headers";
 import { createClient } from "../../../utils/supabase/server";
 import { z } from "zod";
-import { isRegistered } from "../../db/registration";
+import { getRegistration } from "../../db/registration";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function loginWithGoogle() {
   const headers = await getHeaders();
@@ -31,28 +32,35 @@ export async function loginWithGoogle() {
 
 const loginSchema = z.object({
   email: z.string().nonempty().email(),
-  password: z.string(),
+  password: z
+    .string()
+    .refine((pw: string) => pw.length >= 8, "At least 8 characters")
+    .refine((pw: string) => /[A-Z]/.test(pw), "One uppercase letter")
+    .refine((pw: string) => /[a-z]/.test(pw), "One lowercase letter")
+    .refine((pw: string) => /\d/.test(pw), "One number")
+    .refine((pw: string) => /\W/.test(pw), "One special character"),
 });
 
-export async function login(formData: FormData) {
-  const supabase = await createClient();
-
-  const data = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
+export async function login(
+  email: string,
+  password: string,
+  supabase?: SupabaseClient,
+) {
+  if (!supabase) {
+    supabase = await createClient();
+  }
 
   const {
     data: login,
     error: loginError,
     success,
-  } = loginSchema.safeParse(data);
+  } = loginSchema.safeParse({ email, password });
 
   // TODO - redirect the user to an error page with some instructions
   //
   // See github issue #70
   if (!success) {
-    redirect("/error?cause=misformatted login");
+    return { error: loginError, success, type: "signin" as const };
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword(login);
@@ -69,23 +77,21 @@ export async function login(formData: FormData) {
     // The layout is emptied instead of the page,
     // because the dashboard (and potentially other pages)
     // have the same needs.
-    revalidatePath("/register", "layout");
+    // revalidatePath("/register", "layout");
 
-    const { data: registered } = await isRegistered();
-
-    if (registered) {
-      redirect("/dashboard");
-    } else {
-      redirect("/register");
-    }
+    return { success: true, type: "signin" as const };
   }
+
+  const headers = await getHeaders();
+  const origin = headers.get("origin");
 
   const { error: signUpError } = await supabase.auth.signUp(login);
 
   if (signUpError) {
-    redirect(`/error?cause=${signUpError.cause ?? "unable to sign up"}`);
+    return { error: signInError, success: false, type: "signup" as const };
+  } else {
+    return { success: true, type: "signup" as const };
   }
-  redirect(`/auth/confirm?email=${login.email}`);
 
   // TODO - redirect the user to an error page with some instructions
   //

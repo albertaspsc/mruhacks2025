@@ -8,17 +8,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, FileText } from "lucide-react";
-
-// User interface
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  status: "confirmed" | "pending" | "waitlisted";
-}
+import { Registration } from "src/db/registration";
 
 interface ParticipantDashboardProps {
-  user?: User;
+  user?: Registration;
 }
 
 const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({

@@ -4,7 +4,8 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
   useRegisterForm,
-  RegistrationData,
+  RegistrationInput,
+  RegistrationSchema,
 } from "@/context/RegisterFormContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 
 type PersonalForm = Pick<
-  RegistrationData,
-  "attendedBefore" | "gender" | "institution" | "major" | "year"
+  RegistrationInput,
+  "previousAttendance" | "gender" | "university" | "major" | "yearOfStudy"
 >;
 
 export default function Step1Page() {
@@ -58,24 +59,24 @@ export default function Step1Page() {
 
       {/* Attended Before */}
       <div>
-        <Label htmlFor="attendedBefore">
+        <Label htmlFor="previousAttendance">
           Have you attended MRUHacks before?{" "}
           <span className="text-red-500">*</span>
         </Label>
         <select
-          id="attendedBefore"
-          {...register("attendedBefore", {
+          id="previousAttendance"
+          {...register("previousAttendance", {
             required: "Please answer this question",
           })}
           className="w-full border rounded px-3 py-2"
         >
           <option value="">— Select —</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
         </select>
-        {errors.attendedBefore && (
+        {errors.previousAttendance && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.attendedBefore.message}
+            {errors.previousAttendance.message}
           </p>
         )}
       </div>
@@ -103,23 +104,24 @@ export default function Step1Page() {
 
       {/* Institution */}
       <div>
-        <Label htmlFor="institution">
+        <Label htmlFor="university">
           University / Institution <span className="text-red-500">*</span>
         </Label>
         <Input
-          id="institution"
-          list="institution-list"
+          id="university"
+          list="university-list"
           placeholder="Start typing…"
-          {...register("institution", { required: "Institution is required" })}
+          {...register("university", { required: "Institution is required" })}
         />
-        <datalist id="institution-list">
+        <datalist id="university-list">
+          {/* TODO change to uni */}
           {institutions.map((i) => (
             <option key={i} value={i} />
           ))}
         </datalist>
-        {errors.institution && (
+        {errors.university && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.institution.message}
+            {errors.university.message}
           </p>
         )}
       </div>
@@ -147,24 +149,26 @@ export default function Step1Page() {
 
       {/* Year */}
       <div>
-        <Label htmlFor="year">
+        <Label htmlFor="yearOfStudy">
           What year will you be in as of Fall?{" "}
           <span className="text-red-500">*</span>
         </Label>
         <select
-          id="year"
-          {...register("year", { required: "Year is required" })}
+          id="yearOfStudy"
+          {...register("yearOfStudy", { required: "Year is required" })}
           className="w-full border rounded px-3 py-2"
         >
           <option value="">— Select —</option>
-          <option>1st</option>
-          <option>2nd</option>
-          <option>3rd</option>
-          <option>4th+</option>
-          <option>Recent grad</option>
+          {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
+            (x, i) => (
+              <option key={i}>{x}</option>
+            ),
+          )}
         </select>
-        {errors.year && (
-          <p className="mt-1 text-sm text-red-600">{errors.year.message}</p>
+        {errors.yearOfStudy && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.yearOfStudy.message}
+          </p>
         )}
       </div>
 

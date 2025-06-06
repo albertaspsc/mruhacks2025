@@ -4,22 +4,23 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
   useRegisterForm,
-  RegistrationData,
+  RegistrationInput,
 } from "@/context/RegisterFormContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { getProfile, Profile } from "src/db/profiles";
 
 type AccountForm = Pick<
-  RegistrationData,
-  "firstName" | "lastName" | "email" | "password"
-> & {
-  confirmPassword: string;
-};
+  RegistrationInput,
+  "firstName" | "lastName" | "schoolEmail"
+>;
 
 export default function AccountPage() {
   const router = useRouter();
   const { setValues } = useRegisterForm();
+  const [profile, setProfile] = useState<Profile>();
   const {
     register,
     handleSubmit,
@@ -28,12 +29,27 @@ export default function AccountPage() {
   } = useForm<AccountForm>();
 
   const onSubmit: SubmitHandler<AccountForm> = (data) => {
-    const { confirmPassword, ...rest } = data;
-    setValues(rest);
+    setValues(data);
     router.push("/register/step-1");
   };
 
-  const password = watch("password", "");
+  useEffect(() => {
+    const getUserProfile = async () => {
+      const { data, error } = await getProfile();
+      if (error) {
+        return;
+      }
+
+      setProfile(data);
+      setValues({
+        firstName: data.firstName ?? undefined,
+        lastName: data.lastName ?? undefined,
+        schoolEmail: data.email,
+      });
+    };
+
+    getUserProfile();
+  }, []);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -47,6 +63,7 @@ export default function AccountPage() {
         <Input
           id="firstName"
           {...register("firstName", { required: "First name is required" })}
+          {...{ value: profile?.firstName ?? undefined }}
           placeholder="John"
         />
         {errors.firstName && (
@@ -64,6 +81,7 @@ export default function AccountPage() {
         <Input
           id="lastName"
           {...register("lastName", { required: "Last name is required" })}
+          {...{ value: profile?.lastName ?? undefined }}
           placeholder="Doe"
         />
         {errors.lastName && (
@@ -73,64 +91,25 @@ export default function AccountPage() {
 
       {/* Student Email */}
       <div>
-        <Label htmlFor="email">
+        <Label htmlFor="schoolEmail">
           Student Email Address <span className="text-red-500">*</span>
         </Label>
         <Input
-          id="email"
+          id="schoolEmail"
           type="email"
-          {...register("email", {
+          {...register("schoolEmail", {
             required: "Email is required",
             pattern: {
               value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
               message: "Enter a valid email",
             },
           })}
+          {...{ value: profile?.email }}
           placeholder="you@student.mru.ca"
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div>
-        <Label htmlFor="password">
-          Password <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="password"
-          type="password"
-          {...register("password", {
-            required: "Password is required",
-            minLength: { value: 8, message: "At least 8 characters" },
-            pattern: {
-              value: /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W)/,
-              message: "Must include upper, lower, number & special",
-            },
-          })}
-        />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-        )}
-      </div>
-
-      {/* Confirm Password */}
-      <div>
-        <Label htmlFor="confirmPassword">
-          Confirm Password <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          {...register("confirmPassword", {
-            required: "Please confirm your password",
-            validate: (val) => val === password || "Passwords do not match",
-          })}
-        />
-        {errors.confirmPassword && (
+        {errors.schoolEmail && (
           <p className="mt-1 text-sm text-red-600">
-            {errors.confirmPassword.message}
+            {errors.schoolEmail.message}
           </p>
         )}
       </div>
@@ -139,37 +118,5 @@ export default function AccountPage() {
         Next: Personal Details
       </Button>
     </form>
-    
-/* BACKEND REFERENCE =======
-import { redirect, unauthorized } from "next/navigation";
-import { createClient } from "../../../utils/supabase/client";
-import { register } from "./actions";
-import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
-export default function PrivatePage() {
-  const supabase = createClient();
-  const [user, setUser] = useState<User>();
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (!user) {
-        redirect("/error");
-      }
-    };
-    getUser();
-  });
-
-  return (
-    <>
-      <p>
-        Hello {user?.email}
-        /* TODO put in actual form */
-      /* </p>
-      <form></form>
-    </>
-======= END BACKEND REFERENCE */
   );
 }

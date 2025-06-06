@@ -8,6 +8,17 @@ const nextConfig = {
     });
     return cfg;
   },
+
+  experimental: {
+    turbo: {
+      rules: {
+        "*.glsl": {
+          loaders: ["raw-loader"],
+          as: "*.js",
+        },
+      },
+    },
+  },
 };
 
 module.exports = nextConfig;

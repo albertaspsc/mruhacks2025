@@ -17,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Registration } from "src/db/registration";
 
 // Interface for navigation items
 interface NavItem {
@@ -30,16 +31,13 @@ interface NavItem {
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
-  user?: {
-    name: string;
-    [key: string]: any;
-  };
+  user?: Registration;
   onLogout?: () => void; // Logout handler prop
 }
 
 export function Sidebar({ className, user, onLogout, ...props }: SidebarProps) {
   const pathname = usePathname();
-  const userName = user?.name?.split(" ")[0] || "Hacker";
+  const userName = user?.firstName || "Hacker";
 
   const topNavItems: NavItem[] = [
     {

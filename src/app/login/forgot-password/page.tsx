@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
+import { createClient } from "utils/supabase/client";
 
 export default function ForgotPasswordPage() {
+  const supabase = createClient();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<null | "success" | "fail">(null);
   const [error, setError] = useState("");
@@ -15,14 +17,12 @@ export default function ForgotPasswordPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Mock: Accept any email ending with @mtroyal.ca as success
-    if (/^[^@\s]+@mtroyal\.ca$/.test(email)) {
-      setStatus("success");
-      setError("");
-      setTimeout(() => (window.location.href = "/login/reset-link-sent"), 1200);
-    } else {
-      setStatus("fail");
-      setError("No account found with that email.");
-    }
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/login/reset-password`,
+    });
+    setStatus("success");
+    setError("");
+    setTimeout(() => (window.location.href = "/login/reset-link-sent"), 1200);
   };
 
   return (

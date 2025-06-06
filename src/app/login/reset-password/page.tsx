@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
+import { createClient } from "utils/supabase/client";
 
 function validatePassword(password: string) {
   if (!password) return "Password is required";
@@ -59,6 +60,7 @@ const fireConfetti = (canvas: HTMLCanvasElement) => {
 };
 
 const ResetPasswordPageContent = () => {
+  const supabase = createClient();
   const router = useRouter();
   const params = useSearchParams();
   const userName = params.get("name") || "User";
@@ -73,7 +75,7 @@ const ResetPasswordPageContent = () => {
   const getReqStatus = (pw: string) => requirements.map((r) => r.test(pw));
   const reqStatus = getReqStatus(password);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const passwordError = validatePassword(password);
     if (passwordError) {
@@ -82,6 +84,13 @@ const ResetPasswordPageContent = () => {
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+    const { error: passwChangeError } = await supabase.auth.updateUser({
+      password,
+    });
+    if (passwChangeError) {
+      setError(passwChangeError.message);
       return;
     }
     setError("");
@@ -100,6 +109,18 @@ const ResetPasswordPageContent = () => {
       }
     }
   }, [password, confirmPassword, error]);
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event == "PASSWORD_RECOVERY") {
+        const { error: authError } = await supabase.auth.getUser();
+
+        if (authError) {
+          console.log("ATUH", authError);
+        }
+      }
+    });
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">

@@ -1,26 +1,38 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
+import { login } from "./actions";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const params = useSearchParams();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login logic
-    if (email && password) {
-      router.push("/user/dashboard");
-    } else {
+    if (!(email && password)) {
       setError("Please enter your email and password.");
+    }
+
+    const loginResult = await login(email, password);
+    if (!loginResult.success) {
+      setError(loginResult.error?.message ?? "");
+      return;
+    }
+
+    if (loginResult.type == "signin") {
+      const next = params.get("next");
+      redirect(next ?? "/register");
+    } else {
+      redirect("/login/verify-2fa");
     }
   };
 
@@ -64,8 +76,14 @@ export default function LoginPage() {
           type="submit"
           className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors"
         >
-          Log In
+          Log In / Sign Up
         </Button>
+        {/* <Button
+          type="submit"
+          className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors"
+        >
+          Sign in with Google
+        </Button> */}
         <button
           type="button"
           className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 block"
@@ -73,20 +91,6 @@ export default function LoginPage() {
         >
           Forgot password?
         </button>
-
-        {/* Don't have an account link */}
-        <div className="w-full text-center pt-2">
-          <p className="text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
-            <button
-              type="button"
-              onClick={() => router.push("/register")}
-              className="text-black font-semibold hover:underline focus:outline-none focus:underline"
-            >
-              Create one
-            </button>
-          </p>
-        </div>
 
         {/* Mascot inside the card, below the buttons */}
         <div className="flex justify-center pt-4">
@@ -113,39 +117,3 @@ export default function LoginPage() {
   animation: bounce-slow 2.5s infinite;
 }
 */
-
-/* BACKEND REFERENCE =======
-import Image from "next/image";
-import { login, loginWithGoogle } from "./actions";
-import "./styles.scss";
-
-export default function LoginPage() {
-  return (
-    <>
-      <form>
-        <h1 className="text-2xl font-semibold">Sign Up</h1>
-
-        <div>
-          <label htmlFor="email">Email Address</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password">Password</label>
-          <input name="password" type="password" required />
-          <a href="/auth/reset-password">Forgot Password?</a>
-        </div>
-
-        <button type="submit" className="w-full" formAction={login}>
-          Sign Up / Login
-        </button>
-      </form>
-    </>
-  );
-}
-========= END BACKEND REFERENCE */

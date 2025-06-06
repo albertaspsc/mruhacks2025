@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import MascotUrl from "@/assets/mascots/crt.svg";
+import { createClient } from "utils/supabase/client";
 
 export default function Verify2FAPage() {
+  const supabase = createClient();
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
+  const params = useSearchParams();
+  const email = params.get("email");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
   );
@@ -16,65 +19,52 @@ export default function Verify2FAPage() {
   const [cooldown, setCooldown] = useState(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-  // Get email from query param
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const e = params.get("email");
-    if (!e) {
-      router.push("/register");
-    } else {
-      setEmail(e);
-    }
-  }, [router]);
-
   // Simulate sending email (backend call)
   const sendVerificationEmail = async () => {
     if (!email) return;
     setStatus("sending");
     setError("");
 
-    try {
-      // await fetch(`/api/send-verify-email?email=${encodeURIComponent(email)}`);
-      await new Promise((res) => setTimeout(res, 1200)); // Simulate network
-      setStatus("sent");
-      setCooldown(30);
-
-      // Clear any existing interval
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-
-      // Set new interval
-      const id = setInterval(() => {
-        setCooldown((c) => {
-          if (c <= 1) {
-            clearInterval(id);
-            setIntervalId(null);
-            return 0;
-          }
-          return c - 1;
-        });
-      }, 1000);
-
-      setIntervalId(id);
-    } catch (e) {
+    const { error: authError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
+    if (authError) {
       setStatus("error");
       setError("Failed to send verification email. Please try again.");
+    } else {
+      setStatus("sent");
     }
+    setCooldown(30);
+
+    // Clear any existing interval
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+
+    // Set new interval
+    const id = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          clearInterval(id);
+          setIntervalId(null);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+
+    setIntervalId(id);
   };
 
   useEffect(() => {
-    if (email) sendVerificationEmail();
-
     // Cleanup
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email]);
-  if (email === null) return null;
 
   return (
     <div className="flex items-start justify-center min-h-screen bg-white pt-8 px-4">
@@ -106,10 +96,14 @@ export default function Verify2FAPage() {
           Verify Your Email
         </h1>
         <p className="text-gray-700 text-base leading-relaxed text-center">
-          We sent a verification link to{" "}
-          <span className="font-medium text-black">{email}</span>.{" "}
+          {email && (
+            <>
+              We sent a verification link to{" "}
+              <span className="font-medium text-black">{email}</span>.{" "}
+            </>
+          )}
           {/* Removed break-all class */}
-          Please check your inbox to continue registration.
+          Please check your inbox to verify your account.
         </p>
         {status === "sent" && (
           <p className="text-black text-sm font-medium text-center">
@@ -121,25 +115,27 @@ export default function Verify2FAPage() {
             {error}
           </p>
         )}
-        <Button
-          type="button"
-          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition hover:scale-[1.02] active:scale-[0.98]" /* Added hover and active scale */
-          onClick={sendVerificationEmail}
-          disabled={status === "sending" || cooldown > 0}
-        >
-          {status === "sending"
-            ? "Sending..."
-            : cooldown > 0
-              ? `Resend Email (${cooldown}s)`
-              : "Resend Email"}
-        </Button>
+        {email && (
+          <Button
+            type="button"
+            className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition hover:scale-[1.02] active:scale-[0.98]" /* Added hover and active scale */
+            onClick={sendVerificationEmail}
+            disabled={status === "sending" || cooldown > 0}
+          >
+            {status === "sending"
+              ? "Sending..."
+              : cooldown > 0
+                ? `Resend Email (${cooldown}s)`
+                : "Resend Email"}
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
           className="w-full text-black hover:bg-gray-100"
-          onClick={() => router.push("/register")}
+          onClick={() => router.push("/login")}
         >
-          Back to Register
+          Back to Login
         </Button>
         {/* Mascot */}
         <div className="flex justify-center pt-4">
@@ -152,15 +148,6 @@ export default function Verify2FAPage() {
             priority
           />
         </div>
-        {/* dev button */}
-        <button
-          type="button"
-          onClick={() => router.push("/register/complete")}
-          className="absolute bottom-2.5 right-[18px] text-[11px] text-black opacity-35 bg-transparent border-none cursor-pointer tracking-[1.5px] z-1"
-          tabIndex={-1}
-        >
-          dev complete &rarr;
-        </button>
       </div>
     </div>
   );
