@@ -239,8 +239,8 @@ export default function SettingsPage() {
                           <div className="space-y-1 leading-none">
                             <FormLabel>Marketing Emails</FormLabel>
                             <FormDescription>
-                              Receive emails about our services, partners, and
-                              other opportunities.
+                              Receive emails about our organization, partners,
+                              and other opportunities.
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -261,30 +261,7 @@ export default function SettingsPage() {
                           <div className="space-y-1 leading-none">
                             <FormLabel>Event Updates</FormLabel>
                             <FormDescription>
-                              Receive updates about upcoming hackathons and
-                              events.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="hackathonReminders"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Hackathon Reminders</FormLabel>
-                            <FormDescription>
-                              Receive reminders about hackathons you&apos;ve
-                              registered for.
+                              Receive updates about MRUHacks and workshops.
                             </FormDescription>
                           </div>
                         </FormItem>

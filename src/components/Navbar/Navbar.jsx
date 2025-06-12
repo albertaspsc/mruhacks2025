@@ -135,7 +135,7 @@ const Navbar = () => {
               Sponsors
             </a>
 
-            {/* Temporary login button for testing */}
+            {/* Login button */}
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -144,7 +144,7 @@ const Navbar = () => {
               style={{
                 marginLeft: "20px",
                 padding: "8px 16px",
-                backgroundColor: "#007bff",
+                backgroundColor: "#6E40F2",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
@@ -155,7 +155,7 @@ const Navbar = () => {
               onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
               onMouseOut={(e) => (e.target.style.backgroundColor = "#007bff")}
             >
-              Login (Test)
+              Login
             </button>
           </div>
         </div>

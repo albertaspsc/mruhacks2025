@@ -138,9 +138,23 @@ export default function AccountPage() {
       <Button type="submit" className="w-full">
         Next: Personal Details
       </Button>
+
+      {/* Has an account link */}
+      <div className="w-full text-center pt-2">
+        <p className="text-sm text-gray-600">
+          Have have an account?{" "}
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="text-black font-semibold hover:underline focus:outline-none focus:underline"
+          >
+            Login here
+          </button>
+        </p>
+      </div>
     </form>
-    
-/* BACKEND REFERENCE =======
+
+    /* BACKEND REFERENCE =======
 import { redirect, unauthorized } from "next/navigation";
 import { createClient } from "../../../utils/supabase/client";
 import { register } from "./actions";
@@ -167,7 +181,7 @@ export default function PrivatePage() {
       <p>
         Hello {user?.email}
         /* TODO put in actual form */
-      /* </p>
+    /* </p>
       <form></form>
     </>
 ======= END BACKEND REFERENCE */
