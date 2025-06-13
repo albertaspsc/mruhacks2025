@@ -106,7 +106,8 @@ export default function AccountPage() {
             minLength: { value: 8, message: "At least 8 characters" },
             pattern: {
               value: /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W)/,
-              message: "Must include upper, lower, number & special",
+              message:
+                "Must include 1 upper, 1 lower, 1 number & 1 special character",
             },
           })}
         />

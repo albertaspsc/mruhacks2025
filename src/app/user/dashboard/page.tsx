@@ -85,7 +85,7 @@ export default function DashboardPage() {
           id: "asia123",
           name: "Asia Hacker",
           email: "asia@mtroyal.ca",
-          status: "confirmed", // Change to test different statuses
+          status: "pending", // Change to test different statuses
         };
 
         setUser(mockUser);
