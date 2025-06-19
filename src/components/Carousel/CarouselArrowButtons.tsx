@@ -1,8 +1,24 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  ButtonHTMLAttributes,
+  FunctionComponent,
+  MouseEventHandler,
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import styles from "./carousel.module.css"; // Import the CSS module
+import { UseEmblaCarouselType } from "embla-carousel-react";
+import { EmblaCarouselType } from "embla-carousel";
 
-export const usePrevNextButtons = (carouselApi, onButtonClick) => {
+type CallbackHander = (x: EmblaCarouselType) => void;
+type CarouselBtn = FunctionComponent<ButtonHTMLAttributes<{}>>;
+
+export const usePrevNextButtons = (
+  carouselApi: UseEmblaCarouselType[1],
+  onButtonClick: CallbackHander,
+) => {
   const [prevBtnDisabled, setPrevBtnDisabled] = useState(true);
   const [nextBtnDisabled, setNextBtnDisabled] = useState(true);
 
@@ -18,9 +34,9 @@ export const usePrevNextButtons = (carouselApi, onButtonClick) => {
     if (onButtonClick) onButtonClick(carouselApi);
   }, [carouselApi, onButtonClick]);
 
-  const onSelect = useCallback((carouselApi) => {
-    setPrevBtnDisabled(!carouselApi.canScrollPrev());
-    setNextBtnDisabled(!carouselApi.canScrollNext());
+  const onSelect = useCallback((carouselApi: UseEmblaCarouselType[1]) => {
+    setPrevBtnDisabled(!carouselApi?.canScrollPrev());
+    setNextBtnDisabled(!carouselApi?.canScrollNext());
   }, []);
 
   useEffect(() => {
@@ -38,7 +54,7 @@ export const usePrevNextButtons = (carouselApi, onButtonClick) => {
   };
 };
 
-export const PrevButton = (props) => {
+export const PrevButton: CarouselBtn = (props) => {
   const { children, ...restProps } = props;
 
   return (
@@ -53,7 +69,7 @@ export const PrevButton = (props) => {
   );
 };
 
-export const NextButton = (props) => {
+export const NextButton: CarouselBtn = (props) => {
   const { children, ...restProps } = props;
 
   return (

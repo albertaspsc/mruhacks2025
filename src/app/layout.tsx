@@ -1,5 +1,6 @@
 import { DM_Sans } from "next/font/google";
-import "../assets/styles/globals.css";
+import "@/assets/styles/globals.css";
+import React from "react";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -34,7 +35,11 @@ export const metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={dmSans.variable}>

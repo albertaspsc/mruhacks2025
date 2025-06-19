@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import Navbar from "../components/Navbar/Navbar";
-import RegisterSection from "../components/RegisterSection/Register";
-import Welcome from "../components/Welcome/Welcome";
-import About from "../components/About/About";
-import Gallery from "../components/Gallery/Gallery";
-import Stats from "../components/Stats/Stats";
-import FAQ from "../components/FAQ/FAQ";
-import Sponsor from "../components/Sponsor/Sponsor";
-import Footer from "../components/Footer/Footer";
-import TeamCarousel from "../components/Carousel/TeamCarousel";
-import teamDataJson from "../data/team.json";
+import Navbar from "@/components/Navbar/Navbar";
+import RegisterSection from "@/components/RegisterSection/Register";
+import Welcome from "@/components/Welcome/Welcome";
+import About from "@/components/About/About";
+import Gallery from "@/components/Gallery/Gallery";
+import Stats from "@/components/Stats/Stats";
+import FAQ from "@/components/FAQ/FAQ";
+import Sponsor from "@/components/Sponsor/Sponsor";
+import Footer from "@/components/Footer/Footer";
+import TeamCarousel from "@/components/Carousel/TeamCarousel";
+import teamDataJson from "@/data/team.json";
 
 export default function Home() {
   const [teamData] = useState(teamDataJson);
