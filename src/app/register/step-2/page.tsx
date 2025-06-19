@@ -19,6 +19,7 @@ import {
   FileUploadItemDelete,
 } from "@/components/ui/file-upload";
 import { Upload, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import React, { useEffect, useState } from "react";
 
 type FinalForm = Pick<
@@ -65,6 +66,21 @@ export default function Step2Page() {
 
   const interests = watch("interests") || [];
 
+  // enforce max 3 interests
+  useEffect(() => {
+    if (interests.length > 3) {
+      setValue("interests", interests.slice(0, 3));
+    }
+  }, [interests, setValue]);
+
+  const onSubmit: SubmitHandler<FinalForm> = (partial) => {
+    setValues(partial);
+    // build full payload
+    const full = { ...data, ...partial };
+    // always forward to 2fa with the saved email
+    router.push(`/register/complete`);
+  };
+
   const [files, setFiles] = useState<File[]>([]);
 
   // Validation functions
@@ -80,20 +96,15 @@ export default function Step2Page() {
     console.error(`File rejected: ${file.name} - ${message}`);
   };
 
-  // enforce max 3 interests
-  useEffect(() => {
-    if (interests.length > 3) {
-      setValue("interests", interests.slice(0, 3));
-    }
-  }, [interests, setValue]);
+  const [acknowledgments, setAcknowledgments] = useState({
+    informationUsage: false,
+    sponsorSharing: false,
+    mediaConsent: false,
+  });
 
-  const onSubmit: SubmitHandler<FinalForm> = (partial) => {
-    setValues(partial);
-    // build full payload
-    const full = { ...data, ...partial };
-    // always forward to 2fa with the saved email
-    router.push(`/register/complete`);
-  };
+  // Acknowledgment validation function
+  const allAcknowledgmentsChecked =
+    Object.values(acknowledgments).every(Boolean);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -267,7 +278,7 @@ export default function Step2Page() {
       {/* Resume */}
       <div>
         <div className="space-y-1">
-          <Label htmlFor="resume" className="text-sm font-medium">
+          <Label htmlFor="resume" className="text-sm font-semibold">
             Resume Upload
             <span className="text-muted-foreground font-normal ml-2">
               (Optional but Recommended):
@@ -322,8 +333,110 @@ export default function Step2Page() {
         </FileUpload>
       </div>
 
-      <Button type="submit" className="w-full">
-        Submit
+      {/* Acknowledgments */}
+      <div className="space-y-6 mt-8">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">Final Acknowledgments</h3>
+          <p className="text-sm text-muted-foreground">
+            Please review and accept the following before completing your
+            registration:
+          </p>
+        </div>
+      </div>
+      {/* Permission to use information */}
+      <div className="flex items-start space-x-3">
+        <Checkbox
+          id="informationUsage"
+          checked={acknowledgments.informationUsage}
+          onCheckedChange={(checked) =>
+            setAcknowledgments((prev) => ({
+              ...prev,
+              informationUsage: checked as boolean,
+            }))
+          }
+          required
+        />
+        <div className="grid gap-1.5 leading-none">
+          <Label
+            htmlFor="informationUsage"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I give permission to MRUHacks to use my information for the purpose
+            of the event
+            <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            This includes event logistics, communication, and administration
+            purposes.
+          </p>
+        </div>
+      </div>
+
+      {/* Permission to share with sponsors */}
+      <div className="flex items-start space-x-3">
+        <Checkbox
+          id="sponsorSharing"
+          checked={acknowledgments.sponsorSharing}
+          onCheckedChange={(checked) =>
+            setAcknowledgments((prev) => ({
+              ...prev,
+              sponsorSharing: checked as boolean,
+            }))
+          }
+          required
+        />
+        <div className="grid gap-1.5 leading-none">
+          <Label
+            htmlFor="sponsorSharing"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I give my permission to MRUHacks to share my information with our
+            sponsors
+            <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Your information may be shared with event sponsors for recruitment
+            and networking opportunities.
+          </p>
+        </div>
+      </div>
+
+      {/* Photo/Media consent - Professional version */}
+      <div className="flex items-start space-x-3">
+        <Checkbox
+          id="mediaConsent"
+          checked={acknowledgments.mediaConsent}
+          onCheckedChange={(checked) =>
+            setAcknowledgments((prev) => ({
+              ...prev,
+              mediaConsent: checked as boolean,
+            }))
+          }
+          required
+        />
+        <div className="grid gap-1.5 leading-none">
+          <Label
+            htmlFor="mediaConsent"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            I consent to the use of my likeness in photographs, videos, and
+            other media for promotional purposes
+            <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Media may be used for social media, marketing materials, and event
+            documentation.
+          </p>
+        </div>
+      </div>
+      <Button
+        type="submit"
+        disabled={!allAcknowledgmentsChecked}
+        className="w-full"
+      >
+        {allAcknowledgmentsChecked
+          ? "Complete Registration"
+          : "Please accept all acknowledgments"}
       </Button>
     </form>
   );
