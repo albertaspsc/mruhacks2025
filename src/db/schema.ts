@@ -124,6 +124,7 @@ export const users = pgTable("users", {
   marketing: integer()
     .references(() => marketingTypes.id)
     .notNull(),
+  resume: text(),
   timestamp: timestamp(),
   status: status().default(status.enumValues[2]).notNull(),
 });

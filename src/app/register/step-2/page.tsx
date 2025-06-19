@@ -8,7 +8,18 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import React, { useEffect } from "react";
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadTrigger,
+  FileUploadList,
+  FileUploadItem,
+  FileUploadItemPreview,
+  FileUploadItemMetadata,
+  FileUploadItemDelete,
+} from "@/components/ui/file-upload";
+import { Upload, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 type FinalForm = Pick<
   RegistrationInput,
@@ -18,6 +29,7 @@ type FinalForm = Pick<
   | "accommodations"
   | "parking"
   | "marketing"
+  | "resume"
 >;
 
 const INTEREST_OPTIONS = [
@@ -52,6 +64,21 @@ export default function Step2Page() {
   });
 
   const interests = watch("interests") || [];
+
+  const [files, setFiles] = useState<File[]>([]);
+
+  // Validation functions
+  const onFileValidate = (file: File) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      return "File size must be less than 5MB";
+    }
+    return null;
+  };
+
+  const onFileReject = (file: File, message: string) => {
+    console.error(`File rejected: ${file.name} - ${message}`);
+  };
 
   // enforce max 3 interests
   useEffect(() => {
@@ -235,6 +262,64 @@ export default function Step2Page() {
             {errors.marketing.message}
           </p>
         )}
+      </div>
+
+      {/* Resume */}
+      <div>
+        <div className="space-y-1">
+          <Label htmlFor="resume" className="text-sm font-medium">
+            Resume Upload
+            <span className="text-muted-foreground font-normal ml-2">
+              (Optional but Recommended):
+            </span>
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Upload your resume to be considered for sponsor recruitment
+            opportunities and internships.
+          </p>
+        </div>
+        <FileUpload
+          value={files}
+          onValueChange={setFiles}
+          onFileValidate={onFileValidate}
+          onFileReject={onFileReject}
+          accept=".pdf,.doc,.docx"
+          maxFiles={1}
+          className="w-full max-w-md"
+        >
+          <FileUploadDropzone>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center justify-center rounded-full border p-2.5">
+                <Upload className="size-6 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-sm">
+                Drag & drop your resume here
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Or click to browse (PDF, DOC, DOCX only)
+              </p>
+            </div>
+            <FileUploadTrigger asChild>
+              <Button className="mt-2 w-fit">Browse files</Button>
+            </FileUploadTrigger>
+          </FileUploadDropzone>
+          <FileUploadList>
+            {files.map((file) => (
+              <FileUploadItem key={file.name} value={file}>
+                <FileUploadItemPreview />
+                <FileUploadItemMetadata />
+                <FileUploadItemDelete asChild>
+                  <Button
+                    variant="ghost"
+                    className="size-7 flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </FileUploadItemDelete>
+              </FileUploadItem>
+            ))}
+          </FileUploadList>
+        </FileUpload>
       </div>
 
       <Button type="submit" className="w-full">
