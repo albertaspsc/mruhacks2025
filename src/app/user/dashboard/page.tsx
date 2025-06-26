@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
+import SettingsPage from "../settings/page";
+import ProfilePage from "../profile/page";
 import { Sidebar } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,9 @@ import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RegistrationInput } from "@context/RegisterFormContext";
 import { Registration, getRegistration } from "src/db/registration";
+
+// Define available views
+type DashboardView = "dashboard" | "settings" | "profile";
 
 // Status banner component
 const StatusBanner = ({
@@ -65,6 +70,7 @@ const StatusBanner = ({
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<Registration>();
+  const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
 
   // Check authentication
   useEffect(() => {
@@ -87,6 +93,37 @@ export default function DashboardPage() {
     window.location.href = "/auth/logout?next=/";
   };
 
+  // Handle navigation from sidebar
+  const handleNavigation = (view: DashboardView) => {
+    setCurrentView(view);
+  };
+
+  // Render the current view component
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case "settings":
+        return <SettingsPage />;
+      case "profile":
+        return <ProfilePage />;
+      case "dashboard":
+      default:
+        return <ParticipantDashboard user={user || undefined} />;
+    }
+  };
+
+  // Get the title for the mobile header
+  const getViewTitle = () => {
+    switch (currentView) {
+      case "settings":
+        return "Settings";
+      case "profile":
+        return "Profile";
+      case "dashboard":
+      default:
+        return "Dashboard";
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return <LoadingSpinner />;
@@ -97,7 +134,12 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-gray-100">
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-white border-r">
-        <Sidebar user={user || undefined} onLogout={handleLogout} />
+        <Sidebar
+          user={user || undefined}
+          onLogout={handleLogout}
+          currentView={currentView}
+          onNavigate={handleNavigation}
+        />
       </div>
 
       {/* Main Content */}
@@ -115,19 +157,27 @@ export default function DashboardPage() {
               className="p-0 w-64 bg-white !backdrop-blur-none"
               style={{ backgroundColor: "white" }}
             >
-              <Sidebar user={user || undefined} onLogout={handleLogout} />
+              <Sidebar
+                user={user || undefined}
+                onLogout={handleLogout}
+                currentView={currentView}
+                onNavigate={handleNavigation}
+              />
             </SheetContent>
           </Sheet>
 
-          <h1 className="text-xl font-bold">Dashboard</h1>
+          <h1 className="text-xl font-bold">{getViewTitle()}</h1>
         </div>
 
         {/* Dashboard Content */}
         <div className="p-4">
-          {/* Status Banner */}
-          {user && <StatusBanner status={user.status} />}
+          {/* Status Banner - only show on main dashboard */}
+          {user && currentView === "dashboard" && (
+            <StatusBanner status={user.status} />
+          )}
 
-          <ParticipantDashboard user={user || undefined} />
+          {/* Render Current View */}
+          {renderCurrentView()}
         </div>
       </div>
     </div>

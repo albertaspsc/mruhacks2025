@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlertTriangle, Car } from "lucide-react";
+import { Loader2, AlertTriangle, Car, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -263,11 +263,20 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Email Preferences</CardTitle>
-              <CardDescription>
-                Control what types of emails you receive from us.
-              </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Mandatory Email Notice */}
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Notice</AlertTitle>
+                <AlertDescription>
+                  All confirmed participants will receive mandatory logistics
+                  emails with essential event information and updates. These
+                  emails cannot be opted out of to ensure you don&apos;t miss
+                  critical details for your MRUHacks experience.
+                </AlertDescription>
+              </Alert>
+
               <Form {...emailPreferencesForm}>
                 <form
                   onSubmit={emailPreferencesForm.handleSubmit(
@@ -292,27 +301,6 @@ export default function SettingsPage() {
                             <FormDescription>
                               Receive emails about our services, partners, and
                               other opportunities.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="eventUpdates"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Event Updates</FormLabel>
-                            <FormDescription>
-                              Receive updates about MRUHacks and our events.
                             </FormDescription>
                           </div>
                         </FormItem>

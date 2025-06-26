@@ -203,20 +203,8 @@ const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
             MRUHacks, including rules, resources, and tips for a successful
             hackathon experience.
           </p>
+          <p className="mt-4 text-lg">Hackerpack will be available soon!</p>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button
-            className="w-full md:w-auto px-8 flex items-center"
-            onClick={(): void => {
-              window.open(
-                "https://mruhacks.notion.site/Hackerpack-426b5b28cc0a4b069deb0f64f26af37a",
-                "_blank",
-              );
-            }}
-          >
-            View Hackerpack <ExternalLink className="ml-2 h-5 w-5" />
-          </Button>
-        </CardFooter>
       </Card>
 
       {/* Info Card */}
