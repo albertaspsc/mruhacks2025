@@ -24,7 +24,11 @@ export default function Step1Page() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PersonalForm>();
+  } = useForm<PersonalForm>({
+    defaultValues: {
+      yearOfStudy: RegistrationSchema.shape.yearOfStudy.enum[0],
+    },
+  });
 
   const institutions = [
     "Mount Royal University",
@@ -70,7 +74,6 @@ export default function Step1Page() {
           })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           <option value="true">Yes</option>
           <option value="false">No</option>
         </select>
@@ -91,7 +94,6 @@ export default function Step1Page() {
           {...register("gender", { required: "Please select gender" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
@@ -158,10 +160,11 @@ export default function Step1Page() {
           {...register("yearOfStudy", { required: "Year is required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
             (x, i) => (
-              <option key={i}>{x}</option>
+              <option key={i} value={x}>
+                {x}
+              </option>
             ),
           )}
         </select>
