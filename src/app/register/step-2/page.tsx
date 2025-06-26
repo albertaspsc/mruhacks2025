@@ -64,14 +64,48 @@ export default function Step2Page() {
     defaultValues: { interests: [], dietaryRestrictions: [] },
   });
 
-  const interests = watch("interests") || [];
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
+    useState<string[]>([]);
 
-  // enforce max 3 interests
+  {
+    /* Update form values when selections change */
+  }
   useEffect(() => {
-    if (interests.length > 3) {
-      setValue("interests", interests.slice(0, 3));
+    setValue("interests", selectedInterests);
+  }, [selectedInterests, setValue]);
+
+  useEffect(() => {
+    setValue("dietaryRestrictions", selectedDietaryRestrictions);
+  }, [selectedDietaryRestrictions, setValue]);
+
+  const handleInterestChange = (interest: string, checked: boolean) => {
+    if (checked) {
+      if (selectedInterests.length < 3) {
+        setSelectedInterests([...selectedInterests, interest]);
+      }
+    } else {
+      setSelectedInterests(
+        selectedInterests.filter((item) => item !== interest),
+      );
     }
-  }, [interests, setValue]);
+  };
+
+  const handleDietaryRestrictionChange = (
+    restriction: string,
+    checked: boolean,
+  ) => {
+    if (checked) {
+      setSelectedDietaryRestrictions([
+        ...selectedDietaryRestrictions,
+        restriction,
+      ]);
+    } else {
+      setSelectedDietaryRestrictions(
+        selectedDietaryRestrictions.filter((item) => item !== restriction),
+      );
+    }
+  };
 
   const onSubmit: SubmitHandler<FinalForm> = (partial) => {
     setValues(partial);
@@ -83,9 +117,11 @@ export default function Step2Page() {
 
   const [files, setFiles] = useState<File[]>([]);
 
-  // Validation functions
+  {
+    /* Validation functions */
+  }
   const onFileValidate = (file: File) => {
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return "File size must be less than 5MB";
     }
@@ -136,87 +172,69 @@ export default function Step2Page() {
 
       {/* Interests (max 3) */}
       <div>
-        <Label htmlFor="interests">
+        <Label>
           Interests (max 3) <span className="text-red-500">*</span>
         </Label>
-        {/* desktop */}
-        <div className="hidden sm:block">
-          <select
-            id="interests"
-            {...register("interests", {
-              validate: (v) => (v || []).length <= 3 || "Select at most 3",
-            })}
-            multiple
-            size={5}
-            className="w-full border rounded px-3 py-2"
-          >
-            {INTEREST_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
-            ))}
-          </select>
-          <p className="mt-1 text-sm text-gray-500">
-            Hold Ctrl (or ⌘) to select multiple
-          </p>
-          {errors.interests && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.interests.message}
-            </p>
-          )}
-        </div>
-        {/* mobile */}
-        <div className="grid grid-cols-2 gap-2 sm:hidden">
-          {INTEREST_OPTIONS.map((opt) => (
-            <label key={opt} className="inline-flex items-center space-x-2">
-              <input
-                type="checkbox"
-                value={opt}
-                {...register("interests")}
-                disabled={!interests.includes(opt) && interests.length >= 3}
-                className="border rounded"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+          {INTEREST_OPTIONS.map((interest) => (
+            <div key={interest} className="flex items-start space-x-3">
+              <Checkbox
+                id={`interest-${interest}`}
+                checked={selectedInterests.includes(interest)}
+                onCheckedChange={(checked) =>
+                  handleInterestChange(interest, checked as boolean)
+                }
+                disabled={
+                  !selectedInterests.includes(interest) &&
+                  selectedInterests.length >= 3
+                }
               />
-              <span className="text-sm">{opt}</span>
-            </label>
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor={`interest-${interest}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {interest}
+                </Label>
+              </div>
+            </div>
           ))}
-          {errors.interests && (
-            <p className="col-span-2 text-sm text-red-600">
-              {errors.interests.message}
-            </p>
-          )}
         </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Select up to 3 interests ({selectedInterests.length}/3 selected)
+        </p>
+        {selectedInterests.length === 0 && (
+          <p className="mt-1 text-sm text-red-600">
+            Please select at least one interest
+          </p>
+        )}
       </div>
 
       {/* Dietary Restrictions */}
       <div>
-        <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
-        {/* desktop */}
-        <div className="hidden sm:block">
-          <select
-            id="dietaryRestrictions"
-            {...register("dietaryRestrictions")}
-            multiple
-            size={7}
-            className="w-full border rounded px-3 py-2"
-          >
-            {DIETARY_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
-            ))}
-          </select>
-          <p className="mt-1 text-sm text-gray-500">
-            Hold Ctrl (or ⌘) to select multiple
-          </p>
-        </div>
-        {/* mobile */}
-        <div className="grid grid-cols-2 gap-2 sm:hidden">
-          {DIETARY_OPTIONS.map((opt) => (
-            <label key={opt} className="inline-flex items-center space-x-2">
-              <input
-                type="checkbox"
-                value={opt}
-                {...register("dietaryRestrictions")}
-                className="border rounded"
+        <Label>Dietary Restrictions</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+          {DIETARY_OPTIONS.map((restriction) => (
+            <div key={restriction} className="flex items-start space-x-3">
+              <Checkbox
+                id={`dietary-${restriction}`}
+                checked={selectedDietaryRestrictions.includes(restriction)}
+                onCheckedChange={(checked) =>
+                  handleDietaryRestrictionChange(
+                    restriction,
+                    checked as boolean,
+                  )
+                }
               />
-              <span className="text-sm">{opt}</span>
-            </label>
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor={`dietary-${restriction}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {restriction}
+                </Label>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -401,7 +419,7 @@ export default function Step2Page() {
         </div>
       </div>
 
-      {/* Photo/Media consent - Professional version */}
+      {/* Photo/media consent */}
       <div className="flex items-start space-x-3">
         <Checkbox
           id="mediaConsent"
@@ -431,12 +449,14 @@ export default function Step2Page() {
       </div>
       <Button
         type="submit"
-        disabled={!allAcknowledgmentsChecked}
+        disabled={!allAcknowledgmentsChecked || selectedInterests.length === 0}
         className="w-full"
       >
-        {allAcknowledgmentsChecked
+        {allAcknowledgmentsChecked && selectedInterests.length > 0
           ? "Complete Registration"
-          : "Please accept all acknowledgments"}
+          : selectedInterests.length === 0
+            ? "Please select at least one interest"
+            : "Please accept all acknowledgments"}
       </Button>
     </form>
   );
