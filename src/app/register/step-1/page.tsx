@@ -37,7 +37,27 @@ export default function Step1Page() {
     "Ambrose University",
     "Bow Valley College",
     "St. Mary's University",
-    "Other…",
+    "University of Alberta",
+    "University of British Columbia",
+    "Simon Fraser University",
+    "McGill University",
+    "University of Toronto",
+    "York University",
+    "Ryerson University",
+    "University of Waterloo",
+    "McMaster University",
+    "Queen's University",
+    "Carleton University",
+    "University of Ottawa",
+    "Concordia University",
+    "University of Manitoba",
+    "University of Saskatchewan",
+    "University of Regina",
+    "Memorial University of Newfoundland",
+    "Dalhousie University",
+    "University of New Brunswick",
+    "University of Prince Edward Island",
+    "Acadia University",
   ];
   const majors = [
     "Bachelor of Arts – Policy Studies",
@@ -46,10 +66,6 @@ export default function Step1Page() {
     "Bachelor of Science – Chemistry",
     "Bachelor of Science – Computer Science",
     "Bachelor of Science – Data Science",
-    "Bachelor of Science – Environmental Science",
-    "Bachelor of Science – General Science",
-    "Bachelor of Science – Geology",
-    "Other…",
   ];
 
   const onSubmit: SubmitHandler<PersonalForm> = (data) => {
@@ -112,15 +128,18 @@ export default function Step1Page() {
         <Input
           id="university"
           list="university-list"
-          placeholder="Start typing…"
+          placeholder="Select or type your institution"
           {...register("university", { required: "Institution is required" })}
         />
         <datalist id="university-list">
-          {/* TODO change to uni */}
           {institutions.map((i) => (
             <option key={i} value={i} />
           ))}
         </datalist>
+        <p className="mt-1 text-sm text-gray-500">
+          You can type any Canadian university or select from the suggestions
+          above
+        </p>
         {errors.university && (
           <p className="mt-1 text-sm text-red-600">
             {errors.university.message}
@@ -136,7 +155,7 @@ export default function Step1Page() {
         <Input
           id="major"
           list="major-list"
-          placeholder="e.g. Computer Science"
+          placeholder="Select or type your major"
           {...register("major", { required: "Major is required" })}
         />
         <datalist id="major-list">
@@ -144,6 +163,9 @@ export default function Step1Page() {
             <option key={m} value={m} />
           ))}
         </datalist>
+        <p className="mt-1 text-sm text-gray-500">
+          You can type any major/program or select from the suggestions above
+        </p>
         {errors.major && (
           <p className="mt-1 text-sm text-red-600">{errors.major.message}</p>
         )}
