@@ -262,7 +262,7 @@ export default function Step2Page() {
         >
           <option>Yes</option>
           <option>No</option>
-          <option>Not sure yet</option>
+          <option>Not sure</option>
         </select>
         {errors.parking && (
           <p className="mt-1 text-sm text-red-600">{errors.parking.message}</p>

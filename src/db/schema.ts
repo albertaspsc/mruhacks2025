@@ -14,7 +14,30 @@ import {
 import { sql } from "drizzle-orm";
 import { authUsers, authenticatedRole } from "drizzle-orm/supabase";
 
-// const rlsClient = pgRole("rls_client").existing();
+// Existing enums and tables
+export const yearOfStudy = pgEnum("year_of_study", [
+  "1st",
+  "2nd",
+  "3rd",
+  "4th+",
+  "Recent Grad",
+]);
+
+export const parkingSituation = pgEnum("parking_state", [
+  "Yes",
+  "No",
+  "Not sure",
+]);
+
+export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
+
+// New enums for admin system
+export const adminRole = pgEnum("admin_role", ["admin", "super_admin"]);
+export const adminStatus = pgEnum("admin_status", [
+  "active",
+  "inactive",
+  "suspended",
+]);
 
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -53,21 +76,11 @@ export const profiles = pgTable("profile", {
   lastName: varchar("l_name", { length: 255 }),
 });
 
-export const yearOfStudy = pgEnum("year_of_study", [
-  "1st",
-  "2nd",
-  "3rd",
-  "4th+",
-  "Recent Grad",
-]);
-
-// No  RLS
 export const universities = pgTable("universities", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   university: varchar("uni", { length: 255 }).unique().notNull(),
 });
 
-// No  RLS
 export const majors = pgTable("majors", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   major: varchar({ length: 255 }).unique().notNull(),
@@ -87,14 +100,6 @@ export const gender = pgTable("gender", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
   gender: varchar({ length: 255 }).unique().notNull(),
 });
-
-export const parkingSituation = pgEnum("parking_state", [
-  "Yes",
-  "No",
-  "Not sure",
-]);
-
-export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
 
 export const users = pgTable("users", {
   id: uuid("id")
@@ -129,11 +134,36 @@ export const users = pgTable("users", {
   status: status().default(status.enumValues[2]).notNull(),
 });
 
+// Admin table for superAdmins and admins
 export const admins = pgTable("admins", {
   id: uuid("id")
     .primaryKey()
-    .references(() => profiles.id)
-    .notNull(),
-  email: varchar({ length: 255 }).notNull(),
-  status: status().default("waitlisted").notNull(),
+    .references(() => authUsers.id), // References auth.users(id)
+  email: varchar("email", { length: 255 }).notNull(),
+  role: adminRole().default("admin").notNull(), // 'admin' | 'super_admin'
+  status: adminStatus().default("active").notNull(), // 'active' | 'inactive' | 'suspended'
+  is_admin_only: boolean("is_admin_only").default(true).notNull(), // True if admin-only account
+  firstName: varchar("f_name", { length: 100 }),
+  lastName: varchar("l_name", { length: 100 }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Admin audit log table for tracking all admin actions
+export const adminAuditLog = pgTable("admin_audit_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  admin_id: uuid("admin_id")
+    .references(() => authUsers.id)
+    .notNull(), // Who performed the action
+  action: varchar("action", { length: 100 }).notNull(), // What action was performed
+  target_user_id: uuid("target_user_id").references(() => authUsers.id), // Who was the target
+  target_email: varchar("target_email", { length: 255 }), // Target's email for reference
+  details: text("details"), // JSON string with additional details
+  ip_address: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
+  user_agent: text("user_agent"), // Browser/client info
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Type exports for TypeScript
+export type AdminRole = (typeof adminRole.enumValues)[number]; // 'admin' | 'super_admin'
+export type AdminStatus = (typeof adminStatus.enumValues)[number]; // 'active' | 'inactive' | 'suspended'

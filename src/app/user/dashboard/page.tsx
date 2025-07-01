@@ -135,10 +135,11 @@ export default function DashboardPage() {
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-white border-r">
         <Sidebar
-          user={user || undefined}
-          onLogout={handleLogout}
+          userRole="user"
+          user={user}
           currentView={currentView}
           onNavigate={handleNavigation}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -158,10 +159,11 @@ export default function DashboardPage() {
               style={{ backgroundColor: "white" }}
             >
               <Sidebar
+                userRole="user"
                 user={user || undefined}
-                onLogout={handleLogout}
                 currentView={currentView}
                 onNavigate={handleNavigation}
+                onLogout={handleLogout}
               />
             </SheetContent>
           </Sheet>
