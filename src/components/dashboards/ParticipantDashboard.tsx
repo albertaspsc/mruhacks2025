@@ -18,13 +18,21 @@ interface ParticipantDashboardProps {
   user?: Registration;
 }
 
+// Define the checklist keys as a type
+type ChecklistKey = "discordJoined" | "devpostSignup";
+
+// Define the checklist state type
+type ChecklistState = {
+  [K in ChecklistKey]: boolean;
+};
+
 const Checklist = ({ user }: { user?: Registration }) => {
-  const [checklist, setChecklist] = useState({
+  const [checklist, setChecklist] = useState<ChecklistState>({
     discordJoined: false,
     devpostSignup: false,
   });
 
-  const handleChecklistChange = (item: string) => {
+  const handleChecklistChange = (item: ChecklistKey) => {
     setChecklist((prev) => ({
       ...prev,
       [item]: !prev[item],
@@ -33,7 +41,7 @@ const Checklist = ({ user }: { user?: Registration }) => {
 
   const checklistItems = [
     {
-      id: "discordJoined",
+      id: "discordJoined" as ChecklistKey,
       title: "Join our Discord server",
       description: "Connect with other participants and get real-time updates",
       icon: <MessageSquare className="w-5 h-5" />,
@@ -43,7 +51,7 @@ const Checklist = ({ user }: { user?: Registration }) => {
       note: null,
     },
     {
-      id: "devpostSignup",
+      id: "devpostSignup" as ChecklistKey,
       title: "Sign up through DevPost",
       description: "Required for project submission and judging",
       icon: <Trophy className="w-5 h-5" />,
@@ -144,8 +152,6 @@ const Checklist = ({ user }: { user?: Registration }) => {
                     {/* Action Button */}
                     <Button
                       variant={checklist[item.id] ? "secondary" : "primary"}
-                      size="sm"
-                      asChild
                       className={`h-8 flex items-center justify-center ${checklist[item.id] ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}`}
                     >
                       <a

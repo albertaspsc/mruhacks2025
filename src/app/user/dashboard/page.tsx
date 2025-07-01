@@ -13,7 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RegistrationInput } from "@context/RegisterFormContext";
 import { Registration, getRegistration } from "src/db/registration";
 
-// Define available views
+// available views
 type DashboardView = "dashboard" | "settings" | "profile";
 
 // Status banner component
@@ -31,7 +31,7 @@ const StatusBanner = ({
       icon: <CheckCircle className="h-5 w-5 text-green-500 mr-2" />,
       title: "Registration Confirmed",
       message:
-        "Your registration has been confirmed. We look forward to seeing you at the event!",
+        "Your registration has been confirmed. Please register through our DevPost below We look forward to seeing you at the event!",
     },
     pending: {
       bgColor: "bg-blue-100",
@@ -171,7 +171,7 @@ export default function DashboardPage() {
 
         {/* Dashboard Content */}
         <div className="p-4">
-          {/* Status Banner - only show on main dashboard */}
+          {/* Status Banner only shows on main dashboard */}
           {user && currentView === "dashboard" && (
             <StatusBanner status={user.status} />
           )}
