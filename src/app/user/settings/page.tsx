@@ -149,7 +149,7 @@ export default function SettingsPage() {
           id: authUser.id,
           email: authUser.email || "",
           emailPreferences: {
-            marketingEmails: profile.marketingEmails ?? false,
+            marketingEmails: profile.marketingEmails ?? true,
           },
           parkingPreference: (profile.parking || "Not sure") as
             | "Yes"
@@ -375,7 +375,7 @@ export default function SettingsPage() {
                   <ul className="list-disc list-inside mt-2 space-y-1">
                     <li>
                       <strong>Event Updates:</strong> Important announcements,
-                      schedule , and event reminders
+                      schedule, and event reminders.
                     </li>
                   </ul>
                   These emails are mandatory to ensure you don&apos;t miss
