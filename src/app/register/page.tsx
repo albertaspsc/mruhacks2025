@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { getProfile, Profile } from "src/db/profiles";
 import { createClient } from "../../../utils/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -26,10 +25,11 @@ type AccountForm = Pick<
 export default function AccountPage() {
   const router = useRouter();
   const { setValues } = useRegisterForm();
-  const [profile, setProfile] = useState<Profile>();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false); // ADD THIS LINE
   const supabase = createClient();
 
   const {
@@ -39,14 +39,17 @@ export default function AccountPage() {
     watch,
     formState: { errors },
   } = useForm<AccountForm>({
-    mode: "onChange", // Validate on every change
-    reValidateMode: "onChange", // Re-validates on every change
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const password = watch("password");
 
   // Validation function to show all password errors
   const validatePassword = (value: string) => {
+    // Skips password validation for Google users
+    if (isGoogleUser) return true;
+
     const errors = [];
 
     if (value.length < 8) {
@@ -68,9 +71,67 @@ export default function AccountPage() {
     return errors.length === 0 || `Missing: ${errors.join(", ")}`;
   };
 
-  const onSubmit: SubmitHandler<AccountForm> = (data) => {
-    setValues(data);
-    router.push("/register/step-1");
+  const onSubmit: SubmitHandler<AccountForm> = async (data) => {
+    try {
+      // For Google users, just continue (they're already authenticated)
+      if (isGoogleUser) {
+        const submitData = {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          schoolEmail: data.schoolEmail,
+        };
+        setValues(submitData);
+        router.push("/register/step-1");
+        return;
+      }
+
+      // For manual users, create Supabase account first
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(
+        {
+          email: data.schoolEmail,
+          password: data.password,
+          options: {
+            data: {
+              first_name: data.firstName,
+              last_name: data.lastName,
+            },
+          },
+        },
+      );
+
+      if (signUpError) {
+        console.error("Sign up error:", signUpError);
+        alert(`Registration failed: ${signUpError.message}`);
+        return;
+      }
+
+      if (!authData.user) {
+        alert("Registration failed. Please try again.");
+        return;
+      }
+
+      // Save form data to context (WITHOUT password fields)
+      setValues({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        schoolEmail: data.schoolEmail,
+        // Do not include password or confirmPassword - both handled by Supabase auth
+      });
+
+      // Check if email confirmation is required
+      if (!authData.session) {
+        alert(
+          "Please check your email and click the confirmation link before continuing.",
+        );
+        return;
+      }
+
+      // User is now authenticated, proceed to next step
+      router.push("/register/step-1");
+    } catch (err) {
+      console.error("Registration error:", err);
+      alert("An unexpected error occurred. Please try again.");
+    }
   };
 
   // Handle Google OAuth sign up
@@ -81,7 +142,7 @@ export default function AccountPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/register/step-1`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register`,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -102,18 +163,23 @@ export default function AccountPage() {
   };
 
   useEffect(() => {
-    const getUserProfile = async () => {
+    // Prevents multiple intializations
+    if (hasInitialized) return;
+
+    const handleGoogleUser = async () => {
       try {
-        // Check if user is authenticated and get their profile
+        // Check if user just came from Google OAuth
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
           // If user came from Google OAuth, pre-fill form
-          const isGoogleUser = user.app_metadata?.provider === "google";
+          const isFromGoogle = user.app_metadata?.provider === "google";
 
-          if (isGoogleUser) {
+          if (isFromGoogle) {
+            setIsGoogleUser(true);
+
             const googleFirstName =
               user.user_metadata?.given_name ||
               user.user_metadata?.first_name ||
@@ -129,70 +195,71 @@ export default function AccountPage() {
             setValue("lastName", googleLastName);
             setValue("schoolEmail", googleEmail);
 
-            // Set values in context
+            // Set values in context (without password)
             setValues({
               firstName: googleFirstName,
               lastName: googleLastName,
               schoolEmail: googleEmail,
             });
-
-            return;
           }
         }
 
-        // For non-Google users or if no user, try to get existing profile
-        const { data, error } = await getProfile();
-        if (error) {
-          return;
-        }
-
-        setProfile(data);
-        setValues({
-          firstName: data.firstName ?? undefined,
-          lastName: data.lastName ?? undefined,
-          schoolEmail: data.email,
-        });
+        // Mark as initialized to prevent running again
+        setHasInitialized(true);
       } catch (err) {
-        console.error("Error getting user profile:", err);
+        console.error("Error checking Google user:", err);
+        setHasInitialized(true);
       }
     };
 
-    getUserProfile();
-  }, [setValue, setValues, supabase]);
+    handleGoogleUser();
+  }, [setValue, setValues, supabase, hasInitialized]); // Include hasInitialized in dependencies
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Create Your Account</h1>
 
-      {/* Google OAuth Section */}
-      <div className="space-y-4">
-        <Button
-          type="button"
-          onClick={handleGoogleSignUp}
-          disabled={isGoogleLoading}
-          className="w-full flex items-center justify-center"
-        >
-          {isGoogleLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <FcGoogle className="mr-2 h-4 w-4" />
-          )}
-          <span>Continue with Google</span>
-        </Button>
+      {/* Show different content based on user type */}
+      {!isGoogleUser ? (
+        <>
+          {/* Google OAuth Section */}
+          <div className="space-y-4">
+            <Button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={isGoogleLoading}
+              className="w-full flex items-center justify-center"
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FcGoogle className="mr-2 h-4 w-4" />
+              )}
+              <span>Continue with Google</span>
+            </Button>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">
+                  Or continue manually
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">
-              Or continue manually
-            </span>
-          </div>
+        </>
+      ) : (
+        <div className="bg-green-50 border border-green-200 rounded-md p-4">
+          <p className="text-green-800 text-sm">
+            ✓ Connected with Google. Please review and confirm your details
+            below.
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Manual Registration Form */}
+      {/* Registration Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* First Name */}
         <div>
@@ -244,152 +311,165 @@ export default function AccountPage() {
               },
             })}
             placeholder="you@student.mru.ca"
+            disabled={isGoogleUser} // Disabled for Google users
           />
           {errors.schoolEmail && (
             <p className="mt-1 text-sm text-red-600">
               {errors.schoolEmail.message}
             </p>
           )}
-        </div>
-
-        {/* Password */}
-        <div>
-          <Label htmlFor="password">
-            Password <span className="text-red-500">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              {...register("password", {
-                required: "Password is required",
-                validate: validatePassword,
-              })}
-              placeholder="Create a secure password"
-              className="pr-10"
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-              ) : (
-                <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-              )}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.password.message}
-            </p>
-          )}
-          <div className="mt-1 text-xs text-gray-500">
-            <p className="font-medium">Password requirements:</p>
-            <ul className="list-disc list-inside mt-1 space-y-0.5">
-              <li
-                className={
-                  password && password.length >= 8
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                At least 8 characters
-              </li>
-              <li
-                className={
-                  password && /(?=.*[A-Z])/.test(password)
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                One uppercase letter
-              </li>
-              <li
-                className={
-                  password && /(?=.*[a-z])/.test(password)
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                One lowercase letter
-              </li>
-              <li
-                className={
-                  password && /(?=.*\d)/.test(password)
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                One number
-              </li>
-              <li
-                className={
-                  password && /(?=.*[@$!%*?&])/.test(password)
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                One special character (@$!%*?&)
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <Label htmlFor="confirmPassword">
-            Confirm Password <span className="text-red-500">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              {...register("confirmPassword", {
-                required: "Please confirm your password",
-                validate: (value) =>
-                  value === password || "Passwords do not match",
-              })}
-              placeholder="Confirm your password"
-              className="pr-10"
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-              ) : (
-                <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-              )}
-            </button>
-          </div>
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.confirmPassword.message}
+          {isGoogleUser && (
+            <p className="mt-1 text-xs text-gray-500">
+              This email is from your Google account and cannot be changed.
             </p>
           )}
         </div>
+
+        {/* Password fields - only show for manual registration */}
+        {!isGoogleUser && (
+          <>
+            {/* Password */}
+            <div>
+              <Label htmlFor="password">
+                Password <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", {
+                    required: "Password is required",
+                    validate: validatePassword,
+                  })}
+                  placeholder="Create a secure password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.password.message}
+                </p>
+              )}
+              <div className="mt-1 text-xs text-gray-500">
+                <p className="font-medium">Password requirements:</p>
+                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                  <li
+                    className={
+                      password && password.length >= 8
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    At least 8 characters
+                  </li>
+                  <li
+                    className={
+                      password && /(?=.*[A-Z])/.test(password)
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    One uppercase letter
+                  </li>
+                  <li
+                    className={
+                      password && /(?=.*[a-z])/.test(password)
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    One lowercase letter
+                  </li>
+                  <li
+                    className={
+                      password && /(?=.*\d)/.test(password)
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    One number
+                  </li>
+                  <li
+                    className={
+                      password && /(?=.*[@$!%*?&])/.test(password)
+                        ? "text-green-600"
+                        : "text-gray-500"
+                    }
+                  >
+                    One special character (@$!%*?&)
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <Label htmlFor="confirmPassword">
+                Confirm Password <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
+                  })}
+                  placeholder="Confirm your password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         <Button type="submit" className="w-full">
-          Next: Personal Details
+          {isGoogleUser ? "Continue to Next Step" : "Next: Personal Details"}
         </Button>
       </form>
 
       {/* Login Link */}
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
-          >
-            Sign in here
-          </a>
-        </p>
-      </div>
+      {!isGoogleUser && (
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Already have an account?{" "}
+            <a
+              href="/login"
+              className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+            >
+              Sign in here
+            </a>
+          </p>
+        </div>
+      )}
     </div>
   );
 }

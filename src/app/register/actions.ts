@@ -23,6 +23,7 @@ export async function register(formData: FormData) {
     id: data.user.id,
     firstName: formData.get("f_name"),
     lastName: formData.get("l_name"),
+    schoolEmail: formData.get("school_email"),
     dob: formData.get("dob"),
     gender: formData.get("gender"),
     school: formData.get("school"),
