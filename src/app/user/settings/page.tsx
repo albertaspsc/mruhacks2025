@@ -33,38 +33,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/hooks/use-toast";
+import { createClient } from "../../../../utils/supabase/client";
+import { updateProfile, getProfile } from "../../../db/profiles";
 
 interface User {
   id: string;
   email: string;
   emailPreferences: {
     marketingEmails: boolean;
-    eventUpdates: boolean;
-    hackathonReminders: boolean;
   };
-  parkingPreference: "Yes" | "No" | "Not sure yet";
+  parkingPreference: "Yes" | "No" | "Not sure";
   licensePlate?: string;
 }
 
-// Mocked toast function
-const toast = ({
-  title,
-  description,
-  variant = "default",
-}: {
-  title: string;
-  description: string;
-  variant?: string;
-}) => {
-  console.log(`Toast: ${title} - ${description} (${variant})`);
-  alert(`${title}: ${description}`);
-};
-
-// Email preferences form type
+// Email preferences form type - only marketing emails can be changed
 type EmailPreferencesValues = {
   marketingEmails: boolean;
-  eventUpdates: boolean;
-  hackathonReminders: boolean;
 };
 
 // Password form type
@@ -76,7 +61,7 @@ type PasswordFormValues = {
 
 // Parking preferences form type
 type ParkingPreferencesValues = {
-  parkingPreference: "Yes" | "No" | "Not sure yet";
+  parkingPreference: "Yes" | "No" | "Not sure";
   licensePlate: string;
 };
 
@@ -85,13 +70,13 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const supabase = createClient();
+  const { toast } = useToast();
 
   // Email preferences form
   const emailPreferencesForm = useForm<EmailPreferencesValues>({
     defaultValues: {
-      marketingEmails: false,
-      eventUpdates: true,
-      hackathonReminders: true,
+      marketingEmails: true,
     },
   });
 
@@ -107,99 +92,192 @@ export default function SettingsPage() {
   // Parking preferences form
   const parkingPreferencesForm = useForm<ParkingPreferencesValues>({
     defaultValues: {
-      parkingPreference: "Not sure yet",
+      parkingPreference: "Not sure",
       licensePlate: "",
     },
   });
 
-  // Fetch mock user data
+  // Fetches real user data from database
   useEffect(() => {
-    // Simulate API delay
-    const timeout = setTimeout(() => {
-      const mockUser = {
-        id: "asia123",
-        email: "asia@mtroyal.ca",
-        emailPreferences: {
-          marketingEmails: false,
-          eventUpdates: true,
-          hackathonReminders: true,
-        },
-        parkingPreference: "Yes" as const,
-        licensePlate: "ABC-123",
-      };
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
 
-      setUser(mockUser);
+        // Get current user from Supabase auth
+        const {
+          data: { user: authUser },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      // Email preference form values
-      emailPreferencesForm.reset({
-        marketingEmails: mockUser.emailPreferences.marketingEmails,
-        eventUpdates: mockUser.emailPreferences.eventUpdates,
-        hackathonReminders: mockUser.emailPreferences.hackathonReminders,
-      });
+        if (authError || !authUser) {
+          console.error("Auth error:", authError);
+          toast({
+            title: "Error",
+            description: "Unable to load user data. Please log in again.",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      // Parking preference form values
-      parkingPreferencesForm.reset({
-        parkingPreference: mockUser.parkingPreference,
-        licensePlate: mockUser.licensePlate || "",
-      });
+        // Get user profile from database
+        const { data: profile, error: profileError } = await getProfile();
 
-      setIsLoading(false);
-    }, 1000);
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          toast({
+            title: "Error",
+            description: "Unable to load profile data.",
+            variant: "destructive",
+          });
+          return;
+        }
 
-    return () => clearTimeout(timeout);
-  }, [emailPreferencesForm, parkingPreferencesForm]);
+        // Check if profile exists
+        if (!profile) {
+          console.error("No profile found for user");
+          toast({
+            title: "Error",
+            description:
+              "No profile found. Please complete registration first.",
+            variant: "destructive",
+          });
+          return;
+        }
 
-  // Handle email preferences form submission
-  function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
+        // Map database profile to component state
+        const userData = {
+          id: authUser.id,
+          email: authUser.email || "",
+          emailPreferences: {
+            marketingEmails: profile.marketingEmails ?? false,
+          },
+          parkingPreference: (profile.parking || "Not sure") as
+            | "Yes"
+            | "No"
+            | "Not sure",
+          licensePlate: profile.licensePlate || "",
+        };
+
+        setUser(userData);
+
+        // Reset forms with real data - only marketing emails
+        emailPreferencesForm.reset({
+          marketingEmails: userData.emailPreferences.marketingEmails,
+        });
+
+        parkingPreferencesForm.reset({
+          parkingPreference: userData.parkingPreference,
+          licensePlate: userData.licensePlate || "",
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast({
+          title: "Error",
+          description: "Unable to load user data.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [emailPreferencesForm, parkingPreferencesForm, supabase]);
+
+  // Handle email preferences form submission - only marketing emails
+  async function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Email preferences submitted:", data);
-      setIsLoading(false);
+    try {
+      // Update email preference in profile table in database
+      const { error } = await updateProfile({
+        marketingEmails: data.marketingEmails,
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Preferences updated",
-        description: "Your email preferences have been updated successfully.",
-        variant: "default",
+        description:
+          "Your marketing email preference has been updated successfully.",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update email preferences. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // Handle parking preferences form submission
-  function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
+  async function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Parking preferences submitted:", data);
-      setIsLoading(false);
+    try {
+      // Update profile in database
+      const updateData: any = {
+        parking: data.parkingPreference,
+      };
+
+      // Only include license plate if parking is "Yes"
+      if (data.parkingPreference === "Yes") {
+        updateData.licensePlate = data.licensePlate;
+      } else {
+        updateData.licensePlate = null; // Clear license plate if not needed
+      }
+
+      const { error } = await updateProfile(updateData);
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Parking preferences updated",
         description: "Your parking preferences have been updated successfully.",
         variant: "default",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error updating parking preferences:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update parking preferences. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // Handle password form submission
-  function onPasswordSubmit(data: PasswordFormValues) {
+  async function onPasswordSubmit(data: PasswordFormValues) {
     setIsLoading(true);
 
-    // Validate password match
-    if (data.newPassword !== data.confirmPassword) {
-      setIsLoading(false);
-      toast({
-        title: "Error",
-        description: "New passwords don't match",
-        variant: "destructive",
-      });
-      return;
-    }
+    try {
+      // Validate password match
+      if (data.newPassword !== data.confirmPassword) {
+        toast({
+          title: "Error",
+          description: "New passwords don't match",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Password data submitted:", data);
-      setIsLoading(false);
+      // Update password using Supabase auth
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword,
+      });
+
+      if (error) {
+        throw error;
+      }
 
       passwordForm.reset({
         currentPassword: "",
@@ -212,18 +290,31 @@ export default function SettingsPage() {
         description: "Your password has been changed successfully.",
         variant: "default",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // Handle profile deletion
-  function handleDeleteProfile() {
+  async function handleDeleteProfile() {
     setIsDeleting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Profile deleted");
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
+    try {
+      // Delete user account from Supabase (this will cascade delete profile)
+      const { error } = await supabase.auth.admin.deleteUser(user!.id);
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Profile deleted",
         description:
@@ -231,11 +322,22 @@ export default function SettingsPage() {
         variant: "default",
       });
 
-      // Redirect would happen here in a real implementation
+      // Redirect to home page
       setTimeout(() => {
         window.location.href = "/";
       }, 2000);
-    }, 1500);
+    } catch (error: any) {
+      console.error("Error deleting profile:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to delete profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   }
 
   // Show loading state
@@ -265,15 +367,19 @@ export default function SettingsPage() {
               <CardTitle>Email Preferences</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Mandatory Email Notice */}
               <Alert className="mb-6">
                 <Info className="h-4 w-4" />
-                <AlertTitle>Notice</AlertTitle>
+                <AlertTitle>Email Notifications</AlertTitle>
                 <AlertDescription>
-                  All confirmed participants will receive mandatory logistics
-                  emails with essential event information and updates. These
-                  emails cannot be opted out of to ensure you don&apos;t miss
-                  critical details for your MRUHacks experience.
+                  All confirmed participants will automatically receive:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>
+                      <strong>Event Updates:</strong> Important announcements,
+                      schedule , and event reminders
+                    </li>
+                  </ul>
+                  These emails are mandatory to ensure you don&apos;t miss
+                  critical information for your MRUHacks experience.
                 </AlertDescription>
               </Alert>
 
@@ -297,10 +403,11 @@ export default function SettingsPage() {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Marketing Emails</FormLabel>
+                            <FormLabel>Marketing Emails (Optional)</FormLabel>
                             <FormDescription>
-                              Receive emails about our services, partners, and
-                              other opportunities.
+                              Get notified about future hackathons, tech events,
+                              job opportunities from our sponsors, and exclusive
+                              workshops. You can unsubscribe at any time.
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -312,7 +419,7 @@ export default function SettingsPage() {
                     {isLoading && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Save Preferences
+                    Save Marketing Preference
                   </Button>
                 </form>
               </Form>
@@ -359,7 +466,7 @@ export default function SettingsPage() {
                           <SelectContent className="bg-white dark:bg-gray-800">
                             <SelectItem value="Yes">Yes</SelectItem>
                             <SelectItem value="No">No</SelectItem>
-                            <SelectItem value="Not sure yet">
+                            <SelectItem value="Not sure">
                               Not sure yet
                             </SelectItem>
                           </SelectContent>
@@ -418,7 +525,7 @@ export default function SettingsPage() {
                           The event location is accessible via Calgary Transit.
                         </>
                       )}
-                      {parkingPreference === "Not sure yet" && (
+                      {parkingPreference === "Not sure" && (
                         <>
                           You can update this preference closer to the event
                           date. We recommend deciding at least 1 week before the
