@@ -15,6 +15,13 @@
       "when": 1751448718440,
       "tag": "0001_good_tombstone",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751479354125,
+      "tag": "0002_unknown_shiver_man",
+      "breakpoints": true
     }
   ]
 }

@@ -19,6 +19,17 @@ export default function Verify2FAPage() {
   const [cooldown, setCooldown] = useState(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    const checkIfUserAuth = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error) {
+        router.push("/register/step-1");
+      }
+    };
+
+    checkIfUserAuth();
+  }, []);
+
   // Simulate sending email (backend call)
   const sendVerificationEmail = async () => {
     if (!email) return;

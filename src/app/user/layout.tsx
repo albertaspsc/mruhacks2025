@@ -21,7 +21,7 @@ export default function RegisterLayout({ children }: Props) {
       } = await supabase.auth.getUser();
       if (!user) {
         console.error(error);
-        redirect("/login?next=/user");
+        redirect("/login?next=/user/dashboard");
       }
 
       const { data: userRegistration } = await getRegistration();

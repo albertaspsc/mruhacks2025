@@ -97,6 +97,7 @@ export async function register(
   const otherIds = await getOtherIds(user);
 
   if (otherIds.length != 1) {
+    console.log(otherIds);
     return {
       error:
         "one or more of marketing, experience, university, or major was not found in the database.",
@@ -116,12 +117,14 @@ export async function register(
     firstName: user.firstName,
     lastName: user.lastName,
     timestamp: new Date(),
+    marketing: 1,
   });
 
   return await registerInterestsAndRestrictions(id, user);
 }
 
 async function getOtherIds(user: RegistrationInput) {
+  console.log(user);
   return await db
     .select({
       marketing: marketingTypes.id,
@@ -129,11 +132,11 @@ async function getOtherIds(user: RegistrationInput) {
       university: universities.id,
       major: majors.id,
     })
-    .from(marketingTypes)
-    .innerJoin(experienceTypes, eq(experienceTypes.experience, user.experience))
+    .from(experienceTypes)
+    .innerJoin(marketingTypes, eq(marketingTypes.marketing, user.marketing))
     .innerJoin(universities, eq(universities.university, user.university))
     .innerJoin(majors, eq(majors.major, user.major))
-    .where(eq(marketingTypes.marketing, user.marketing));
+    .where(eq(experienceTypes.experience, user.experience));
 }
 
 async function getOrInsertGenderId(user: RegistrationInput) {
@@ -160,5 +163,19 @@ export async function getMajorsAndUniversities() {
   return {
     majors: majorsResult.map((row) => row.major),
     universities: universitiesResult.map((row) => row.university),
+  };
+}
+
+export async function getStaticOptions() {
+  const [dietary, interest, marketing] = await Promise.all([
+    db.select().from(dietaryRestrictionsTable),
+    db.select().from(interestsTable),
+    db.select().from(marketingTypes),
+  ]);
+
+  return {
+    dietaryRestrictions: dietary.map((x) => x.restriction),
+    interests: interest.map((x) => x.interest),
+    marketingTypes: marketing.map((x) => x.marketing),
   };
 }

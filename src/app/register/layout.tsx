@@ -12,15 +12,6 @@ type Props = { children: ReactNode };
 
 export default function RegisterLayout({ children }: Props) {
   const supabase = createClient();
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: isUserRegistered } = await getRegistration();
-      if (isUserRegistered) {
-        redirect("/user");
-      }
-    };
-    getUser();
-  });
 
   const path = usePathname() ?? "";
   let step = 1;
@@ -28,6 +19,23 @@ export default function RegisterLayout({ children }: Props) {
   else if (path.includes("step-1")) step = 3;
   else if (path.includes("step-2")) step = 4;
   else if (path.includes("complete")) step = 5;
+
+  useEffect(() => {
+    const assertPermission = async () => {
+      const { data: isUserRegistered } = await getRegistration();
+      if (isUserRegistered) {
+        redirect("/user/dashboard");
+      }
+
+      const { error } = await supabase.auth.getUser();
+      if (step >= 3 && error) {
+        redirect("/register");
+      } else if (!error) {
+        redirect("/register/step-1");
+      }
+    };
+    assertPermission();
+  }, []);
 
   return (
     <RegisterFormProvider>

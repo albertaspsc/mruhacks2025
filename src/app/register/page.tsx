@@ -68,13 +68,16 @@ export default function AccountPage() {
       {
         password: data.password,
         email: data.schoolEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/register/step-1`,
+        },
       },
     );
     if (signUpError) {
       console.log(`Failed to sign up user, ${signUpError}`);
       return;
     } else {
-      router.push(`/register/verify-2fa`);
+      router.push(`/register/verify-2fa?email=${data.schoolEmail}`);
     }
   };
 
@@ -107,7 +110,7 @@ export default function AccountPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Create Your Account</h1>
 
       {/* Google OAuth Section */}
@@ -302,6 +305,6 @@ export default function AccountPage() {
           </a>
         </p>
       </div>
-    </form>
+    </div>
   );
 }

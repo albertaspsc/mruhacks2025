@@ -8,7 +8,8 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { getStaticOptions } from "src/db/registration";
 
 type FinalForm = Pick<
   RegistrationInput,
@@ -26,7 +27,7 @@ const INTEREST_OPTIONS = [
   "Data Science and ML",
   "Design and User Experience (UX/UI)",
   "Game Development",
-] as const;
+];
 
 const DIETARY_OPTIONS = [
   "Kosher",
@@ -36,7 +37,16 @@ const DIETARY_OPTIONS = [
   "Gluten-free",
   "Peanuts & Treenuts allergy",
   "None",
-] as const;
+];
+
+const MARKETING_OPTIONS = [
+  "Poster",
+  "Social Media",
+  "Word of Mouth",
+  "Website / Googling it",
+  "Attended the event before",
+  "Other…",
+];
 
 export default function Step2Page() {
   const router = useRouter();
@@ -50,6 +60,26 @@ export default function Step2Page() {
   } = useForm<FinalForm>({
     defaultValues: { interests: [], dietaryRestrictions: [] },
   });
+
+  // A database call is not always the fastest, thus const defaults
+  const [dietaryOptions, setDietaryOptions] =
+    useState<string[]>(DIETARY_OPTIONS);
+  const [interestOptions, setInterestOptions] =
+    useState<string[]>(INTEREST_OPTIONS);
+  const [marketingOptions, setMarketingOptions] =
+    useState<string[]>(MARKETING_OPTIONS);
+
+  useEffect(() => {
+    // The defaults may not accurately repersent whats actually in the database, hence the database call
+    const loadStaticOptions = async () => {
+      const { dietaryRestrictions, interests, marketingTypes } =
+        await getStaticOptions();
+      setDietaryOptions(dietaryRestrictions);
+      setInterestOptions(interests);
+      setMarketingOptions(marketingTypes);
+    };
+    loadStaticOptions();
+  }, []);
 
   const interests = watch("interests") || [];
 
@@ -82,12 +112,14 @@ export default function Step2Page() {
           {...register("experience", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option>Beginner – What is a computer?</option>
-          <option>
+          <option value="Beginner">Beginner – What is a computer?</option>
+          <option value="Intermediate">
             Intermediate – My spaghetti code is made out of tagliatelle.
           </option>
-          <option>Advanced – Firewalls disabled, mainframes bypassed.</option>
-          <option>Expert – I know what a computer is.</option>
+          <option value="Advanced">
+            Advanced – Firewalls disabled, mainframes bypassed.
+          </option>
+          <option value="Expert">Expert – I know what a computer is.</option>
         </select>
         {errors.experience && (
           <p className="mt-1 text-sm text-red-600">
@@ -112,7 +144,7 @@ export default function Step2Page() {
             size={5}
             className="w-full border rounded px-3 py-2"
           >
-            {INTEREST_OPTIONS.map((opt) => (
+            {interestOptions.map((opt) => (
               <option key={opt}>{opt}</option>
             ))}
           </select>
@@ -127,7 +159,7 @@ export default function Step2Page() {
         </div>
         {/* mobile */}
         <div className="grid grid-cols-2 gap-2 sm:hidden">
-          {INTEREST_OPTIONS.map((opt) => (
+          {interestOptions.map((opt) => (
             <label key={opt} className="inline-flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -159,7 +191,7 @@ export default function Step2Page() {
             size={7}
             className="w-full border rounded px-3 py-2"
           >
-            {DIETARY_OPTIONS.map((opt) => (
+            {dietaryOptions.map((opt) => (
               <option key={opt}>{opt}</option>
             ))}
           </select>
@@ -169,7 +201,7 @@ export default function Step2Page() {
         </div>
         {/* mobile */}
         <div className="grid grid-cols-2 gap-2 sm:hidden">
-          {DIETARY_OPTIONS.map((opt) => (
+          {dietaryOptions.map((opt) => (
             <label key={opt} className="inline-flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -223,12 +255,9 @@ export default function Step2Page() {
           {...register("marketing", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option>Poster</option>
-          <option>Social Media</option>
-          <option>Word of Mouth</option>
-          <option>Website / Googling it</option>
-          <option>Attended the event before</option>
-          <option>Other…</option>
+          {marketingOptions.map((x, i) => (
+            <option key={`marketingOption-${i}`}>{x}</option>
+          ))}
         </select>
         {errors.marketing && (
           <p className="mt-1 text-sm text-red-600">
