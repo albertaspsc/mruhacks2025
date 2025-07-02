@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/register";
 
+  // TODO - type == "email"
   if (token_hash && type) {
     const supabase = await createClient();
 
@@ -19,9 +20,10 @@ export async function GET(request: NextRequest) {
     if (!error) {
       redirect(next);
     }
-    return NextResponse.json(error);
+    redirect(`${next}?error=${error.message}`);
   }
 
   // redirect the user to an error page with some instructions
-  return NextResponse.json({ WHAT: "?" });
+  // TODO - logging
+  redirect(`${next}`);
 }

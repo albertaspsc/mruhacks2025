@@ -151,14 +151,14 @@ async function getOrInsertGenderId(user: RegistrationInput) {
   return genderId;
 }
 
-export async function getDegreeOptions() {
-  const universitiesList = await db
-    .select({ university: universities.university })
-    .from(universities);
-  const majorsList = await db.select({ major: majors.major }).from(majors);
+export async function getMajorsAndUniversities() {
+  const [majorsResult, universitiesResult] = await Promise.all([
+    db.select().from(majors),
+    db.select().from(universities),
+  ]);
 
   return {
-    universities: universitiesList.map(({ university }) => university),
-    majors: majorsList.map(({ major }) => major),
+    majors: majorsResult.map((row) => row.major),
+    universities: universitiesResult.map((row) => row.university),
   };
 }

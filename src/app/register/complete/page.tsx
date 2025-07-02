@@ -9,9 +9,6 @@ import {
 } from "@/context/RegisterFormContext";
 import { Button } from "@/components/ui/button";
 import MascotUrl from "@/assets/mascots/crt.svg";
-import z from "zod";
-import { createSelectSchema } from "drizzle-zod";
-import { parkingSituation, yearOfStudy } from "src/db/schema";
 import { register } from "src/db/registration";
 
 // tiny confetti helper

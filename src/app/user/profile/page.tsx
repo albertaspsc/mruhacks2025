@@ -23,13 +23,9 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { getRegistration, Registration } from "src/db/registration";
 
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
+type User = Pick<Registration, "firstName" | "lastName" | "schoolEmail">;
 
 // Mocked toast function
 const toast = ({
@@ -49,7 +45,7 @@ const toast = ({
 type ProfileValues = {
   firstName: string;
   lastName: string;
-  email: string;
+  schoolEmail: string;
 };
 
 export default function ProfilePage() {
@@ -63,35 +59,24 @@ export default function ProfilePage() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      email: "",
+      schoolEmail: "",
     },
   });
 
   // Fetch mock user data
+  // Check authentication
   useEffect(() => {
-    // Simulate API delay
-    const timeout = setTimeout(() => {
-      const mockUser = {
-        id: "asia123",
-        email: "asia@mtroyal.ca",
-        firstName: "Asia",
-        lastName: "Hacker",
-      };
+    const checkAuth = async () => {
+      try {
+        const { data: registration } = await getRegistration();
+        setUser(registration ?? null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      setUser(mockUser);
-
-      // Set form values
-      profileForm.reset({
-        firstName: mockUser.firstName,
-        lastName: mockUser.lastName,
-        email: mockUser.email,
-      });
-
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  }, [profileForm]);
+    checkAuth();
+  }, []);
 
   // Handle profile form submission
   function onProfileSubmit(data: ProfileValues) {
@@ -177,7 +162,7 @@ export default function ProfilePage() {
 
               <FormField
                 control={profileForm.control}
-                name="email"
+                name="schoolEmail"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>

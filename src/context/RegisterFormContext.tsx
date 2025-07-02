@@ -54,7 +54,7 @@ const RegisterFormContext = createContext<ContextType>({
 });
 
 export function RegisterFormProvider({ children }: React.PropsWithChildren) {
-  const [data, setData] = useState<RegistrationInput>({});
+  const [data, setData] = useState<Partial<RegistrationInput>>({});
 
   const setValues = (vals: Partial<RegistrationInput>) => {
     setData((prev) => ({ ...prev, ...vals }));

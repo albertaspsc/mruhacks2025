@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
-import { login } from "./actions";
+import { createClient } from "utils/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,18 +23,17 @@ export default function LoginPage() {
       setError("Please enter your email and password.");
     }
 
-    const loginResult = await login(email, password);
-    if (!loginResult.success) {
-      setError(loginResult.error?.message ?? "");
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setError(error.message ?? "");
       return;
     }
 
-    if (loginResult.type == "signin") {
-      const next = params.get("next");
-      redirect(next ?? "/register");
-    } else {
-      redirect("/login/verify-2fa");
-    }
+    const next = params.get("next");
+    redirect(next ?? "/register");
   };
 
   return (
@@ -102,6 +102,18 @@ export default function LoginPage() {
             className="object-contain"
             priority
           />
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Need to make an account?{" "}
+            <a
+              href="/register"
+              className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+            >
+              Register here
+            </a>
+          </p>
         </div>
       </form>
     </div>

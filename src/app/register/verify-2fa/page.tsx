@@ -131,11 +131,10 @@ export default function Verify2FAPage() {
         )}
         <Button
           type="button"
-          variant="ghost"
-          className="w-full text-black hover:bg-gray-100"
-          onClick={() => router.push("/login")}
+          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition hover:scale-[1.02] active:scale-[0.98]" /* Added hover and active scale */
+          onClick={() => router.replace("/register")}
         >
-          Back to Login
+          Try a different email
         </Button>
         {/* Mascot */}
         <div className="flex justify-center pt-4">

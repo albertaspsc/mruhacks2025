@@ -10,43 +10,91 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getMajorsAndUniversities } from "src/db/registration";
+import { createClient } from "utils/supabase/client";
 
 type PersonalForm = Pick<
   RegistrationInput,
-  "previousAttendance" | "gender" | "university" | "major" | "yearOfStudy"
+  | "previousAttendance"
+  | "gender"
+  | "university"
+  | "major"
+  | "yearOfStudy"
+  | "firstName"
+  | "lastName"
+  | "schoolEmail"
 >;
 
 export default function Step1Page() {
+  const supabase = createClient();
   const router = useRouter();
   const { setValues } = useRegisterForm();
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PersonalForm>();
+    setValue,
+  } = useForm<PersonalForm>({
+    defaultValues: {},
+  });
 
-  const institutions = [
-    "Mount Royal University",
-    "University of Calgary",
-    "SAIT Polytechnic",
-    "Ambrose University",
-    "Bow Valley College",
-    "St. Mary's University",
-    "Other…",
-  ];
-  const majors = [
-    "Bachelor of Arts – Policy Studies",
-    "Bachelor of Computer Information Systems",
-    "Bachelor of Science – Biology",
-    "Bachelor of Science – Chemistry",
-    "Bachelor of Science – Computer Science",
-    "Bachelor of Science – Data Science",
-    "Bachelor of Science – Environmental Science",
-    "Bachelor of Science – General Science",
-    "Bachelor of Science – Geology",
-    "Other…",
-  ];
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [majors, setMajors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadLists = async () => {
+      const { majors, universities } = await getMajorsAndUniversities();
+      setMajors(majors);
+      setInstitutions(universities);
+    };
+    loadLists();
+  }, []);
+
+  useEffect(() => {
+    const getUserProfile = async () => {
+      try {
+        // Check if user is authenticated and get their profile
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          setValues({ schoolEmail: user.email });
+
+          // If user came from Google OAuth, pre-fill form
+          const isGoogleUser = user.app_metadata?.provider === "google";
+
+          if (isGoogleUser) {
+            const googleFirstName =
+              user.user_metadata?.given_name ||
+              user.user_metadata?.first_name ||
+              "";
+            const googleLastName =
+              user.user_metadata?.family_name ||
+              user.user_metadata?.last_name ||
+              "";
+
+            // Pre-fill form with Google data
+            setValue("firstName", googleFirstName);
+            setValue("lastName", googleLastName);
+
+            // Set values in context
+            setValues({
+              firstName: googleFirstName,
+              lastName: googleLastName,
+            });
+
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error getting user profile:", err);
+      }
+    };
+
+    getUserProfile();
+  }, []);
 
   const onSubmit: SubmitHandler<PersonalForm> = (data) => {
     setValues(data);
@@ -56,6 +104,38 @@ export default function Step1Page() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <h1 className="text-2xl font-semibold">Personal Details</h1>
+
+      {/* First Name */}
+      <div>
+        <Label htmlFor="firstName">
+          First Name <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="firstName"
+          {...register("firstName", { required: "First name is required" })}
+          placeholder="John"
+        />
+        {errors.firstName && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors.firstName.message}
+          </p>
+        )}
+      </div>
+
+      {/* Last Name */}
+      <div>
+        <Label htmlFor="lastName">
+          Last Name <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="lastName"
+          {...register("lastName", { required: "Last name is required" })}
+          placeholder="Doe"
+        />
+        {errors.lastName && (
+          <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+        )}
+      </div>
 
       {/* Attended Before */}
       <div>
