@@ -1,4 +1,4 @@
-"use server";
+"use client";
 
 import React, { ReactNode, useEffect } from "react";
 import { redirect } from "next/navigation";

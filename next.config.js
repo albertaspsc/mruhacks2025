@@ -9,13 +9,11 @@ const nextConfig = {
     return cfg;
   },
 
-  experimental: {
-    turbo: {
-      rules: {
-        "*.glsl": {
-          loaders: ["raw-loader"],
-          as: "*.js",
-        },
+  turbopack: {
+    rules: {
+      "*.glsl": {
+        loaders: ["raw-loader"],
+        as: "*.js",
       },
     },
   },

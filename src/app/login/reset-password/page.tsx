@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -62,8 +62,6 @@ const fireConfetti = (canvas: HTMLCanvasElement) => {
 const ResetPasswordPageContent = () => {
   const supabase = createClient();
   const router = useRouter();
-  const params = useSearchParams();
-  const userName = params.get("name") || "User";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import MascotUrl from "@/assets/mascots/crt.svg";
@@ -10,8 +10,7 @@ import { createClient } from "utils/supabase/client";
 export default function Verify2FAPage() {
   const supabase = createClient();
   const router = useRouter();
-  const params = useSearchParams();
-  const email = params.get("email");
+  const [email, setEmail] = useState<string | null>();
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
   );
@@ -29,6 +28,11 @@ export default function Verify2FAPage() {
 
     checkIfUserAuth();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setEmail(params.get("email"));
+  });
 
   // Simulate sending email (backend call)
   const sendVerificationEmail = async () => {

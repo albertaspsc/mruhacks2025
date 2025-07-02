@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const params = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +31,7 @@ export default function LoginPage() {
       return;
     }
 
+    const params = new URLSearchParams(window.location.search);
     const next = params.get("next");
     redirect(next ?? "/register");
   };
