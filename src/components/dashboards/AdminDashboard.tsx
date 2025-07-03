@@ -34,6 +34,7 @@ interface Participant {
 
 interface AdminDashboardProps {
   className?: string;
+  userRole?: "volunteer" | "admin" | "super_admin";
 }
 
 export function AdminDashboard({ className = "" }: AdminDashboardProps) {

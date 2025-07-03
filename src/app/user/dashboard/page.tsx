@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
 import SettingsPage from "../settings/page";
 import ProfilePage from "../profile/page";
-import { Sidebar } from "@/components/ui/sidebar";
+import { Sidebar } from "@components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
@@ -134,13 +134,7 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-gray-100">
       {/* Desktop Sidebar */}
       <div className="hidden md:block w-64 bg-white border-r">
-        <Sidebar
-          userRole="user"
-          user={user}
-          currentView={currentView}
-          onNavigate={handleNavigation}
-          onLogout={handleLogout}
-        />
+        <Sidebar user={user} onLogout={handleLogout} />
       </div>
 
       {/* Main Content */}
@@ -158,13 +152,7 @@ export default function DashboardPage() {
               className="p-0 w-64 bg-white !backdrop-blur-none"
               style={{ backgroundColor: "white" }}
             >
-              <Sidebar
-                userRole="user"
-                user={user || undefined}
-                currentView={currentView}
-                onNavigate={handleNavigation}
-                onLogout={handleLogout}
-              />
+              <Sidebar user={user} onLogout={handleLogout} />
             </SheetContent>
           </Sheet>
 

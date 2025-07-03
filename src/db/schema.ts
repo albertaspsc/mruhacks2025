@@ -32,7 +32,11 @@ export const parkingSituation = pgEnum("parking_state", [
 export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
 
 // New enums for admin system
-export const adminRole = pgEnum("admin_role", ["admin", "super_admin"]);
+export const adminRole = pgEnum("admin_role", [
+  "admin",
+  "super_admin",
+  "volunteer",
+]);
 export const adminStatus = pgEnum("admin_status", [
   "active",
   "inactive",
@@ -132,6 +136,7 @@ export const users = pgTable("users", {
   resume: text(),
   timestamp: timestamp(),
   status: status().default(status.enumValues[2]).notNull(),
+  checkedIn: boolean("checked_in").default(false).notNull(),
 });
 
 // Admin table for superAdmins and admins
@@ -142,26 +147,11 @@ export const admins = pgTable("admins", {
   email: varchar("email", { length: 255 }).notNull(),
   role: adminRole().default("admin").notNull(), // 'admin' | 'super_admin'
   status: adminStatus().default("active").notNull(), // 'active' | 'inactive' | 'suspended'
-  is_admin_only: boolean("is_admin_only").default(true).notNull(), // True if admin-only account
+  is_organizer_only: boolean("is_organizer_only").default(true).notNull(), // For accounts made for organizers only - not made through registration form
   firstName: varchar("f_name", { length: 100 }),
   lastName: varchar("l_name", { length: 100 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Admin audit log table for tracking all admin actions
-export const adminAuditLog = pgTable("admin_audit_log", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  admin_id: uuid("admin_id")
-    .references(() => authUsers.id)
-    .notNull(), // Who performed the action
-  action: varchar("action", { length: 100 }).notNull(), // What action was performed
-  target_user_id: uuid("target_user_id").references(() => authUsers.id), // Who was the target
-  target_email: varchar("target_email", { length: 255 }), // Target's email for reference
-  details: text("details"), // JSON string with additional details
-  ip_address: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
-  user_agent: text("user_agent"), // Browser/client info
-  created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Type exports for TypeScript

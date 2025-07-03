@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Download, RefreshCw, UserCheck, Users } from "lucide-react";
+import {
+  Search,
+  Download,
+  RefreshCw,
+  UserCheck,
+  Users,
+  Lock,
+  Eye,
+} from "lucide-react";
 
 interface Participant {
   id: string;
@@ -14,10 +22,14 @@ interface Participant {
 
 interface ParticipantManagementProps {
   className?: string;
+  userRole?: "volunteer" | "admin" | "super_admin";
+  readOnly?: boolean;
 }
 
 export function ParticipantManagement({
   className = "",
+  userRole = "admin",
+  readOnly = false,
 }: ParticipantManagementProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +39,24 @@ export function ParticipantManagement({
     [],
   );
 
+  // Role-based permissions
+  const isVolunteer = userRole === "volunteer";
+  const isAdmin = userRole === "admin";
+  const isSuperAdmin = userRole === "super_admin";
+
+  // Define what each role can do
+  const permissions = {
+    canEdit: !readOnly && !isVolunteer, // Admins and super admins can edit
+    canBulkEdit: (isAdmin || isSuperAdmin) && !readOnly, // Only admins+ can bulk edit
+    canExport: !isVolunteer || isSuperAdmin, // Volunteers cannot export, unless super admin
+    canCheckIn: true, // All roles can check people in
+    canChangeStatus: !readOnly && !isVolunteer, // Only admins+ can change status
+  };
+
   // Fetch participants
   const fetchParticipants = async () => {
     setLoading(true);
     try {
-      // Replace with your API call
       const response = await fetch("/api/participants");
       const data = await response.json();
       setParticipants(data);
@@ -42,8 +67,13 @@ export function ParticipantManagement({
     }
   };
 
-  // Update participant status
+  // Update participant status (admin+ only)
   const updateStatus = async (id: string, newStatus: string) => {
+    if (!permissions.canChangeStatus) {
+      alert("You don't have permission to change participant status");
+      return;
+    }
+
     try {
       await fetch(`/api/participants/${id}`, {
         method: "PATCH",
@@ -59,8 +89,13 @@ export function ParticipantManagement({
     }
   };
 
-  // Toggle check-in
+  // Toggle check-in (all roles can do this)
   const toggleCheckIn = async (id: string) => {
+    if (!permissions.canCheckIn) {
+      alert("You don't have permission to check in participants");
+      return;
+    }
+
     const participant = participants.find((p) => p.id === id);
     const newCheckedIn = !participant?.checkedIn;
 
@@ -79,8 +114,13 @@ export function ParticipantManagement({
     }
   };
 
-  // Bulk update status
+  // Bulk update status (admin+ only)
   const bulkUpdateStatus = async (newStatus: string) => {
+    if (!permissions.canBulkEdit) {
+      alert("You don't have permission to bulk update participants");
+      return;
+    }
+
     if (selectedParticipants.length === 0) return;
 
     try {
@@ -106,8 +146,13 @@ export function ParticipantManagement({
     }
   };
 
-  // Export data
+  // Export data (admin+ only)
   const exportData = () => {
+    if (!permissions.canExport) {
+      alert("You don't have permission to export data");
+      return;
+    }
+
     const csvContent = [
       [
         "Name",
@@ -182,6 +227,19 @@ export function ParticipantManagement({
     }
   };
 
+  const getRoleDisplay = () => {
+    switch (userRole) {
+      case "volunteer":
+        return "Volunteer";
+      case "admin":
+        return "Admin";
+      case "super_admin":
+        return "Super Admin";
+      default:
+        return "User";
+    }
+  };
+
   useEffect(() => {
     fetchParticipants();
   }, []);
@@ -199,6 +257,27 @@ export function ParticipantManagement({
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Role-based access indicator */}
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+        <div className="flex items-center">
+          {isVolunteer ? (
+            <Eye className="h-5 w-5 text-blue-400" />
+          ) : (
+            <Users className="h-5 w-5 text-blue-400" />
+          )}
+          <div className="ml-3">
+            <p className="text-sm text-blue-700">
+              <strong>{getRoleDisplay()} Access:</strong>{" "}
+              {isVolunteer
+                ? "You can view participant information and check people in/out."
+                : readOnly
+                  ? "Read-only access to participant management."
+                  : "Full participant management access including status changes and bulk operations."}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
@@ -297,13 +376,15 @@ export function ParticipantManagement({
             </div>
 
             <div className="flex items-center space-x-2">
-              <button
-                onClick={exportData}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
-              </button>
+              {permissions.canExport && (
+                <button
+                  onClick={exportData}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </button>
+              )}
 
               <button
                 onClick={fetchParticipants}
@@ -321,26 +402,28 @@ export function ParticipantManagement({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedParticipants(
-                          filteredParticipants.map((p) => p.id),
-                        );
-                      } else {
-                        setSelectedParticipants([]);
+                {permissions.canBulkEdit && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedParticipants(
+                            filteredParticipants.map((p) => p.id),
+                          );
+                        } else {
+                          setSelectedParticipants([]);
+                        }
+                      }}
+                      checked={
+                        selectedParticipants.length ===
+                          filteredParticipants.length &&
+                        filteredParticipants.length > 0
                       }
-                    }}
-                    checked={
-                      selectedParticipants.length ===
-                        filteredParticipants.length &&
-                      filteredParticipants.length > 0
-                    }
-                  />
-                </th>
+                    />
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Participant
                 </th>
@@ -353,33 +436,37 @@ export function ParticipantManagement({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Check-in
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                {permissions.canChangeStatus && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredParticipants.map((participant) => (
                 <tr key={participant.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={selectedParticipants.includes(participant.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedParticipants((prev) => [
-                            ...prev,
-                            participant.id,
-                          ]);
-                        } else {
-                          setSelectedParticipants((prev) =>
-                            prev.filter((id) => id !== participant.id),
-                          );
-                        }
-                      }}
-                    />
-                  </td>
+                  {permissions.canBulkEdit && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        checked={selectedParticipants.includes(participant.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedParticipants((prev) => [
+                              ...prev,
+                              participant.id,
+                            ]);
+                          } else {
+                            setSelectedParticipants((prev) =>
+                              prev.filter((id) => id !== participant.id),
+                            );
+                          }
+                        }}
+                      />
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
@@ -395,7 +482,9 @@ export function ParticipantManagement({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(participant.status)}`}
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                        participant.status,
+                      )}`}
                     >
                       {participant.status}
                     </span>
@@ -403,28 +492,34 @@ export function ParticipantManagement({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => toggleCheckIn(participant.id)}
+                      disabled={!permissions.canCheckIn}
                       className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                        participant.checkedIn
-                          ? "bg-green-100 text-green-800 hover:bg-green-200"
-                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                        !permissions.canCheckIn
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : participant.checkedIn
+                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                       }`}
                     >
                       {participant.checkedIn ? "Checked In" : "Check In"}
                     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <select
-                      value={participant.status}
-                      onChange={(e) =>
-                        updateStatus(participant.id, e.target.value)
-                      }
-                      className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="waitlisted">Waitlisted</option>
-                    </select>
-                  </td>
+                  {permissions.canChangeStatus && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <select
+                        value={participant.status}
+                        onChange={(e) =>
+                          updateStatus(participant.id, e.target.value)
+                        }
+                        className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+                        disabled={!permissions.canChangeStatus}
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="waitlisted">Waitlisted</option>
+                      </select>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -438,8 +533,8 @@ export function ParticipantManagement({
         )}
       </div>
 
-      {/* Bulk Actions */}
-      {selectedParticipants.length > 0 && (
+      {/* Bulk Actions - only show for admin+ */}
+      {permissions.canBulkEdit && selectedParticipants.length > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border p-4 z-50">
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-700">

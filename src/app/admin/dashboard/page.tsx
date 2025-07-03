@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sidebar } from "@/components/ui/sidebar";
+import { Sidebar } from "@components/ui/admin-sidebar";
 import SettingsPage from "../settings/page";
 import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
 import { RoleManager } from "@/components/admin/RoleManager";
@@ -19,7 +19,7 @@ type AdminDashboardView =
   | "dashboard"
   | "participants"
   | "check-in" // Available to volunteers
-  | "roles" // Admin+ only
+  | "roles" // Super admin only (fixed from admin+ to super admin only)
   | "settings"
   | "profile"
   | "admin-management" // Super admin only
@@ -105,7 +105,7 @@ export default function AdminDashboardPage() {
 
     const userRole = adminUser?.role;
 
-    // Define role permissions
+    // Define role permissions - CORRECTED VERSION
     const rolePermissions = {
       volunteer: [
         "dashboard",
@@ -118,15 +118,15 @@ export default function AdminDashboardPage() {
         "dashboard",
         "participants",
         "check-in",
-        "roles",
         "settings",
         "profile",
+        // NOTE: "roles" removed - only super admin can manage roles
       ],
       super_admin: [
         "dashboard",
         "participants",
         "check-in",
-        "roles",
+        "roles", // Only super admin can access role management
         "admin-management",
         "audit-logs",
         "system-settings",
@@ -137,8 +137,14 @@ export default function AdminDashboardPage() {
 
     // Check if user has permission for this view
     if (userRole && !rolePermissions[userRole].includes(view)) {
+      const roleDisplay =
+        userRole === "volunteer"
+          ? "Volunteer"
+          : userRole === "admin"
+            ? "Admin"
+            : "Super Admin";
       alert(
-        `Access denied. ${userRole === "volunteer" ? "Volunteer" : "Admin"} privileges required for this section.`,
+        `Access denied. ${roleDisplay} privileges are insufficient for this section.`,
       );
       return;
     }
@@ -189,7 +195,7 @@ export default function AdminDashboardPage() {
         );
 
       case "check-in":
-        // Volunteers and admins can handle check-ins
+        // All staff roles can handle check-ins
         return (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">Event Check-in</h2>
@@ -215,12 +221,22 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-700">
+            <div
+              className={`rounded-lg p-4 ${
+                userRole === "volunteer" ? "bg-green-50" : "bg-blue-50"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  userRole === "volunteer" ? "text-green-700" : "text-blue-700"
+                }`}
+              >
                 <strong>
                   {userRole === "volunteer"
                     ? "Volunteer Access:"
-                    : "Admin Access:"}
+                    : userRole === "admin"
+                      ? "Admin Access:"
+                      : "Super Admin Access:"}
                 </strong>
                 {userRole === "volunteer"
                   ? " You can check participants in/out and view attendance data."
@@ -234,19 +250,17 @@ export default function AdminDashboardPage() {
         return <SettingsPage />;
 
       case "roles":
-        return userRole && ["admin", "super_admin"].includes(userRole) ? (
-          <RoleManager
-            showHeader={true}
-            className="max-w-7xl mx-auto"
-            currentUserRole={userRole as "admin" | "super_admin"}
-          />
+        // ONLY super admin can access this - corrected logic
+        return userRole === "super_admin" ? (
+          <RoleManager showHeader={true} className="max-w-7xl mx-auto" />
         ) : (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4 text-red-600">
               Access Denied
             </h2>
             <p className="text-gray-600">
-              You need admin privileges to manage roles.
+              You need super admin privileges to manage roles and create admin
+              accounts.
             </p>
           </div>
         );
@@ -256,7 +270,7 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">Admin Management</h2>
             <p className="text-gray-600 mb-4">
-              Create, edit, and manage admin accounts.
+              Advanced admin account management and system oversight.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -269,19 +283,21 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-green-600">--</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-purple-900">Admins</h3>
+                <h3 className="font-semibold text-purple-900">
+                  Regular Admins
+                </h3>
                 <p className="text-2xl font-bold text-purple-600">--</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-red-900">Super Admins</h3>
+                <h3 className="font-semibold text-red-900">Active Accounts</h3>
                 <p className="text-2xl font-bold text-red-600">--</p>
               </div>
             </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Super Admin Only:</strong> Manage all admin accounts and
-                permissions.
+            <div className="mt-4 p-4 bg-red-50 rounded-lg">
+              <p className="text-sm text-red-700">
+                <strong>Super Admin Only:</strong> Advanced admin account
+                management, system monitoring, and security oversight.
               </p>
             </div>
           </div>
@@ -291,7 +307,7 @@ export default function AdminDashboardPage() {
               Access Denied
             </h2>
             <p className="text-gray-600">
-              You need super admin privileges to manage admin accounts.
+              You need super admin privileges to access admin management.
             </p>
           </div>
         );
@@ -317,7 +333,7 @@ export default function AdminDashboardPage() {
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 <strong>Super Admin Only:</strong> Complete audit trail of all
-                admin actions.
+                admin actions and system events.
               </p>
             </div>
           </div>
@@ -360,12 +376,32 @@ export default function AdminDashboardPage() {
                   Configure Event
                 </button>
               </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Security Settings</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Manage authentication and security policies.
+                </p>
+                <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm">
+                  Security Config
+                </button>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Email Settings</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Configure email templates and notifications.
+                </p>
+                <button className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 text-sm">
+                  Email Config
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 p-4 bg-red-50 rounded-lg">
               <p className="text-sm text-red-700">
                 <strong>Super Admin Only:</strong> These settings affect the
-                entire system.
+                entire system. Changes require careful consideration.
               </p>
             </div>
           </div>
@@ -462,7 +498,7 @@ export default function AdminDashboardPage() {
                   <ul className="text-sm text-gray-600 space-y-1">
                     {userRole === "volunteer" && (
                       <>
-                        <li>• View participant information</li>
+                        <li>• View participant information (read-only)</li>
                         <li>• Check participants in/out</li>
                         <li>• Access basic event statistics</li>
                         <li>• Update personal settings</li>
@@ -471,17 +507,19 @@ export default function AdminDashboardPage() {
                     {userRole === "admin" && (
                       <>
                         <li>• Full participant management</li>
-                        <li>• Create and manage volunteer accounts</li>
-                        <li>• Access event analytics</li>
+                        <li>• Bulk participant operations</li>
+                        <li>• Access detailed event analytics</li>
                         <li>• Manage check-in systems</li>
+                        <li>• Export participant data</li>
                       </>
                     )}
                     {userRole === "super_admin" && (
                       <>
                         <li>• Complete system administration</li>
-                        <li>• Manage all admin accounts</li>
-                        <li>• Access audit logs</li>
-                        <li>• Configure system settings</li>
+                        <li>• Create and manage all admin accounts</li>
+                        <li>• Access audit logs and system monitoring</li>
+                        <li>• Configure system-wide settings</li>
+                        <li>• Advanced security and backup management</li>
                       </>
                     )}
                   </ul>
@@ -490,7 +528,7 @@ export default function AdminDashboardPage() {
                 <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
                   <p className="text-sm text-yellow-700">
                     Profile editing functionality coming soon. Use Settings to
-                    update your password.
+                    update your password and preferences.
                   </p>
                 </div>
               </div>
@@ -548,9 +586,9 @@ export default function AdminDashboardPage() {
       case "check-in":
         return "Manage participant check-ins during the event";
       case "roles":
-        return "Create and manage admin accounts and permissions";
+        return "Create and manage admin and volunteer accounts";
       case "admin-management":
-        return "Create, edit, and manage admin accounts";
+        return "Advanced admin account management and system oversight";
       case "audit-logs":
         return "View system audit logs and admin activity history";
       case "system-settings":
@@ -563,12 +601,11 @@ export default function AdminDashboardPage() {
       default:
         return userRole === "volunteer"
           ? "Your volunteer dashboard with event information and check-in tools"
-          : "Overview of participants, analytics, and system status";
+          : userRole === "admin"
+            ? "Admin dashboard with participant management and analytics"
+            : "Super admin dashboard with complete system oversight";
     }
   };
-
-  // Rest of component (loading states, main content, etc.) remains the same...
-  // [Previous code for loading, main content rendering, etc.]
 
   // Show loading during initialization
   if (isInitializing) {
@@ -592,7 +629,7 @@ export default function AdminDashboardPage() {
     <div className="flex h-screen bg-gray-100">
       {/* Role-aware Sidebar */}
       <Sidebar
-        userRole={adminUser.role === "volunteer" ? "volunteer" : adminUser.role}
+        userRole={adminUser.role}
         currentView={currentView}
         onNavigate={handleNavigation}
         onLogout={handleLogout}
@@ -600,7 +637,7 @@ export default function AdminDashboardPage() {
       />
 
       {/* Main content area */}
-      <div className="flex-1 overflow-y-auto bg-purple-100">
+      <div className="flex-1 overflow-y-auto bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -614,7 +651,13 @@ export default function AdminDashboardPage() {
             {/* Role-based action buttons */}
             <div className="flex items-center space-x-3">
               {currentView === "participants" && (
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">
+                <button
+                  className={`px-4 py-2 rounded-md transition-colors text-white ${
+                    adminUser?.role === "volunteer"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  }`}
+                >
                   {adminUser?.role === "volunteer"
                     ? "Quick Check-in"
                     : "Export Data"}

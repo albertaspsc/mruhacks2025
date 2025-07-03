@@ -1,12 +1,7 @@
 "use server";
 import { eq, sql, and, desc, gte, lte } from "drizzle-orm";
 import { db } from "./drizzle";
-import {
-  admins,
-  profiles as profilesTable,
-  users,
-  adminAuditLog,
-} from "./schema";
+import { admins, profiles as profilesTable, users } from "./schema";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../../utils/supabase/server";
 
@@ -20,7 +15,7 @@ export async function isAdmin(supabase?: SupabaseClient) {
     return { error: authError };
   }
 
-  // Check if user is any type of admin (admin or super_admin) and active
+  // Check if user is any type of admin (admin, super_admin, or volunteer) and active
   const validAdminsWithId = await db
     .select()
     .from(admins)
@@ -52,6 +47,56 @@ export async function isSuperAdmin(supabase?: SupabaseClient) {
     );
 
   return { data: validSuperAdmins.length > 0 };
+}
+
+// Check if user is a volunteer
+export async function isVolunteer(supabase?: SupabaseClient) {
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    return { error: authError };
+  }
+
+  const validVolunteers = await db
+    .select()
+    .from(admins)
+    .where(
+      and(
+        eq(admins.id, auth.user.id),
+        eq(admins.role, "volunteer"),
+        eq(admins.status, "active"),
+      ),
+    );
+
+  return { data: validVolunteers.length > 0 };
+}
+
+// Check if user is admin or super admin (not volunteer)
+export async function isAdminOrSuperAdmin(supabase?: SupabaseClient) {
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    return { error: authError };
+  }
+
+  const validAdmins = await db
+    .select()
+    .from(admins)
+    .where(
+      and(
+        eq(admins.id, auth.user.id),
+        eq(admins.status, "active"),
+        sql`${admins.role} IN ('admin', 'super_admin')`,
+      ),
+    );
+
+  return { data: validAdmins.length > 0 };
 }
 
 // Get current admin details
@@ -107,7 +152,7 @@ export async function listAllAdmins() {
         lastName: admins.lastName,
         created_at: admins.created_at,
         updated_at: admins.updated_at,
-        is_admin_only: admins.is_admin_only,
+        is_organizer_only: admins.is_organizer_only,
       })
       .from(admins)
       .orderBy(desc(admins.created_at));
@@ -123,7 +168,7 @@ export async function listAllAdmins() {
 export async function createAdminAccount(
   email: string,
   password: string,
-  role: "admin" | "super_admin" = "admin",
+  role: "admin" | "super_admin" | "volunteer" = "admin",
   firstName?: string,
   lastName?: string,
 ) {
@@ -202,21 +247,8 @@ export async function createAdminAccount(
       status: "active",
       firstName: firstName,
       lastName: lastName,
-      is_admin_only: true,
+      is_organizer_only: true,
     });
-
-    // Log the action
-    await logAdminAction(
-      currentUser?.id || "",
-      "CREATE_ADMIN",
-      authData.user.id,
-      email,
-      {
-        role: role,
-        firstName: firstName,
-        lastName: lastName,
-      },
-    );
 
     return {
       success: true,
@@ -232,7 +264,7 @@ export async function createAdminAccount(
 // Update admin role (super admin only)
 export async function updateAdminRole(
   userId: string,
-  newRole: "admin" | "super_admin",
+  newRole: "admin" | "super_admin" | "volunteer",
 ) {
   try {
     const supabase = await createClient();
@@ -291,18 +323,6 @@ export async function updateAdminRole(
         lastName: existingAdmin[0].lastName,
       },
     });
-
-    // Log the action
-    await logAdminAction(
-      currentUser?.id || "",
-      "UPDATE_ADMIN_ROLE",
-      userId,
-      existingAdmin[0].email,
-      {
-        oldRole: oldRole,
-        newRole: newRole,
-      },
-    );
 
     return { success: true, message: "Admin role updated successfully" };
   } catch (error) {
@@ -376,19 +396,6 @@ export async function updateAdminStatus(
       .set({ status: newStatus })
       .where(eq(admins.id, userId));
 
-    // Log the action
-    await logAdminAction(
-      currentUser?.id || "",
-      `UPDATE_ADMIN_STATUS_${newStatus.toUpperCase()}`,
-      userId,
-      existingAdmin[0].email,
-      {
-        oldStatus: oldStatus,
-        newStatus: newStatus,
-        reason: reason,
-      },
-    );
-
     return { success: true, message: `Admin status updated to ${newStatus}` };
   } catch (error) {
     console.error("Error updating admin status:", error);
@@ -446,18 +453,6 @@ export async function deleteAdminAccount(userId: string, reason: string) {
       }
     }
 
-    // Log the action before deletion
-    await logAdminAction(
-      currentUser?.id || "",
-      "DELETE_ADMIN",
-      userId,
-      adminToDelete[0].email,
-      {
-        role: adminToDelete[0].role,
-        reason: reason,
-      },
-    );
-
     // Remove from admins table
     await db.delete(admins).where(eq(admins.id, userId));
 
@@ -500,6 +495,8 @@ export async function getSystemStats() {
       totalUsersResult,
       totalAdminsResult,
       superAdminsResult,
+      regularAdminsResult,
+      volunteersResult,
       activeAdminsResult,
     ] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(profilesTable),
@@ -508,6 +505,14 @@ export async function getSystemStats() {
         .select({ count: sql<number>`count(*)` })
         .from(admins)
         .where(eq(admins.role, "super_admin")),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(admins)
+        .where(eq(admins.role, "admin")),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(admins)
+        .where(eq(admins.role, "volunteer")),
       db
         .select({ count: sql<number>`count(*)` })
         .from(admins)
@@ -520,6 +525,8 @@ export async function getSystemStats() {
         totalUsers: totalUsersResult[0].count,
         totalAdmins: totalAdminsResult[0].count,
         superAdmins: superAdminsResult[0].count,
+        regularAdmins: regularAdminsResult[0].count,
+        volunteers: volunteersResult[0].count,
         activeAdmins: activeAdminsResult[0].count,
         inactiveAdmins:
           totalAdminsResult[0].count - activeAdminsResult[0].count,
@@ -528,111 +535,6 @@ export async function getSystemStats() {
   } catch (error) {
     console.error("Error getting system stats:", error);
     return { success: false, error: "Failed to get system statistics" };
-  }
-}
-
-// Get audit logs (super admin only)
-export async function getAuditLogs(
-  limit: number = 100,
-  offset: number = 0,
-  adminId?: string,
-  action?: string,
-  startDate?: string,
-  endDate?: string,
-) {
-  try {
-    const supabase = await createClient();
-
-    // Check if current user is super admin
-    const { data: isSuperAdminUser, error: superAdminError } =
-      await isSuperAdmin(supabase);
-    if (superAdminError || !isSuperAdminUser) {
-      return {
-        success: false,
-        error: "Unauthorized: Super Admin access required",
-      };
-    }
-
-    // Build conditions array
-    const conditions = [];
-
-    if (adminId) {
-      conditions.push(eq(adminAuditLog.admin_id, adminId));
-    }
-
-    if (action) {
-      conditions.push(eq(adminAuditLog.action, action));
-    }
-
-    if (startDate) {
-      conditions.push(gte(adminAuditLog.created_at, new Date(startDate)));
-    }
-
-    if (endDate) {
-      conditions.push(lte(adminAuditLog.created_at, new Date(endDate)));
-    }
-
-    const baseQuery = db
-      .select({
-        id: adminAuditLog.id,
-        admin_id: adminAuditLog.admin_id,
-        action: adminAuditLog.action,
-        target_user_id: adminAuditLog.target_user_id,
-        target_email: adminAuditLog.target_email,
-        details: adminAuditLog.details,
-        ip_address: adminAuditLog.ip_address,
-        user_agent: adminAuditLog.user_agent,
-        created_at: adminAuditLog.created_at,
-        admin_email: admins.email,
-        admin_firstName: admins.firstName,
-        admin_lastName: admins.lastName,
-      })
-      .from(adminAuditLog)
-      .leftJoin(admins, eq(adminAuditLog.admin_id, admins.id));
-
-    // Execute query with conditions if any exist
-    const auditLogs =
-      conditions.length > 0
-        ? await baseQuery
-            .where(and(...conditions))
-            .orderBy(desc(adminAuditLog.created_at))
-            .limit(limit)
-            .offset(offset)
-        : await baseQuery
-            .orderBy(desc(adminAuditLog.created_at))
-            .limit(limit)
-            .offset(offset);
-
-    return { success: true, data: auditLogs };
-  } catch (error) {
-    console.error("Error getting audit logs:", error);
-    return { success: false, error: "Failed to get audit logs" };
-  }
-}
-
-// Log admin action (internal function)
-export async function logAdminAction(
-  adminId: string,
-  action: string,
-  targetUserId?: string,
-  targetEmail?: string,
-  details?: Record<string, any>,
-  ipAddress?: string,
-  userAgent?: string,
-) {
-  try {
-    await db.insert(adminAuditLog).values({
-      admin_id: adminId,
-      action: action,
-      target_user_id: targetUserId,
-      target_email: targetEmail,
-      details: details ? JSON.stringify(details) : null,
-      ip_address: ipAddress,
-      user_agent: userAgent,
-    });
-  } catch (error) {
-    console.error("Error logging admin action:", error);
-    // Don't throw error - logging failure shouldn't break main operation
   }
 }
 
@@ -654,7 +556,7 @@ export async function createAdminOnlyAccount(
   return await createAdminAccount(
     email,
     password,
-    role as "admin" | "super_admin",
+    role as "admin" | "super_admin" | "volunteer",
   );
 }
 
@@ -669,12 +571,35 @@ export async function listAdminOnlyAccounts() {
         created_at: admins.created_at,
       })
       .from(admins)
-      .where(eq(admins.is_admin_only, true));
+      .where(eq(admins.is_organizer_only, true));
 
     return { success: true, data: adminAccounts };
   } catch (error) {
     console.error("Error listing admin accounts:", error);
     return { success: false, error: "Failed to list admin accounts" };
+  }
+}
+
+// List volunteers only
+export async function listVolunteers() {
+  try {
+    const volunteers = await db
+      .select({
+        id: admins.id,
+        email: admins.email,
+        firstName: admins.firstName,
+        lastName: admins.lastName,
+        status: admins.status,
+        created_at: admins.created_at,
+      })
+      .from(admins)
+      .where(eq(admins.role, "volunteer"))
+      .orderBy(desc(admins.created_at));
+
+    return { success: true, data: volunteers };
+  } catch (error) {
+    console.error("Error listing volunteers:", error);
+    return { success: false, error: "Failed to list volunteers" };
   }
 }
 
@@ -703,7 +628,7 @@ export async function isAdminOnlyAccount(userId: string) {
     const adminUser = await db
       .select()
       .from(admins)
-      .where(and(eq(admins.id, userId), eq(admins.is_admin_only, true)))
+      .where(and(eq(admins.id, userId), eq(admins.is_organizer_only, true)))
       .limit(1);
 
     return { success: true, data: adminUser.length > 0 };
