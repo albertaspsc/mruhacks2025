@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
@@ -13,7 +14,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "utils/supabase/client";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import React from "react";
 
 type AccountForm = Pick<RegistrationInput, "schoolEmail"> & {
   password: string;

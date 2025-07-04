@@ -51,6 +51,11 @@ export const profiles = pgTable("profile", {
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }),
   lastName: varchar("l_name", { length: 255 }),
+  marketingEmails: boolean("marketing_emails").default(true),
+  parking: varchar("parking", {
+    enum: ["Yes", "No", "Not sure"],
+  }).default("Not sure"),
+  licensePlate: varchar("license_plate", { length: 20 }),
 });
 
 export const yearOfStudy = pgEnum("year_of_study", [
@@ -126,7 +131,7 @@ export const users = pgTable("users", {
     .notNull(),
   resume: text(),
   timestamp: timestamp().defaultNow().notNull(),
-  status: status().default(status.enumValues[2]).notNull(),
+  status: status().default(status.enumValues[1]).notNull(),
 });
 
 export const admins = pgTable("admins", {
@@ -135,5 +140,5 @@ export const admins = pgTable("admins", {
     .references(() => profiles.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
-  status: status().default("waitlisted").notNull(),
+  status: status().default("pending").notNull(),
 });

@@ -6,7 +6,7 @@ import ProgressBar from "@/components/Register/ProgressBar";
 import Image from "next/image";
 import { RegisterFormProvider } from "@/context/RegisterFormContext";
 import { createClient } from "utils/supabase/client";
-import { getRegistration } from "src/db/registration";
+import { getRegistration } from "@/db/registration";
 
 type Props = { children: ReactNode };
 

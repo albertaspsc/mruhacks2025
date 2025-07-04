@@ -1,260 +1,139 @@
-"use client";
-
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import {
-  useRegisterForm,
-  RegistrationInput,
-  RegistrationSchema,
-} from "@/context/RegisterFormContext";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import React, { useEffect, useState } from "react";
-import { getMajorsAndUniversities } from "src/db/registration";
-import { createClient } from "utils/supabase/client";
+  date,
+  integer,
+  pgTable,
+  text,
+  varchar,
+  uuid,
+  boolean,
+  pgEnum,
+  timestamp,
+  pgPolicy,
+  pgRole,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { authUsers, authenticatedRole } from "drizzle-orm/supabase";
 
-type PersonalForm = Pick<
-  RegistrationInput,
-  | "previousAttendance"
-  | "gender"
-  | "university"
-  | "major"
-  | "yearOfStudy"
-  | "firstName"
-  | "lastName"
-  | "schoolEmail"
->;
+// const rlsClient = pgRole("rls_client").existing();
 
-export default function Step1Page() {
-  const supabase = createClient();
-  const router = useRouter();
-  const { setValues } = useRegisterForm();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm<PersonalForm>({
-    defaultValues: {},
-  });
+export const dietaryRestrictions = pgTable("dietary_restrictions", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  restriction: varchar({ length: 255 }).notNull().unique(),
+});
 
-  const [institutions, setInstitutions] = useState<string[]>([]);
-  const [majors, setMajors] = useState<string[]>([]);
+export const userRestrictions = pgTable("user_diet_restrictions", {
+  user: uuid("id")
+    .references(() => profiles.id)
+    .notNull(),
+  restriction: integer()
+    .references(() => dietaryRestrictions.id)
+    .notNull(),
+});
 
-  useEffect(() => {
-    const loadLists = async () => {
-      const { majors, universities } = await getMajorsAndUniversities();
-      setMajors(majors);
-      setInstitutions(universities);
-    };
-    loadLists();
-  }, []);
+export const interests = pgTable("interests", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  interest: varchar({ length: 255 }).notNull().unique(),
+});
 
-  useEffect(() => {
-    const getUserProfile = async () => {
-      try {
-        // Check if user is authenticated and get their profile
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+export const userInterests = pgTable("user_interests", {
+  user: uuid("id")
+    .references(() => profiles.id)
+    .notNull(),
+  interest: integer()
+    .references(() => interests.id)
+    .notNull(),
+});
 
-        if (user) {
-          setValues({ schoolEmail: user.email });
+export const profiles = pgTable("profile", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => authUsers.id),
+  email: varchar({ length: 255 }).notNull(),
+  firstName: varchar("f_name", { length: 255 }),
+  lastName: varchar("l_name", { length: 255 }),
+});
 
-          // If user came from Google OAuth, pre-fill form
-          const isGoogleUser = user.app_metadata?.provider === "google";
+export const yearOfStudy = pgEnum("year_of_study", [
+  "1st",
+  "2nd",
+  "3rd",
+  "4th+",
+  "Recent Grad",
+]);
 
-          if (isGoogleUser) {
-            const googleFirstName =
-              user.user_metadata?.given_name ||
-              user.user_metadata?.first_name ||
-              "";
-            const googleLastName =
-              user.user_metadata?.family_name ||
-              user.user_metadata?.last_name ||
-              "";
+// No  RLS
+export const universities = pgTable("universities", {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  university: varchar("uni", { length: 255 }).unique().notNull(),
+});
 
-            // Pre-fill form with Google data
-            setValue("firstName", googleFirstName);
-            setValue("lastName", googleLastName);
+// No  RLS
+export const majors = pgTable("majors", {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  major: varchar({ length: 255 }).unique().notNull(),
+});
 
-            // Set values in context
-            setValues({
-              firstName: googleFirstName,
-              lastName: googleLastName,
-            });
+export const marketingTypes = pgTable("marketing_types", {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  marketing: varchar({ length: 255 }).unique().notNull(),
+});
 
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Error getting user profile:", err);
-      }
-    };
+export const experienceTypes = pgTable("experience_types", {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  experience: varchar({ length: 255 }).unique().notNull(),
+});
 
-    getUserProfile();
-  }, []);
+export const gender = pgTable("gender", {
+  id: integer().generatedAlwaysAsIdentity().primaryKey(),
+  gender: varchar({ length: 255 }).unique().notNull(),
+});
 
-  const onSubmit: SubmitHandler<PersonalForm> = (data) => {
-    setValues(data);
-    router.push("/register/step-2");
-  };
+export const parkingSituation = pgEnum("parking_state", [
+  "Yes",
+  "No",
+  "Not sure",
+]);
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <h1 className="text-2xl font-semibold">Personal Details</h1>
+export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
 
-      {/* First Name */}
-      <div>
-        <Label htmlFor="firstName">
-          First Name <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="firstName"
-          {...register("firstName", { required: "First name is required" })}
-          placeholder="John"
-        />
-        {errors.firstName && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.firstName.message}
-          </p>
-        )}
-      </div>
+export const users = pgTable("users", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => profiles.id)
+    .notNull(),
+  email: varchar({ length: 255 }).notNull(),
+  firstName: varchar("f_name", { length: 255 }).notNull(),
+  lastName: varchar("l_name", { length: 255 }).notNull(),
+  gender: integer()
+    .references(() => gender.id)
+    .notNull(),
+  university: integer()
+    .references(() => universities.id)
+    .notNull(),
+  previousAttendance: boolean("prev_attendance").notNull(),
+  major: integer()
+    .references(() => majors.id)
+    .notNull(),
+  parking: parkingSituation().notNull(),
+  schoolEmail: varchar("school_email", { length: 255 }).notNull(),
+  yearOfStudy: yearOfStudy().notNull(),
+  experience: integer()
+    .references(() => experienceTypes.id)
+    .notNull(),
+  accommodations: text().notNull(),
+  marketing: integer()
+    .references(() => marketingTypes.id)
+    .notNull(),
+  resume: text(),
+  timestamp: timestamp().defaultNow().notNull(),
+  status: status().default(status.enumValues[2]).notNull(),
+});
 
-      {/* Last Name */}
-      <div>
-        <Label htmlFor="lastName">
-          Last Name <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="lastName"
-          {...register("lastName", { required: "Last name is required" })}
-          placeholder="Doe"
-        />
-        {errors.lastName && (
-          <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-        )}
-      </div>
-
-      {/* Attended Before */}
-      <div>
-        <Label htmlFor="previousAttendance">
-          Have you attended MRUHacks before?{" "}
-          <span className="text-red-500">*</span>
-        </Label>
-        <select
-          id="previousAttendance"
-          {...register("previousAttendance", {
-            required: "Please answer this question",
-          })}
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="">— Select —</option>
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-        {errors.previousAttendance && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.previousAttendance.message}
-          </p>
-        )}
-      </div>
-
-      {/* Gender */}
-      <div>
-        <Label htmlFor="gender">
-          Gender <span className="text-red-500">*</span>
-        </Label>
-        <select
-          id="gender"
-          {...register("gender", { required: "Please select gender" })}
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="">— Select —</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-          <option value="preferNot">Prefer not to say</option>
-        </select>
-        {errors.gender && (
-          <p className="mt-1 text-sm text-red-600">{errors.gender.message}</p>
-        )}
-      </div>
-
-      {/* Institution */}
-      <div>
-        <Label htmlFor="university">
-          University / Institution <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="university"
-          list="university-list"
-          placeholder="Start typing…"
-          {...register("university", { required: "Institution is required" })}
-        />
-        <datalist id="university-list">
-          {/* TODO change to uni */}
-          {institutions.map((i) => (
-            <option key={i} value={i} />
-          ))}
-        </datalist>
-        {errors.university && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.university.message}
-          </p>
-        )}
-      </div>
-
-      {/* Major */}
-      <div>
-        <Label htmlFor="major">
-          Major / Program <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="major"
-          list="major-list"
-          placeholder="e.g. Computer Science"
-          {...register("major", { required: "Major is required" })}
-        />
-        <datalist id="major-list">
-          {majors.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
-        {errors.major && (
-          <p className="mt-1 text-sm text-red-600">{errors.major.message}</p>
-        )}
-      </div>
-
-      {/* Year */}
-      <div>
-        <Label htmlFor="yearOfStudy">
-          What year will you be in as of Fall?{" "}
-          <span className="text-red-500">*</span>
-        </Label>
-        <select
-          id="yearOfStudy"
-          {...register("yearOfStudy", { required: "Year is required" })}
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="">— Select —</option>
-          {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
-            (x, i) => (
-              <option key={i}>{x}</option>
-            ),
-          )}
-        </select>
-        {errors.yearOfStudy && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.yearOfStudy.message}
-          </p>
-        )}
-      </div>
-
-      <Button type="submit" className="w-full">
-        Next: Final Questions
-      </Button>
-    </form>
-  );
-}
+export const admins = pgTable("admins", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => profiles.id)
+    .notNull(),
+  email: varchar({ length: 255 }).notNull(),
+  status: status().default("waitlisted").notNull(),
+});

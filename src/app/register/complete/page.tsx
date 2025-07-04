@@ -9,7 +9,7 @@ import {
 } from "@/context/RegisterFormContext";
 import { Button } from "@/components/ui/button";
 import MascotUrl from "@/assets/mascots/crt.svg";
-import { register } from "src/db/registration";
+import { register } from "@/db/registration";
 
 // tiny confetti helper
 const fireConfetti = (canvas: HTMLCanvasElement) => {

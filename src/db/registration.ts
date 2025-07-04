@@ -19,7 +19,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import {
   RegistrationInput,
   RegistrationSchema,
-} from "@context/RegisterFormContext";
+} from "@/context/RegisterFormContext";
 
 export type Registration = NonNullable<
   Awaited<ReturnType<typeof getRegistration>>["data"]
