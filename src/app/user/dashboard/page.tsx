@@ -8,8 +8,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RegistrationInput } from "@context/RegisterFormContext";
-import { Registration, getRegistration } from "src/db/registration";
+import { RegistrationInput } from "@/context/RegisterFormContext";
+import { Registration, getRegistration } from "@/db/registration";
 
 // Status banner component
 const StatusBanner = ({
