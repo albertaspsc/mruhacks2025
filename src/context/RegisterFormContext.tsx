@@ -38,6 +38,7 @@ export const RegistrationSchema = z.object({
   marketing: z.string(),
   dietaryRestrictions: z.array(z.string()),
   interests: z.array(z.string()),
+  resume: z.string().optional(),
 });
 
 export type RegistrationInput = z.infer<typeof RegistrationSchema>;

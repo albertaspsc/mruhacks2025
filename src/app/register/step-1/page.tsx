@@ -150,7 +150,6 @@ export default function Step1Page() {
           })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           <option value="true">Yes</option>
           <option value="false">No</option>
         </select>
@@ -171,7 +170,6 @@ export default function Step1Page() {
           {...register("gender", { required: "Please select gender" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
@@ -190,15 +188,18 @@ export default function Step1Page() {
         <Input
           id="university"
           list="university-list"
-          placeholder="Start typing…"
+          placeholder="Select or type your institution"
           {...register("university", { required: "Institution is required" })}
         />
         <datalist id="university-list">
-          {/* TODO change to uni */}
           {institutions.map((i) => (
             <option key={i} value={i} />
           ))}
         </datalist>
+        <p className="mt-1 text-sm text-gray-500">
+          You can type any Canadian university or select from the suggestions
+          above
+        </p>
         {errors.university && (
           <p className="mt-1 text-sm text-red-600">
             {errors.university.message}
@@ -214,7 +215,7 @@ export default function Step1Page() {
         <Input
           id="major"
           list="major-list"
-          placeholder="e.g. Computer Science"
+          placeholder="Select or type your major"
           {...register("major", { required: "Major is required" })}
         />
         <datalist id="major-list">
@@ -222,6 +223,9 @@ export default function Step1Page() {
             <option key={m} value={m} />
           ))}
         </datalist>
+        <p className="mt-1 text-sm text-gray-500">
+          You can type any major/program or select from the suggestions above
+        </p>
         {errors.major && (
           <p className="mt-1 text-sm text-red-600">{errors.major.message}</p>
         )}
@@ -238,10 +242,11 @@ export default function Step1Page() {
           {...register("yearOfStudy", { required: "Year is required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="">— Select —</option>
           {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
             (x, i) => (
-              <option key={i}>{x}</option>
+              <option key={i} value={x}>
+                {x}
+              </option>
             ),
           )}
         </select>

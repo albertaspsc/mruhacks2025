@@ -29,6 +29,7 @@ export default function AccountPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<AccountForm>({

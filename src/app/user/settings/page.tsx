@@ -22,10 +22,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Car, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface User {
   id: string;
@@ -35,6 +42,8 @@ interface User {
     eventUpdates: boolean;
     hackathonReminders: boolean;
   };
+  parkingPreference: "Yes" | "No" | "Not sure yet";
+  licensePlate?: string;
 }
 
 // Mocked toast function
@@ -65,6 +74,12 @@ type PasswordFormValues = {
   confirmPassword: string;
 };
 
+// Parking preferences form type
+type ParkingPreferencesValues = {
+  parkingPreference: "Yes" | "No" | "Not sure yet";
+  licensePlate: string;
+};
+
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -89,6 +104,14 @@ export default function SettingsPage() {
     },
   });
 
+  // Parking preferences form
+  const parkingPreferencesForm = useForm<ParkingPreferencesValues>({
+    defaultValues: {
+      parkingPreference: "Not sure yet",
+      licensePlate: "",
+    },
+  });
+
   // Fetch mock user data
   useEffect(() => {
     // Simulate API delay
@@ -101,6 +124,8 @@ export default function SettingsPage() {
           eventUpdates: true,
           hackathonReminders: true,
         },
+        parkingPreference: "Yes" as const,
+        licensePlate: "ABC-123",
       };
 
       setUser(mockUser);
@@ -112,11 +137,17 @@ export default function SettingsPage() {
         hackathonReminders: mockUser.emailPreferences.hackathonReminders,
       });
 
+      // Parking preference form values
+      parkingPreferencesForm.reset({
+        parkingPreference: mockUser.parkingPreference,
+        licensePlate: mockUser.licensePlate || "",
+      });
+
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [emailPreferencesForm]);
+  }, [emailPreferencesForm, parkingPreferencesForm]);
 
   // Handle email preferences form submission
   function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
@@ -129,6 +160,22 @@ export default function SettingsPage() {
       toast({
         title: "Preferences updated",
         description: "Your email preferences have been updated successfully.",
+        variant: "default",
+      });
+    }, 1000);
+  }
+
+  // Handle parking preferences form submission
+  function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
+    setIsLoading(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Parking preferences submitted:", data);
+      setIsLoading(false);
+      toast({
+        title: "Parking preferences updated",
+        description: "Your parking preferences have been updated successfully.",
         variant: "default",
       });
     }, 1000);
@@ -196,6 +243,9 @@ export default function SettingsPage() {
     return <LoadingSpinner />;
   }
 
+  // Watch parking preference to conditionally show license plate field
+  const parkingPreference = parkingPreferencesForm.watch("parkingPreference");
+
   return (
     <div className="container max-w-4xl py-10">
       <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
@@ -203,6 +253,7 @@ export default function SettingsPage() {
       <Tabs defaultValue="email" className="w-full">
         <TabsList className="mb-8">
           <TabsTrigger value="email">Email Preferences</TabsTrigger>
+          <TabsTrigger value="parking">Parking</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
@@ -212,11 +263,20 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Email Preferences</CardTitle>
-              <CardDescription>
-                Control what types of emails you receive from us.
-              </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Mandatory Email Notice */}
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Notice</AlertTitle>
+                <AlertDescription>
+                  All confirmed participants will receive mandatory logistics
+                  emails with essential event information and updates. These
+                  emails cannot be opted out of to ensure you don&apos;t miss
+                  critical details for your MRUHacks experience.
+                </AlertDescription>
+              </Alert>
+
               <Form {...emailPreferencesForm}>
                 <form
                   onSubmit={emailPreferencesForm.handleSubmit(
@@ -246,50 +306,6 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="eventUpdates"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Event Updates</FormLabel>
-                            <FormDescription>
-                              Receive updates about upcoming hackathons and
-                              events.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="hackathonReminders"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Hackathon Reminders</FormLabel>
-                            <FormDescription>
-                              Receive reminders about hackathons you&apos;ve
-                              registered for.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   <Button type="submit" disabled={isLoading}>
@@ -297,6 +313,126 @@ export default function SettingsPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     Save Preferences
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Parking Preferences Tab */}
+        <TabsContent value="parking">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Car className="h-5 w-5" />
+                Parking Preferences
+              </CardTitle>
+              <CardDescription>
+                Update your parking needs and license plate information for the
+                event.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...parkingPreferencesForm}>
+                <form
+                  onSubmit={parkingPreferencesForm.handleSubmit(
+                    onParkingPreferencesSubmit,
+                  )}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={parkingPreferencesForm.control}
+                    name="parkingPreference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Will you require parking?</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your parking preference" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                            <SelectItem value="Not sure yet">
+                              Not sure yet
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          This helps us plan parking capacity for the event.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* License Plate Field - Only shows if parking is "Yes" */}
+                  {parkingPreference === "Yes" && (
+                    <FormField
+                      control={parkingPreferencesForm.control}
+                      name="licensePlate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>License Plate Number</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. ABC-123"
+                              {...field}
+                              className="uppercase"
+                              onChange={(e) => {
+                                // Convert to uppercase automatically
+                                field.onChange(e.target.value.toUpperCase());
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Enter your vehicle&apos;s license plate number. This
+                            will help with parking coordination and security.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Info Alert */}
+                  <Alert>
+                    <Car className="h-4 w-4" />
+                    <AlertTitle>Parking Information</AlertTitle>
+                    <AlertDescription>
+                      {parkingPreference === "Yes" && (
+                        <>
+                          Parking will be available at Mount Royal University.
+                          Please arrive early as spaces are limited.
+                        </>
+                      )}
+                      {parkingPreference === "No" && (
+                        <>
+                          Consider carpooling or using public transportation.
+                          The event location is accessible via Calgary Transit.
+                        </>
+                      )}
+                      {parkingPreference === "Not sure yet" && (
+                        <>
+                          You can update this preference closer to the event
+                          date. We recommend deciding at least 1 week before the
+                          event.
+                        </>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save Parking Preferences
                   </Button>
                 </form>
               </Form>
