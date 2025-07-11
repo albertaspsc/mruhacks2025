@@ -31,7 +31,7 @@ export const RegistrationSchema = z.object({
   previousAttendance: z.coerce.boolean(),
   major: z.string(),
   parking: createSelectSchema(parkingSituation),
-  schoolEmail: z.string().email(),
+  email: z.string().email(),
   yearOfStudy: createSelectSchema(yearOfStudy),
   experience: z.string(),
   accommodations: z.string(),

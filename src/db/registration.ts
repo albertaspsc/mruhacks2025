@@ -20,6 +20,7 @@ import {
   RegistrationInput,
   RegistrationSchema,
 } from "@context/RegisterFormContext";
+import { z } from "zod";
 
 export type Registration = NonNullable<
   Awaited<ReturnType<typeof getRegistration>>["data"]
@@ -44,11 +45,6 @@ async function registerInterestsAndRestrictions(
   userId: string,
   user: RegistrationInput,
 ) {
-  const { error, success } = await RegistrationSchema.safeParseAsync(user);
-  if (!success) {
-    return { error };
-  }
-
   db.insert(dietaryRestrictionsTable).values(
     user.dietaryRestrictions.map((restriction) => ({ restriction })),
   );
@@ -88,6 +84,11 @@ export async function register(
     return { error: authError };
   }
 
+  const { error, success } = await RegistrationSchema.safeParseAsync(user);
+  if (!success) {
+    return { error };
+  }
+
   if (!auth.user.email) {
     return { error: "user not registered with email" };
   }
@@ -110,7 +111,6 @@ export async function register(
     ...otherIds[0],
     previousAttendance: user.previousAttendance,
     parking: user.parking,
-    schoolEmail: user.schoolEmail,
     yearOfStudy: user.yearOfStudy,
     accommodations: user.accommodations,
     email: auth.user.email,
@@ -178,4 +178,41 @@ export async function getStaticOptions() {
     interests: interest.map((x) => x.interest),
     marketingTypes: marketing.map((x) => x.marketing),
   };
+}
+
+const userNameAndEmailSchema = z
+  .object({
+    firstName: z.string().nonempty(),
+    lastName: z.string().nonempty(),
+    email: z.string().email(),
+  })
+  .partial();
+
+export async function updateUserNameAndEmail(
+  user: Partial<Pick<Registration, "firstName" | "lastName" | "email">>,
+  supabase?: SupabaseClient,
+) {
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    return { error: authError };
+  }
+
+  const userId = auth.user.id;
+
+  const { error, success } = await userNameAndEmailSchema.safeParseAsync(user);
+  if (!success) {
+    return { error };
+  }
+
+  try {
+    await db.update(users).set(user).where(eq(users.id, userId));
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update user profile", details: error };
+  }
 }

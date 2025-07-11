@@ -23,7 +23,7 @@ type PersonalForm = Pick<
   | "yearOfStudy"
   | "firstName"
   | "lastName"
-  | "schoolEmail"
+  | "email"
 >;
 
 export default function Step1Page() {
@@ -60,7 +60,7 @@ export default function Step1Page() {
         } = await supabase.auth.getUser();
 
         if (user) {
-          setValues({ schoolEmail: user.email });
+          setValues({ email: user.email });
 
           // If user came from Google OAuth, pre-fill form
           const isGoogleUser = user.app_metadata?.provider === "google";

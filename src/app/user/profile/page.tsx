@@ -23,29 +23,69 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { getRegistration, Registration } from "src/db/registration";
+import {
+  getRegistration,
+  Registration,
+  updateUserNameAndEmail,
+} from "src/db/registration";
+import { createClient } from "utils/supabase/client";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
-type User = Pick<Registration, "firstName" | "lastName" | "schoolEmail">;
-
-// Mocked toast function
-const toast = ({
-  title,
-  description,
-  variant = "default",
-}: {
-  title: string;
-  description: string;
-  variant?: string;
-}) => {
-  console.log(`Toast: ${title} - ${description} (${variant})`);
-  alert(`${title}: ${description}`);
-};
-
-// Basic profile form type
+// Types
+type User = Pick<Registration, "firstName" | "lastName" | "email">;
 type ProfileValues = {
   firstName: string;
   lastName: string;
-  schoolEmail: string;
+  email: string;
+};
+type ToastType = "success" | "error";
+interface ToastState {
+  type: ToastType;
+  title: string;
+  description?: string;
+}
+
+const ToastBanner = ({
+  toast,
+  onClose,
+  duration = 3000,
+}: {
+  toast: ToastState | null;
+  onClose: () => void;
+  duration?: number;
+}) => {
+  useEffect(() => {
+    if (toast) {
+      const timeout = setTimeout(() => {
+        onClose();
+      }, duration);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [toast, duration, onClose]);
+
+  if (!toast) return null;
+
+  const baseStyle =
+    "fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md shadow-md z-50 text-sm transition-all duration-300";
+  const variantStyle =
+    toast.type === "success"
+      ? "bg-green-100 text-green-800 border border-green-300"
+      : "bg-red-100 text-red-800 border border-red-300";
+
+  return (
+    <div className={`${baseStyle} ${variantStyle}`}>
+      <strong className="block">{toast.title}</strong>
+      {toast.description && <div>{toast.description}</div>}
+      <button
+        onClick={onClose}
+        className="absolute top-1 right-2 text-xs underline"
+      >
+        Close
+      </button>
+    </div>
+  );
 };
 
 export default function ProfilePage() {
@@ -53,23 +93,27 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const supabase = createClient();
 
-  // Profile form
   const profileForm = useForm<ProfileValues>({
     defaultValues: {
       firstName: "",
       lastName: "",
-      schoolEmail: "",
+      email: "",
     },
   });
 
-  // Fetch mock user data
-  // Check authentication
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data: registration } = await getRegistration();
-        setUser(registration ?? null);
+        if (registration) {
+          setUser(registration ?? null);
+          profileForm.setValue("firstName", registration.firstName);
+          profileForm.setValue("lastName", registration.lastName);
+          profileForm.setValue("email", registration.email);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -78,35 +122,43 @@ export default function ProfilePage() {
     checkAuth();
   }, []);
 
-  // Handle profile form submission
-  function onProfileSubmit(data: ProfileValues) {
+  async function onProfileSubmit(data: ProfileValues) {
     setIsSaving(true);
     setSaveSuccess(false);
 
-    // Simulate API call to update profile
-    setTimeout(() => {
-      console.log("Profile data submitted:", data);
-      setIsSaving(false);
+    try {
+      const isValidEmail = z.string().email().safeParse(data.email).success;
+      if (data.email !== user?.email && isValidEmail) {
+        const { error: emailUpdateError } = await supabase.auth.updateUser({
+          email: data.email,
+        });
+        if (emailUpdateError) throw new Error("Email update failed.");
+      }
+
+      const { error } = await updateUserNameAndEmail(data);
+      if (error) throw new Error("Failed to update name or email.");
+
       setSaveSuccess(true);
-
-      // Clear success message after a delay
-      setTimeout(() => setSaveSuccess(false), 3000);
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully.",
-        variant: "default",
+    } catch (err: any) {
+      setToast({
+        type: "error",
+        title: "Update failed",
+        description: err?.message || "Something went wrong.",
       });
-    }, 1000);
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    }
   }
 
-  // Show loading state
   if (isLoading && !user) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="container max-w-2xl py-10">
+      <ToastBanner toast={toast} onClose={() => setToast(null)} />
+
       <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
       <p className="text-gray-500 mb-6">Manage your personal information</p>
 
@@ -162,7 +214,7 @@ export default function ProfilePage() {
 
               <FormField
                 control={profileForm.control}
-                name="schoolEmail"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
@@ -180,6 +232,16 @@ export default function ProfilePage() {
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
+              </Button>
+
+              <Button
+                type="button"
+                className="ml-4"
+                disabled={isSaving}
+                onClick={() => redirect("/user/dashboard")}
+              >
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Back
               </Button>
             </form>
           </Form>

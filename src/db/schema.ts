@@ -115,7 +115,6 @@ export const users = pgTable("users", {
     .references(() => majors.id)
     .notNull(),
   parking: parkingSituation().notNull(),
-  schoolEmail: varchar("school_email", { length: 255 }).notNull(),
   yearOfStudy: yearOfStudy().notNull(),
   experience: integer()
     .references(() => experienceTypes.id)

@@ -14,7 +14,7 @@ import { createClient } from "utils/supabase/client";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
-type AccountForm = Pick<RegistrationInput, "schoolEmail"> & {
+type AccountForm = Pick<RegistrationInput, "email"> & {
   password: string;
   confirmPassword: string;
 };
@@ -67,7 +67,7 @@ export default function AccountPage() {
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
       {
         password: data.password,
-        email: data.schoolEmail,
+        email: data.email,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=/register/step-1`,
         },
@@ -77,7 +77,7 @@ export default function AccountPage() {
       console.log(`Failed to sign up user, ${signUpError}`);
       return;
     } else {
-      router.push(`/register/verify-2fa?email=${data.schoolEmail}`);
+      router.push(`/register/verify-2fa?email=${data.email}`);
     }
   };
 
@@ -145,13 +145,13 @@ export default function AccountPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Student Email */}
         <div>
-          <Label htmlFor="schoolEmail">
+          <Label htmlFor="email">
             Student Email Address <span className="text-red-500">*</span>
           </Label>
           <Input
-            id="schoolEmail"
+            id="email"
             type="email"
-            {...register("schoolEmail", {
+            {...register("email", {
               required: "Email is required",
               pattern: {
                 value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
@@ -160,10 +160,8 @@ export default function AccountPage() {
             })}
             placeholder="you@student.mru.ca"
           />
-          {errors.schoolEmail && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.schoolEmail.message}
-            </p>
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
           )}
         </div>
 
