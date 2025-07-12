@@ -12,18 +12,8 @@ import { getRegistration } from "src/db/registration";
 type Props = { children: ReactNode };
 
 export default function RegisterLayout({ children }: Props) {
-  const supabase = createClient();
   useEffect(() => {
     const getUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (!user) {
-        console.error(error);
-        redirect("/login?next=/user/dashboard");
-      }
-
       const { data: userRegistration } = await getRegistration();
       if (!userRegistration) {
         redirect("/register");

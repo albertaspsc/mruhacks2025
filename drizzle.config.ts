@@ -14,4 +14,5 @@ export default defineConfig({
       provider: "supabase",
     },
   },
+  casing: "snake_case",
 });

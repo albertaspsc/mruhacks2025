@@ -1,5 +1,4 @@
 import {
-  date,
   integer,
   pgTable,
   text,
@@ -8,11 +7,11 @@ import {
   boolean,
   pgEnum,
   timestamp,
-  pgPolicy,
-  pgRole,
+  check,
+  customType,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { authUsers, authenticatedRole } from "drizzle-orm/supabase";
+import { authUsers } from "drizzle-orm/supabase";
 
 // const rlsClient = pgRole("rls_client").existing();
 
@@ -23,7 +22,7 @@ export const dietaryRestrictions = pgTable("dietary_restrictions", {
 
 export const userRestrictions = pgTable("user_diet_restrictions", {
   user: uuid("id")
-    .references(() => profiles.id)
+    .references(() => users.id)
     .notNull(),
   restriction: integer()
     .references(() => dietaryRestrictions.id)
@@ -37,7 +36,7 @@ export const interests = pgTable("interests", {
 
 export const userInterests = pgTable("user_interests", {
   user: uuid("id")
-    .references(() => profiles.id)
+    .references(() => users.id)
     .notNull(),
   interest: integer()
     .references(() => interests.id)
@@ -45,9 +44,7 @@ export const userInterests = pgTable("user_interests", {
 });
 
 export const profiles = pgTable("profile", {
-  id: uuid("id")
-    .primaryKey()
-    .references(() => authUsers.id),
+  id: uuid("id").primaryKey(),
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }),
   lastName: varchar("l_name", { length: 255 }),
@@ -96,10 +93,19 @@ export const parkingSituation = pgEnum("parking_state", [
 
 export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
 
+const bytea = customType<{
+  data: Buffer;
+  default: false;
+}>({
+  dataType() {
+    return "bytea";
+  },
+});
+
 export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
-    .references(() => profiles.id)
+    .references(() => authUsers.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }).notNull(),
@@ -123,16 +129,39 @@ export const users = pgTable("users", {
   marketing: integer()
     .references(() => marketingTypes.id)
     .notNull(),
-  resume: text(),
   timestamp: timestamp().defaultNow().notNull(),
   status: status().default(status.enumValues[2]).notNull(),
+});
+
+export const resumes = pgTable("resumes", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  resume: bytea().notNull(),
 });
 
 export const admins = pgTable("admins", {
   id: uuid("id")
     .primaryKey()
-    .references(() => profiles.id)
+    .references(() => users.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
   status: status().default("waitlisted").notNull(),
+});
+
+export const marketingPreferences = pgTable("mktg_preferences", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  sendEmails: boolean("send_emails").default(true).notNull(),
+});
+
+export const parkingInfo = pgTable("parking_info", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  licencePlate: varchar("licence_plate", { length: 8 }).notNull(),
 });

@@ -33,18 +33,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  updateParkingPreferences,
+  updateMarketingPreferences,
+  getParkingPreference,
+} from "src/db/settings";
+import { getRegistration, Registration } from "src/db/registration";
+import { RegistrationInput } from "@context/RegisterFormContext";
+import { createClient } from "utils/supabase/client";
+import { redirect } from "next/navigation";
 
-interface User {
-  id: string;
-  email: string;
-  emailPreferences: {
-    marketingEmails: boolean;
-    eventUpdates: boolean;
-    hackathonReminders: boolean;
-  };
-  parkingPreference: "Yes" | "No" | "Not sure yet";
-  licensePlate?: string;
-}
+// interface User {
+//   id: string;
+//   email: string;
+//   // emailPreferences: {
+//   //   marketingEmails: boolean;
+//   //   eventUpdates: boolean;
+//   //   hackathonReminders: boolean;
+//   // };
+//   parking: "Yes" | "No" | "Not sure yet";
+//   // licensePlate?: string;
+// }
 
 // Mocked toast function
 const toast = ({
@@ -76,13 +85,14 @@ type PasswordFormValues = {
 
 // Parking preferences form type
 type ParkingPreferencesValues = {
-  parkingPreference: "Yes" | "No" | "Not sure yet";
+  parkingPreference: "Yes" | "No" | "Not sure";
   licensePlate: string;
 };
 
 export default function SettingsPage() {
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Registration>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -107,82 +117,54 @@ export default function SettingsPage() {
   // Parking preferences form
   const parkingPreferencesForm = useForm<ParkingPreferencesValues>({
     defaultValues: {
-      parkingPreference: "Not sure yet",
+      parkingPreference: "Not sure",
       licensePlate: "",
     },
   });
 
   // Fetch mock user data
   useEffect(() => {
-    // Simulate API delay
-    const timeout = setTimeout(() => {
-      const mockUser = {
-        id: "asia123",
-        email: "asia@mtroyal.ca",
-        emailPreferences: {
-          marketingEmails: false,
-          eventUpdates: true,
-          hackathonReminders: true,
-        },
-        parkingPreference: "Yes" as const,
-        licensePlate: "ABC-123",
-      };
-
-      setUser(mockUser);
-
-      // Email preference form values
-      emailPreferencesForm.reset({
-        marketingEmails: mockUser.emailPreferences.marketingEmails,
-        eventUpdates: mockUser.emailPreferences.eventUpdates,
-        hackathonReminders: mockUser.emailPreferences.hackathonReminders,
-      });
-
-      // Parking preference form values
-      parkingPreferencesForm.reset({
-        parkingPreference: mockUser.parkingPreference,
-        licensePlate: mockUser.licensePlate || "",
-      });
-
+    const loadData = async () => {
+      setIsLoading(true);
+      // shouldn't have error; see layout
+      const { data: user } = await getRegistration();
+      setUser(user);
+      emailPreferencesForm.reset;
+      const { data: parkingPreference } = await getParkingPreference();
+      if (!parkingPreference) {
+        parkingPreferencesForm.reset(parkingPreference);
+      }
       setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timeout);
+    };
   }, [emailPreferencesForm, parkingPreferencesForm]);
 
   // Handle email preferences form submission
-  function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
+  async function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Email preferences submitted:", data);
-      setIsLoading(false);
-      toast({
-        title: "Preferences updated",
-        description: "Your email preferences have been updated successfully.",
-        variant: "default",
-      });
-    }, 1000);
+    await updateMarketingPreferences(data.marketingEmails);
+    setIsLoading(false);
+    toast({
+      title: "Preferences updated",
+      description: "Your email preferences have been updated successfully.",
+      variant: "default",
+    });
   }
 
   // Handle parking preferences form submission
-  function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
+  async function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
     setIsLoading(true);
+    await updateParkingPreferences(data);
+    setIsLoading(false);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Parking preferences submitted:", data);
-      setIsLoading(false);
-      toast({
-        title: "Parking preferences updated",
-        description: "Your parking preferences have been updated successfully.",
-        variant: "default",
-      });
-    }, 1000);
+    toast({
+      title: "Parking preferences updated",
+      description: "Your parking preferences have been updated successfully.",
+      variant: "default",
+    });
   }
 
   // Handle password form submission
-  function onPasswordSubmit(data: PasswordFormValues) {
+  async function onPasswordSubmit(data: PasswordFormValues) {
     setIsLoading(true);
 
     // Validate password match
@@ -197,45 +179,41 @@ export default function SettingsPage() {
     }
 
     // Simulate API call
-    setTimeout(() => {
-      console.log("Password data submitted:", data);
-      setIsLoading(false);
+    supabase.auth.updateUser({ password: data.newPassword });
+    setIsLoading(false);
 
-      passwordForm.reset({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+    passwordForm.reset({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
 
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully.",
-        variant: "default",
-      });
-    }, 1000);
+    toast({
+      title: "Password updated",
+      description: "Your password has been changed successfully.",
+      variant: "default",
+    });
   }
 
   // Handle profile deletion
-  function handleDeleteProfile() {
+  async function handleDeleteProfile() {
     setIsDeleting(true);
 
     // Simulate API call
-    setTimeout(() => {
-      console.log("Profile deleted");
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-      toast({
-        title: "Profile deleted",
-        description:
-          "Your profile has been deleted successfully. You will be redirected to the home page.",
-        variant: "default",
-      });
+    console.log("Profile deleted");
+    setIsDeleting(false);
+    setShowDeleteConfirm(false);
+    toast({
+      title: "Profile deleted",
+      description:
+        "Your profile has been deleted successfully. You will be redirected to the home page.",
+      variant: "default",
+    });
 
-      // Redirect would happen here in a real implementation
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
-    }, 1500);
+    // Redirect would happen here in a real implementation
+    setTimeout(() => {
+      redirect("/");
+    }, 2000);
   }
 
   // Show loading state
@@ -418,7 +396,7 @@ export default function SettingsPage() {
                           The event location is accessible via Calgary Transit.
                         </>
                       )}
-                      {parkingPreference === "Not sure yet" && (
+                      {parkingPreference === "Not sure" && (
                         <>
                           You can update this preference closer to the event
                           date. We recommend deciding at least 1 week before the

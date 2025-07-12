@@ -23,14 +23,11 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import {
-  getRegistration,
-  Registration,
-  updateUserNameAndEmail,
-} from "src/db/registration";
+import { getRegistration, Registration } from "src/db/registration";
 import { createClient } from "utils/supabase/client";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { updateUserNameAndEmail } from "src/db/settings";
 
 // Types
 type User = Pick<Registration, "firstName" | "lastName" | "email">;

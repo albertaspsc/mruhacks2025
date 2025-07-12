@@ -17,6 +17,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "baseUrl": ".",
+    "noErrorTruncation": true,
     "paths": {
       "@components/*": ["src/components/*"],
       "@/components/*": ["src/components/*"],

@@ -94,7 +94,7 @@ export default function Step2Page() {
     loadStaticOptions();
   }, []);
 
-  const interests = watch("interests") || [];
+  const [resume, setResume] = useState<File>();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
     useState<string[]>([]);
@@ -109,6 +109,10 @@ export default function Step2Page() {
   useEffect(() => {
     setValue("dietaryRestrictions", selectedDietaryRestrictions);
   }, [selectedDietaryRestrictions, setValue]);
+
+  useEffect(() => {
+    setValue("resume", resume);
+  }, [resume, setValue]);
 
   const handleInterestChange = (interest: string, checked: boolean) => {
     if (checked) {
@@ -145,8 +149,6 @@ export default function Step2Page() {
     // always forward to 2fa with the saved email
     router.push(`/register/complete`);
   };
-
-  const [files, setFiles] = useState<File[]>([]);
 
   {
     /* Validation functions */
@@ -338,8 +340,8 @@ export default function Step2Page() {
           </p>
         </div>
         <FileUpload
-          value={files}
-          onValueChange={setFiles}
+          value={resume ? [resume] : resume}
+          onValueChange={([file]) => setResume(file)}
           onFileValidate={onFileValidate}
           onFileReject={onFileReject}
           accept=".pdf,.doc,.docx"
@@ -363,8 +365,8 @@ export default function Step2Page() {
             </FileUploadTrigger>
           </FileUploadDropzone>
           <FileUploadList>
-            {files.map((file) => (
-              <FileUploadItem key={file.name} value={file}>
+            {resume ? (
+              <FileUploadItem key={resume.name} value={resume}>
                 <FileUploadItemPreview />
                 <FileUploadItemMetadata />
                 <FileUploadItemDelete asChild>
@@ -376,7 +378,9 @@ export default function Step2Page() {
                   </Button>
                 </FileUploadItemDelete>
               </FileUploadItem>
-            ))}
+            ) : (
+              <></>
+            )}
           </FileUploadList>
         </FileUpload>
       </div>

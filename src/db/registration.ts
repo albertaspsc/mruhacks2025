@@ -11,6 +11,7 @@ import {
   userRestrictions,
   profiles,
   userInterests,
+  resumes,
 } from "./schema";
 import { createClient } from "../../utils/supabase/server";
 import { db } from "./drizzle";
@@ -64,9 +65,9 @@ async function registerInterestsAndRestrictions(
     return { error: "request contains invalid user interests" };
   }
 
-  db.insert(userInterests).values(
-    interests.map(({ id }) => ({ interest: id, user: userId })),
-  );
+  await db
+    .insert(userInterests)
+    .values(interests.map(({ id }) => ({ interest: id, user: userId })));
 
   return {};
 }
@@ -120,7 +121,19 @@ export async function register(
     marketing: 1,
   });
 
-  return await registerInterestsAndRestrictions(id, user);
+  const { error: multiOptionsError } = await registerInterestsAndRestrictions(
+    id,
+    user,
+  );
+  if (multiOptionsError) {
+    return { error: multiOptionsError };
+  }
+
+  if (user.resume) {
+    saveResume(user.resume, supabase);
+  }
+
+  return {};
 }
 
 async function getOtherIds(user: RegistrationInput) {
@@ -180,18 +193,7 @@ export async function getStaticOptions() {
   };
 }
 
-const userNameAndEmailSchema = z
-  .object({
-    firstName: z.string().nonempty(),
-    lastName: z.string().nonempty(),
-    email: z.string().email(),
-  })
-  .partial();
-
-export async function updateUserNameAndEmail(
-  user: Partial<Pick<Registration, "firstName" | "lastName" | "email">>,
-  supabase?: SupabaseClient,
-) {
+async function saveResume(resume: File, supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
   }
@@ -201,18 +203,11 @@ export async function updateUserNameAndEmail(
     return { error: authError };
   }
 
-  const userId = auth.user.id;
-
-  const { error, success } = await userNameAndEmailSchema.safeParseAsync(user);
-  if (!success) {
-    return { error };
+  if (typeof resume.arrayBuffer != "function") {
+    return { error: new Error("resume is not a file") };
   }
-
-  try {
-    await db.update(users).set(user).where(eq(users.id, userId));
-
-    return { success: true };
-  } catch (error) {
-    return { error: "Failed to update user profile", details: error };
-  }
+  const buf = await resume.arrayBuffer();
+  await db
+    .insert(resumes)
+    .values({ id: auth.user.id, resume: Buffer.from(buf) });
 }
