@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Search,
@@ -33,6 +35,7 @@ export function ParticipantManagement({
 }: ParticipantManagementProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
@@ -56,12 +59,46 @@ export function ParticipantManagement({
   // Fetch participants
   const fetchParticipants = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/participants");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      setParticipants(data);
+
+      // Debug: Log the response to see what we're getting
+      console.log("API Response:", data);
+
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setParticipants(data);
+      } else if (data && Array.isArray(data.participants)) {
+        // If the API returns an object with a participants array
+        setParticipants(data.participants);
+      } else if (data && typeof data === "object") {
+        // If it's an object, try to extract an array
+        const possibleArray = Object.values(data).find((value) =>
+          Array.isArray(value),
+        );
+        if (possibleArray) {
+          setParticipants(possibleArray as Participant[]);
+        } else {
+          throw new Error(
+            "API response does not contain a valid participants array",
+          );
+        }
+      } else {
+        throw new Error("Invalid data format received from API");
+      }
     } catch (error) {
       console.error("Error fetching participants:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch participants",
+      );
+      setParticipants([]); // Ensure participants is always an array
     } finally {
       setLoading(false);
     }
@@ -75,17 +112,22 @@ export function ParticipantManagement({
     }
 
     try {
-      await fetch(`/api/participants/${id}`, {
+      const response = await fetch(`/api/participants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       setParticipants((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: newStatus as any } : p)),
       );
     } catch (error) {
       console.error("Error updating status:", error);
+      alert("Failed to update participant status");
     }
   };
 
@@ -100,17 +142,22 @@ export function ParticipantManagement({
     const newCheckedIn = !participant?.checkedIn;
 
     try {
-      await fetch(`/api/participants/${id}`, {
+      const response = await fetch(`/api/participants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ checkedIn: newCheckedIn }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       setParticipants((prev) =>
         prev.map((p) => (p.id === id ? { ...p, checkedIn: newCheckedIn } : p)),
       );
     } catch (error) {
       console.error("Error updating check-in:", error);
+      alert("Failed to update check-in status");
     }
   };
 
@@ -124,7 +171,7 @@ export function ParticipantManagement({
     if (selectedParticipants.length === 0) return;
 
     try {
-      await fetch("/api/participants/bulk-update", {
+      const response = await fetch("/api/participants/bulk-update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -132,6 +179,10 @@ export function ParticipantManagement({
           status: newStatus,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       setParticipants((prev) =>
         prev.map((p) =>
@@ -143,6 +194,7 @@ export function ParticipantManagement({
       setSelectedParticipants([]);
     } catch (error) {
       console.error("Error bulk updating:", error);
+      alert("Failed to bulk update participants");
     }
   };
 
@@ -182,8 +234,14 @@ export function ParticipantManagement({
     a.click();
   };
 
-  // Filter participants
+  // Filter participants - ensure participants is always an array
   const filteredParticipants = useMemo(() => {
+    // Safety check: ensure participants is an array
+    if (!Array.isArray(participants)) {
+      console.warn("participants is not an array:", participants);
+      return [];
+    }
+
     return participants.filter((participant) => {
       const matchesSearch =
         participant.firstName
@@ -199,8 +257,18 @@ export function ParticipantManagement({
     });
   }, [participants, searchTerm, statusFilter]);
 
-  // Statistics
+  // Statistics - ensure participants is always an array
   const stats = useMemo(() => {
+    if (!Array.isArray(participants)) {
+      return {
+        total: 0,
+        confirmed: 0,
+        pending: 0,
+        waitlisted: 0,
+        checkedIn: 0,
+      };
+    }
+
     const total = participants.length;
     const confirmed = participants.filter(
       (p) => p.status === "confirmed",
@@ -250,6 +318,25 @@ export function ParticipantManagement({
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-500">Loading participants...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`${className}`}>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="text-red-500 text-center">
+            <p className="text-lg font-semibold">Error loading participants</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <button
+            onClick={fetchParticipants}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -526,7 +613,7 @@ export function ParticipantManagement({
           </table>
         </div>
 
-        {filteredParticipants.length === 0 && (
+        {filteredParticipants.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
             No participants found matching your criteria.
           </div>

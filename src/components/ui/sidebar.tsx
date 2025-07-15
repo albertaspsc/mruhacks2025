@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Registration } from "src/db/registration";
+import { Registration } from "./../../db/registration";
 
 // Interface for navigation items
 interface NavItem {

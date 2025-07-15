@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
 import SettingsPage from "../settings/page";
 import ProfilePage from "../profile/page";
-import { Sidebar } from "@components/ui/sidebar";
+import { Sidebar } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RegistrationInput } from "@context/RegisterFormContext";
+import { RegistrationInput } from "@/context/RegisterFormContext";
 import { Registration, getRegistration } from "src/db/registration";
 
 // Define available views

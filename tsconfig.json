@@ -18,6 +18,7 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@components/*": ["src/components/*"],
       "@/components/*": ["src/components/*"],
       "@/components/ui/*": ["src/components/ui/*"],

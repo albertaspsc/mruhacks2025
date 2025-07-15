@@ -72,6 +72,10 @@ export async function updateSession(request: NextRequest) {
     return redirectResponse;
   };
 
+  if (url.pathname === "/admin-login-portal") {
+    return supabaseResponse; // Let users access the login page
+  }
+
   // Define protected routes
   const adminRoutes = ["/admin"];
   const isAdminRoute = adminRoutes.some((route) =>
@@ -86,7 +90,7 @@ export async function updateSession(request: NextRequest) {
         "Unauthenticated user attempting to access admin route:",
         url.pathname,
       );
-      url.pathname = "/login";
+      url.pathname = "/admin-login-portal";
       url.searchParams.set("next", request.nextUrl.pathname);
       return createRedirectWithCookies(url);
     }

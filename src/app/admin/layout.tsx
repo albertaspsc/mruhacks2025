@@ -1,9 +1,8 @@
 "use client";
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "utils/supabase/client";
-import { isAdmin } from "src/db/admin";
+import { useRouter, usePathname } from "next/navigation";
+import { createClient } from "./../../../utils/supabase/client";
 
 type Props = {
   children: ReactNode;
@@ -13,51 +12,72 @@ export default function AdminLayout({ children }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
 
   useEffect(() => {
+    // Skip auth check for admin login portal
+    if (pathname === "/admin-login-portal") {
+      setIsLoading(false);
+      setIsAuthorized(true);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
-        // Check if user is logged in
+        // Step 1: Check Supabase authentication
         const {
           data: { user },
-          error,
+          error: authError,
         } = await supabase.auth.getUser();
 
-        if (!user || error) {
-          console.log("No user found, redirecting to login");
-          router.push("/login?next=/admin");
+        if (authError || !user) {
+          console.log("No authenticated user, redirecting to admin login");
+          router.push("/admin-login-portal");
           return;
         }
 
-        // Check if user is admin
-        const { data: isUserAdmin, error: adminError } =
-          await isAdmin(supabase);
+        // Step 2: Check if user is in admins table
+        const { data: adminData, error: adminError } = await supabase
+          .from("admins")
+          .select("id, email, role, status")
+          .eq("id", user.id)
+          .single();
 
-        if (adminError) {
-          console.error("Error checking admin status:", adminError);
-          router.push("/");
+        if (adminError || !adminData) {
+          console.log("User is not an admin, redirecting to login");
+          await supabase.auth.signOut();
+          router.push("/admin-login-portal");
           return;
         }
 
-        if (!isUserAdmin) {
-          console.log("User is not admin, redirecting to home");
-          router.push("/");
+        // Step 3: Check admin status
+        if (adminData.status !== "active") {
+          console.log("Admin account is not active");
+          await supabase.auth.signOut();
+          router.push("/admin-login-portal");
           return;
         }
 
-        console.log("User is admin, allowing access");
+        // Step 4: Check role permissions for admin routes
+        if (pathname.startsWith("/admin") && adminData.role !== "admin") {
+          console.log("User is not admin, redirecting to volunteer dashboard");
+          router.push("/volunteer/dashboard");
+          return;
+        }
+
+        console.log("Admin access granted:", adminData.email);
         setIsAuthorized(true);
       } catch (error) {
         console.error("Auth check failed:", error);
-        router.push("/login?next=/admin");
+        router.push("/admin-login-portal");
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [router, supabase]);
+  }, [router, pathname, supabase]);
 
   // Show loading spinner while checking auth
   if (isLoading) {
@@ -76,6 +96,11 @@ export default function AdminLayout({ children }: Props) {
     return null;
   }
 
-  // User is authorized, render the admin content
+  // For admin login portal, render without any wrapper
+  if (pathname === "/admin-login-portal") {
+    return <>{children}</>;
+  }
+
+  // For other admin pages, just render children
   return <>{children}</>;
 }

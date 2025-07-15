@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "src/db/drizzle";
-import { users, universities } from "src/db/schema";
+import { db } from "../../../../db/drizzle";
+import { users, universities } from "../../../../db/schema";
 import { eq, inArray } from "drizzle-orm";
 
 interface BulkUpdateRequest {
@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest) {
         { status: 400 },
       );
     }
-    // Ensure all participant IDs are valid UUIDs
+
     if (status === undefined && checkedIn === undefined) {
       return NextResponse.json(
         {
@@ -41,6 +41,14 @@ export async function PATCH(request: NextRequest) {
     if (status && !["pending", "confirmed", "waitlisted"].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status. Must be: pending, confirmed, or waitlisted" },
+        { status: 400 },
+      );
+    }
+
+    // Validate checkedIn if provided
+    if (checkedIn !== undefined && typeof checkedIn !== "boolean") {
+      return NextResponse.json(
+        { error: "checkedIn must be a boolean value" },
         { status: 400 },
       );
     }
@@ -62,9 +70,10 @@ export async function PATCH(request: NextRequest) {
     const foundIds = participantsToUpdate.map((p) => p.id);
     const notFoundIds = participantIds.filter((id) => !foundIds.includes(id));
 
-    // Prepare update data
-    const updateData: Partial<typeof users.$inferInsert> = {};
+    // Prepare update data - use any to avoid type conflicts
+    const updateData: any = {};
     if (status !== undefined) updateData.status = status;
+    if (checkedIn !== undefined) updateData.checkedIn = checkedIn;
 
     // Perform bulk update using transaction for consistency
     const updatedParticipants = await db.transaction(async (tx) => {
@@ -87,6 +96,7 @@ export async function PATCH(request: NextRequest) {
         email: users.email,
         university: universities.university,
         status: users.status,
+        checkedIn: users.checkedIn,
         registrationDate: users.timestamp,
       })
       .from(users)
@@ -101,7 +111,7 @@ export async function PATCH(request: NextRequest) {
       email: p.email,
       university: p.university,
       status: p.status,
-      checkedIn: false,
+      checkedIn: p.checkedIn,
       registrationDate:
         p.registrationDate?.toISOString() || new Date().toISOString(),
     }));
@@ -154,6 +164,23 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Delete the participants
+        await db.delete(users).where(inArray(users.id, participantIds));
+
+        return NextResponse.json(
+          {
+            message: "Participants deleted successfully",
+            deletedCount: participantsToDelete.length,
+            deletedParticipants: participantsToDelete.map((p) => ({
+              id: p.id,
+              firstName: p.firstName,
+              lastName: p.lastName,
+              email: p.email,
+            })),
+          },
+          { status: 200 },
+        );
+
       case "export":
         // Export participants data
         const participantsToExport = await db
@@ -165,6 +192,7 @@ export async function POST(request: NextRequest) {
             schoolEmail: users.schoolEmail,
             university: universities.university,
             status: users.status,
+            checkedIn: users.checkedIn,
             yearOfStudy: users.yearOfStudy,
             parking: users.parking,
             previousAttendance: users.previousAttendance,

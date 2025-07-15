@@ -1,46 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "src/db/drizzle";
-import {
-  users,
-  profiles,
-  universities,
-  majors,
-  gender,
-  experienceTypes,
-  marketingTypes,
-} from "src/db/schema";
-import { eq, desc, ilike, or, and } from "drizzle-orm";
+import { db } from "../../../db/drizzle";
+import { users, universities } from "../../../db/schema";
+import { eq, desc } from "drizzle-orm";
 
-// GET - Fetches all participants with related data
+// GET - Fetches all participants with minimal fields for debugging
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search");
-    const statusFilter = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "100");
-    const offset = parseInt(searchParams.get("offset") || "0");
+    console.log("🔍 Starting participants fetch...");
 
-    const whereConditions = [];
+    // Test database connection first
+    console.log("📦 Testing database connection...");
 
-    // Add search filter if provided for first name, last name, email, or school email
-    if (search) {
-      whereConditions.push(
-        or(
-          ilike(users.firstName, `%${search}%`),
-          ilike(users.lastName, `%${search}%`),
-          ilike(users.email, `%${search}%`),
-          ilike(users.schoolEmail, `%${search}%`),
-        ),
-      );
-    }
+    // Start with the simplest possible query
+    const simpleTest = await db.select().from(users).limit(1);
+    console.log(
+      "✅ Database connection successful, sample user:",
+      simpleTest[0] || "No users found",
+    );
 
-    // Add status filter if provided for user status
-    if (statusFilter && statusFilter !== "all") {
-      whereConditions.push(eq(users.status, statusFilter as any));
-    }
+    // Test universities table
+    console.log("Testing universities table...");
+    const universityTest = await db.select().from(universities).limit(1);
+    console.log(
+      "✅ Universities table accessible, sample:",
+      universityTest[0] || "No universities found",
+    );
 
-    // Build the complete query based on whether we have conditions
-    const baseQuery = db
+    // Now try the full query
+    console.log("🔄 Executing full query...");
+
+    const participants = await db
       .select({
         id: users.id,
         firstName: users.firstName,
@@ -50,66 +39,70 @@ export async function GET(request: NextRequest) {
         status: users.status,
         checkedIn: users.checkedIn,
         registrationDate: users.timestamp,
-        schoolEmail: users.schoolEmail,
-        yearOfStudy: users.yearOfStudy,
-        parking: users.parking,
-        previousAttendance: users.previousAttendance,
-        accommodations: users.accommodations,
-        resume: users.resume,
       })
       .from(users)
-      .leftJoin(universities, eq(users.university, universities.id));
+      .leftJoin(universities, eq(users.university, universities.id))
+      .orderBy(desc(users.timestamp))
+      .limit(100);
 
-    // Execute query with or without conditions
-    const participants =
-      whereConditions.length > 0
-        ? await baseQuery
-            .where(and(...whereConditions))
-            .orderBy(desc(users.timestamp))
-            .limit(limit)
-            .offset(offset)
-        : await baseQuery
-            .orderBy(desc(users.timestamp))
-            .limit(limit)
-            .offset(offset);
+    console.log(
+      `✅ Query successful, found ${participants.length} participants`,
+    );
 
-    // Transform the data to match the frontend interface
-    const transformedParticipants = participants.map(
-      (participant: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        university: string | null;
-        status: "pending" | "confirmed" | "waitlisted";
-        checkedIn: boolean;
-        registrationDate: Date | null;
-        schoolEmail: string;
-        yearOfStudy: "1st" | "2nd" | "3rd" | "4th+" | "Recent Grad";
-        parking: "Yes" | "No" | "Not sure";
-        previousAttendance: boolean;
-        accommodations: string;
-        resume: string | null;
-      }) => ({
+    // Transform the data
+    const transformedParticipants = participants.map((participant, index) => {
+      console.log(`🔄 Transforming participant ${index + 1}:`, {
+        id: participant.id,
+        firstName: participant.firstName,
+        university: participant.university,
+      });
+
+      return {
         id: participant.id,
         firstName: participant.firstName,
         lastName: participant.lastName,
         email: participant.email,
-        university: participant.university,
+        university: participant.university || "N/A",
         status: participant.status,
-        checkedIn: participant.checkedIn,
+        checkedIn: participant.checkedIn || false,
         registrationDate:
           participant.registrationDate?.toISOString() ||
           new Date().toISOString(),
-      }),
-    );
+      };
+    });
 
+    console.log("✅ Transformation complete, returning data");
     return NextResponse.json(transformedParticipants, { status: 200 });
   } catch (error) {
-    console.error("Error fetching participants:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch participants" },
-      { status: 500 },
+    console.error("Error in participants API:");
+    console.error("Error type:", typeof error);
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error),
     );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("ECONNREFUSED")
+      ) {
+        console.error("🔌 Database connection issue detected");
+      } else if (
+        error.message.includes("column") ||
+        error.message.includes("table")
+      ) {
+        console.error("📋 Database schema issue detected");
+      } else if (error.message.includes("syntax")) {
+        console.error("📝 SQL syntax issue detected");
+      }
+    }
+
+    // Return empty array for safety
+    return NextResponse.json([], { status: 200 });
   }
 }

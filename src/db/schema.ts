@@ -135,17 +135,17 @@ export const users = pgTable("users", {
     .notNull(),
   resume: text(),
   timestamp: timestamp(),
-  status: status().default(status.enumValues[2]).notNull(),
+  status: status().default("pending").notNull(),
   checkedIn: boolean("checked_in").default(false).notNull(),
 });
 
-// Admin table for superAdmins and admins
+// Admin table for volunteers and admins
 export const admins = pgTable("admins", {
   id: uuid("id")
     .primaryKey()
     .references(() => authUsers.id), // References auth.users(id)
   email: varchar("email", { length: 255 }).notNull(),
-  role: adminRole().default("admin").notNull(), // 'admin' | 'super_admin'
+  role: adminRole().default("admin").notNull(), // 'admin' | 'volunteer'
   status: adminStatus().default("active").notNull(), // 'active' | 'inactive' | 'suspended'
   is_organizer_only: boolean("is_organizer_only").default(true).notNull(), // For accounts made for organizers only - not made through registration form
   firstName: varchar("f_name", { length: 100 }),

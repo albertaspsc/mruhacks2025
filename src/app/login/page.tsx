@@ -26,11 +26,7 @@ export default function LoginPage() {
     try {
       // Pass email and password as individual parameters
       const result = await login(email, password);
-
-      // The middleware will handle redirecting to the appropriate dashboard
-      // based on the user's role:
-      // - Regular users -> /dashboard
-      // - Volunteers/Admins/Super Admins -> /admin/dashboard
+      // Regular users will be redirected to /dashboard
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "Login failed. Please try again.");
@@ -45,7 +41,7 @@ export default function LoginPage() {
 
     try {
       await loginWithGoogle();
-      // Middleware will handle role-based redirection
+      // Regular users will be redirected to /dashboard
     } catch (err: any) {
       console.error("Google login error:", err);
       setError("Google sign-in failed. Please try again.");
@@ -85,17 +81,6 @@ export default function LoginPage() {
         <h1 className="text-3xl font-bold text-center text-black mb-2">
           Log In
         </h1>
-
-        {/* Optional: Role indicator for different login contexts */}
-        {searchParams.get("next")?.includes("/admin") && (
-          <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800 text-center">
-              <strong>Admin Access Required</strong>
-              <br />
-              Please log in with your admin credentials
-            </p>
-          </div>
-        )}
 
         <div className="w-full">
           <Label htmlFor="email">Email</Label>
@@ -159,20 +144,16 @@ export default function LoginPage() {
           Forgot password?
         </button>
 
-        {/* Helpful information */}
-        <div className="w-full text-center text-xs text-gray-500 pt-2">
-          <p>
-            After logging in, you&apos;ll be redirected to your appropriate
-            dashboard:
-          </p>
-          <p className="mt-1">
-            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-            Regular users → Main Dashboard
-          </p>
-          <p>
-            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
-            Staff & Volunteers → Admin Dashboard
-          </p>
+        {/* Small staff login link at the bottom */}
+        <div className="pt-2">
+          <button
+            type="button"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors underline"
+            onClick={() => router.push("/admin-login-portal")}
+            disabled={isLoading}
+          >
+            Admin/Volunteer Login
+          </button>
         </div>
 
         {/* Mascot inside the card, below the buttons */}
