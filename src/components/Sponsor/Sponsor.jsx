@@ -5,6 +5,8 @@ import Image from "next/image";
 import acurve from "../../assets/sponsors/arcurve_logo_2024_color_large.webp";
 import institute from "../../assets/sponsors/Institute.webp";
 import library from "../../assets/sponsors/mrulibrary.webp";
+import adx from "../../assets/sponsors/adx_logo.webp";
+import cnrl from "../../assets/sponsors/canadian_natural.webp";
 import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
@@ -18,6 +20,11 @@ export default function Sponsor() {
       href: "https://www.mtroyal.ca/ProgramsCourses/FacultiesSchoolsCentres/Business/Institutes/InstituteInnovationEntrepreneurship/index.htm",
     },
     { img: library, href: "https://library.mtroyal.ca" },
+    {
+      img: adx,
+      href: "https://www.abdiamond.ca/?gad_source=1&gad_campaignid=21486602802&gbraid=0AAAAAocBOJOMK1uXMlxXqUi7Ec0sjwsCv&gclid=CjwKCAjw4efDBhATEiwAaDBpbnF6Hno1EYFTfi94tso6NuHseNyx1TkGy1qJ4buIIP-2VS2SPyi6uxoCLN0QAvD_BwE",
+    },
+    { img: cnrl, href: "https://www.cnrl.com/" },
   ];
 
   return (
