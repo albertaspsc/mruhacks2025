@@ -7,6 +7,11 @@ import {
   parkingInfo,
   parkingSituation,
   users,
+  userInterests,
+  userRestrictions,
+  admins,
+  resumes,
+  profiles,
 } from "./schema";
 import { Registration } from "./registration";
 import z from "zod";
@@ -200,16 +205,31 @@ export async function deleteUserProfile(supabase?: SupabaseClient) {
   const userId = auth.user.id;
 
   try {
-    // Delete from all your tables
-    await db
-      .delete(marketingPreferences)
-      .where(eq(marketingPreferences.id, userId));
-    await db.delete(parkingInfo).where(eq(parkingInfo.id, userId));
+    console.log("Deleting user data for:", userId);
+
+    // Delete from all related tables first (children tables)
+    await Promise.all([
+      db
+        .delete(marketingPreferences)
+        .where(eq(marketingPreferences.id, userId)),
+      db.delete(parkingInfo).where(eq(parkingInfo.id, userId)),
+      db.delete(userInterests).where(eq(userInterests.user, userId)),
+      db.delete(userRestrictions).where(eq(userRestrictions.user, userId)),
+      db.delete(admins).where(eq(admins.id, userId)),
+      db.delete(resumes).where(eq(resumes.id, userId)),
+      db.delete(profiles).where(eq(profiles.id, userId)),
+    ]);
+
+    console.log("Deleted from child tables");
+
+    // Delete from users table last (parent table)
     await db.delete(users).where(eq(users.id, userId));
-    // Add any other tables that contain user data
+
+    console.log("Deleted from users table");
 
     return { success: true };
   } catch (error) {
-    return { error };
+    console.error("Database deletion error:", error);
+    return { error: `Database deletion failed: ${error}` };
   }
 }

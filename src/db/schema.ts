@@ -129,7 +129,7 @@ export const users = pgTable("users", {
     .references(() => marketingTypes.id)
     .notNull(),
   timestamp: timestamp().defaultNow().notNull(),
-  status: status().default(status.enumValues[1]).notNull(),
+  status: status().default("pending").notNull(),
 });
 
 export const resumes = pgTable("resumes", {

@@ -108,79 +108,11 @@ async function registerInterestsAndRestrictions(
   return {};
 }
 
-// export async function register(
-//   user: RegistrationInput,
-//   supabase?: SupabaseClient,
-// ) {
-//   if (!supabase) {
-//     supabase = await createClient();
-//   }
-
-//   const { data: auth, error: authError } = await supabase.auth.getUser();
-//   if (authError) {
-//     return { error: authError };
-//   }
-
-//   const result = RegistrationSchema.safeParse(user);
-//   const { error, success } = result;
-
-//   if (!success) {
-//     return { error };
-//   }
-
-//   if (!auth.user.email) {
-//     return { error: "user not registered with email" };
-//   }
-
-//   const id = auth.user.id;
-//   const genderId = await getOrInsertGenderId(user);
-//   const otherIds = await getOtherIds(user);
-
-//   if (otherIds.length != 1) {
-//     console.log(otherIds);
-//     return {
-//       error:
-//         "one or more of marketing, experience, university, or major was not found in the database.",
-//     };
-//   }
-
-//   await db.insert(users).values({
-//     id,
-//     gender: genderId,
-//     ...otherIds[0],
-//     previousAttendance: user.previousAttendance,
-//     parking: user.parking,
-//     yearOfStudy: user.yearOfStudy,
-//     accommodations: user.accommodations,
-//     email: auth.user.email,
-//     firstName: user.firstName,
-//     lastName: user.lastName,
-//     timestamp: new Date(),
-//     marketing: otherIds[0].marketing,
-//   });
-
-//   const { error: multiOptionsError } = await registerInterestsAndRestrictions(
-//     id,
-//     user,
-//   );
-//   if (multiOptionsError) {
-//     return { error: multiOptionsError };
-//   }
-
-//   if (user.resume) {
-//     const resumeResult = await saveResume(user.resume, user, supabase);
-//     if (resumeResult?.error) {
-//       console.error('Failed to save resume:', resumeResult.error);
-//     }
-//   }
-//   return {};
-// }
-
 export async function register(
   user: RegistrationInput,
   supabase?: SupabaseClient,
 ) {
-  console.log("🚀 REGISTRATION - Starting registration for:", user.email);
+  console.log("REGISTRATION - Starting registration for:", user.email);
 
   if (!supabase) {
     supabase = await createClient();
@@ -188,7 +120,7 @@ export async function register(
 
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
-    console.error("❌ Auth error:", authError);
+    console.error("Auth error:", authError);
     return { error: authError };
   }
 
@@ -200,21 +132,21 @@ export async function register(
     .limit(1);
 
   if (existingUser.length > 0) {
-    console.log("✅ User already registered, skipping...");
+    console.log("User already registered..");
     return { success: true, message: "User already registered" };
   }
 
   // USE LOCAL VALIDATION SCHEMA
   const result = LocalRegistrationSchema.safeParse(user);
   if (!result.success) {
-    console.error("❌ Validation failed:", result.error.issues);
+    console.error("Validation failed:", result.error.issues);
     return {
       error: result.error.issues
         .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
         .join(", "),
     };
   }
-  console.log("✅ Validation passed");
+  console.log("Validation passed");
 
   if (!auth.user.email) {
     return { error: "user not registered with email" };
@@ -225,7 +157,7 @@ export async function register(
   const otherIds = await getOtherIds(user);
 
   if (otherIds.length != 1) {
-    console.log("❌ Other IDs failed:", otherIds);
+    console.log("Other IDs failed:", otherIds);
     return {
       error:
         "one or more of marketing, experience, university, or major was not found in the database.",
@@ -248,9 +180,9 @@ export async function register(
       marketing: otherIds[0].marketing,
     });
 
-    console.log("✅ User created successfully");
+    console.log("User created successfully");
   } catch (insertError) {
-    console.error("❌ User insert failed:", insertError);
+    console.error("User insert failed:", insertError);
     return { error: `Database insert failed: ${insertError}` };
   }
 
@@ -265,21 +197,31 @@ export async function register(
   if (user.resume) {
     const resumeResult = await saveResume(user.resume, user, supabase);
     if (resumeResult?.error) {
-      console.error("⚠️ Resume save failed:", resumeResult.error);
+      console.error("Resume save failed:", resumeResult.error);
       // Don't fail registration for resume issues
     }
   }
 
-  console.log("🎉 Registration completed successfully");
+  console.log("Registration completed successfully");
   return { success: true };
-}
-
-{
-  /* End of debug */
 }
 
 async function getOtherIds(user: RegistrationInput) {
   console.log(user);
+
+  // Auto-insert university and major if they don't exist
+  await Promise.all([
+    // Insert university if it doesn't exist
+    db
+      .insert(universities)
+      .values({ university: user.university })
+      .onConflictDoNothing(),
+
+    // Insert major if it doesn't exist
+    db.insert(majors).values({ major: user.major }).onConflictDoNothing(),
+  ]);
+
+  // marketing and experience must exist - university and major will exist after insert
   return await db
     .select({
       marketing: marketingTypes.id,
