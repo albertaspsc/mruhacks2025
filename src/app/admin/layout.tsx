@@ -2,8 +2,8 @@
 
 import React, { ReactNode, useEffect } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "utils/supabase/client";
-import { isAdmin } from "src/db/admin";
+import { createClient } from "@/utils/supabase/client";
+import { isAdmin } from "@/db/admin";
 
 type Props = { children: ReactNode };
 

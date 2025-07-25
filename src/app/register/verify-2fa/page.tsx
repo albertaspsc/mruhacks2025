@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import MascotUrl from "@/assets/mascots/crt.svg";
-import { createClient } from "utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Verify2FAPage() {
   const supabase = createClient();

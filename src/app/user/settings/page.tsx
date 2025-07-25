@@ -37,10 +37,12 @@ import {
   updateParkingPreferences,
   updateMarketingPreferences,
   getParkingPreference,
-} from "src/db/settings";
-import { getRegistration, Registration } from "src/db/registration";
-import { RegistrationInput } from "@context/RegisterFormContext";
-import { createClient } from "utils/supabase/client";
+  getMarketingPreference,
+  deleteUserProfile,
+} from "@/db/settings";
+import { getRegistration, Registration } from "@/db/registration";
+import { RegistrationInput } from "@/context/RegisterFormContext";
+import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 
 // interface User {
@@ -126,17 +128,39 @@ export default function SettingsPage() {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      // shouldn't have error; see layout
-      const { data: user } = await getRegistration();
-      setUser(user);
-      emailPreferencesForm.reset;
-      const { data: parkingPreference } = await getParkingPreference();
-      if (!parkingPreference) {
-        parkingPreferencesForm.reset(parkingPreference);
+      try {
+        // Get user registration data
+        const { data: user } = await getRegistration();
+        setUser(user);
+
+        // Get parking preferences and populate the form
+        const { data: parkingPreference } = await getParkingPreference();
+        if (parkingPreference) {
+          parkingPreferencesForm.reset({
+            parkingPreference: parkingPreference.parking || "Not sure",
+            licensePlate: parkingPreference.licensePlate || "",
+          });
+        }
+
+        // Get marketing preferences separately
+        const { data: marketingPrefs } = await getMarketingPreference();
+        if (marketingPrefs) {
+          emailPreferencesForm.reset({
+            marketingEmails: marketingPrefs.sendEmails || false,
+            eventUpdates: true,
+            hackathonReminders: true,
+          });
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
-  }, [emailPreferencesForm, parkingPreferencesForm]);
+
+    loadData();
+  }, []);
 
   // Handle email preferences form submission
   async function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
@@ -178,42 +202,88 @@ export default function SettingsPage() {
       return;
     }
 
-    // Simulate API call
-    supabase.auth.updateUser({ password: data.newPassword });
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Success => reset form and show success message
+      passwordForm.reset({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+        variant: "default",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update password",
+        variant: "destructive",
+      });
+    }
+
     setIsLoading(false);
-
-    passwordForm.reset({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-
-    toast({
-      title: "Password updated",
-      description: "Your password has been changed successfully.",
-      variant: "default",
-    });
   }
 
   // Handle profile deletion
   async function handleDeleteProfile() {
     setIsDeleting(true);
 
-    // Simulate API call
-    console.log("Profile deleted");
-    setIsDeleting(false);
-    setShowDeleteConfirm(false);
-    toast({
-      title: "Profile deleted",
-      description:
-        "Your profile has been deleted successfully. You will be redirected to the home page.",
-      variant: "default",
-    });
+    try {
+      // Use API route for complete deletion (handles both DB and Auth)
+      const response = await fetch("/api/delete-account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    // Redirect would happen here in a real implementation
-    setTimeout(() => {
-      redirect("/");
-    }, 2000);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete account");
+      }
+
+      // Success - account deleted
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+
+      // Sign out the user
+      await supabase.auth.signOut();
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted.",
+        variant: "default",
+      });
+
+      // Redirect to home page
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    } catch (error) {
+      console.error("Profile deletion error:", error);
+      setIsDeleting(false);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please contact support.",
+        variant: "destructive",
+      });
+    }
   }
 
   // Show loading state
@@ -337,9 +407,7 @@ export default function SettingsPage() {
                           <SelectContent className="bg-white dark:bg-gray-800">
                             <SelectItem value="Yes">Yes</SelectItem>
                             <SelectItem value="No">No</SelectItem>
-                            <SelectItem value="Not sure yet">
-                              Not sure yet
-                            </SelectItem>
+                            <SelectItem value="Not sure">Not sure</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>

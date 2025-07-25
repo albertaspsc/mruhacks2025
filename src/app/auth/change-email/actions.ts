@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "../../../../utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { z } from "zod";
 
 export async function changeEmail(formData: FormData) {

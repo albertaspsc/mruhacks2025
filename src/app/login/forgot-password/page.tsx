@@ -6,23 +6,38 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
-import { createClient } from "utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<null | "success" | "fail">(null);
+  const [status, setStatus] = useState<null | "success" | "fail" | "loading">(
+    null,
+  );
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock: Accept any email ending with @mtroyal.ca as success
-    supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/login/reset-password`,
-    });
-    setStatus("success");
+    setStatus("loading");
     setError("");
-    setTimeout(() => (window.location.href = "/login/reset-link-sent"), 1200);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login/reset-password`,
+      });
+
+      if (error) {
+        setStatus("fail");
+        setError(error.message);
+        return;
+      }
+
+      setStatus("success");
+      setTimeout(() => (window.location.href = "/login/reset-link-sent"), 1200);
+    } catch (err) {
+      setStatus("fail");
+      setError("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
@@ -44,6 +59,7 @@ export default function ForgotPasswordPage() {
             placeholder="you@mtroyal.ca"
             required
             className="mt-1 pr-10"
+            disabled={status === "loading"}
           />
         </div>
         {status === "success" && (
@@ -57,8 +73,9 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors"
+          disabled={status === "loading"}
         >
-          Send Reset Link
+          {status === "loading" ? "Sending..." : "Send Reset Link"}
         </Button>
         <a
           href="/login"

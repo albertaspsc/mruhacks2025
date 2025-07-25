@@ -5,15 +5,18 @@ import { redirect, usePathname } from "next/navigation";
 import ProgressBar from "@/components/Register/ProgressBar";
 import Image from "next/image";
 import { RegisterFormProvider } from "@/context/RegisterFormContext";
-import { createClient } from "utils/supabase/client";
-import { getRegistration } from "src/db/registration";
+import { createClient } from "@/utils/supabase/client";
+import { getRegistration } from "@/db/registration";
 
-type Props = { children: ReactNode };
+type Props = {
+  children: ReactNode;
+};
 
 export default function RegisterLayout({ children }: Props) {
   const supabase = createClient();
-
   const path = usePathname() ?? "";
+  const [isLoading, setIsLoading] = useState(true);
+
   let step = 1;
   if (path.includes("verify-2fa")) step = 2;
   else if (path.includes("step-1")) step = 3;
@@ -22,20 +25,83 @@ export default function RegisterLayout({ children }: Props) {
 
   useEffect(() => {
     const assertPermission = async () => {
-      const { data: isUserRegistered } = await getRegistration();
-      if (isUserRegistered) {
-        redirect("/user/dashboard");
-      }
+      try {
+        // Check if user is already fully registered
+        const { data: isUserRegistered } = await getRegistration();
+        if (isUserRegistered) {
+          redirect("/user/dashboard");
+          return;
+        }
 
-      const { error } = await supabase.auth.getUser();
-      if (step >= 3 && error) {
-        redirect("/register");
-      } else if (!error) {
-        redirect("/register/step-1");
+        // Get current user and auth status
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        // Handle different page access permissions
+        if (path === "/register") {
+          // On main registration page
+          if (user && user.email_confirmed_at) {
+            // User is authenticated and verified, go to step-1
+            redirect("/register/step-1");
+            return;
+          }
+          // Allow access to registration page
+        } else if (path.includes("verify-2fa")) {
+          // On email verification page - allow access
+          // (Users can be here whether authenticated or not)
+        } else if (path.includes("step-1")) {
+          // On step-1 page - require authenticated user
+          if (error || !user) {
+            redirect("/register");
+            return;
+          }
+          if (!user.email_confirmed_at) {
+            redirect(`/register/verify-2fa?email=${user.email}`);
+            return;
+          }
+          // User is properly authenticated and verified - allow access
+        } else if (path.includes("step-2")) {
+          // On step-2 page - require authenticated user
+          if (error || !user) {
+            redirect("/register");
+            return;
+          }
+          if (!user.email_confirmed_at) {
+            redirect(`/register/verify-2fa?email=${user.email}`);
+            return;
+          }
+          // User is properly authenticated and verified - allow access
+        } else if (path.includes("complete")) {
+          // On completion page - require authenticated user
+          if (error || !user) {
+            redirect("/register");
+            return;
+          }
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Permission check error:", err);
+        setIsLoading(false);
       }
     };
+
     assertPermission();
-  }, []);
+  }, [path, supabase.auth]);
+
+  // Show loading while checking permissions
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <RegisterFormProvider>

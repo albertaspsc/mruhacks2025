@@ -2,8 +2,8 @@
 "use client";
 import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";
-import { parkingSituation, yearOfStudy } from "src/db/schema";
-import z from "zod";
+import { parkingSituation, yearOfStudy } from "./../db/schema";
+import { z } from "zod";
 
 // export type RegistrationData = {
 //   firstName?: string;
@@ -35,9 +35,9 @@ export const RegistrationSchema = z.object({
   yearOfStudy: createSelectSchema(yearOfStudy),
   experience: z.string(),
   accommodations: z.string(),
-  marketing: z.string(),
   dietaryRestrictions: z.array(z.string()),
   interests: z.array(z.string()),
+  marketing: z.string().min(1),
   resume: z.instanceof(File).optional(),
 });
 

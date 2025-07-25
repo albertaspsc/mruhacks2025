@@ -7,7 +7,6 @@ import {
   boolean,
   pgEnum,
   timestamp,
-  check,
   customType,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -130,7 +129,7 @@ export const users = pgTable("users", {
     .references(() => marketingTypes.id)
     .notNull(),
   timestamp: timestamp().defaultNow().notNull(),
-  status: status().default(status.enumValues[2]).notNull(),
+  status: status().default(status.enumValues[1]).notNull(),
 });
 
 export const resumes = pgTable("resumes", {
@@ -138,7 +137,11 @@ export const resumes = pgTable("resumes", {
     .primaryKey()
     .references(() => users.id)
     .notNull(),
-  resume: bytea().notNull(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
 export const admins = pgTable("admins", {
@@ -163,5 +166,5 @@ export const parkingInfo = pgTable("parking_info", {
     .primaryKey()
     .references(() => users.id)
     .notNull(),
-  licencePlate: varchar("licence_plate", { length: 8 }).notNull(),
+  licensePlate: varchar("license_plate", { length: 8 }).notNull(),
 });

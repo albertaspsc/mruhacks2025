@@ -8,7 +8,7 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getStaticOptions } from "src/db/registration";
+import { getStaticOptions } from "@/db/registration";
 import {
   FileUpload,
   FileUploadDropzone,
@@ -71,7 +71,7 @@ export default function Step2Page() {
     setValue,
     formState: { errors },
   } = useForm<FinalForm>({
-    defaultValues: { interests: [], dietaryRestrictions: [] },
+    defaultValues: { interests: [], dietaryRestrictions: [], marketing: "" },
   });
 
   // A database call is not always the fastest, thus const defaults
@@ -297,7 +297,7 @@ export default function Step2Page() {
         >
           <option>Yes</option>
           <option>No</option>
-          <option>Not sure yet</option>
+          <option>Not sure</option>
         </select>
         {errors.parking && (
           <p className="mt-1 text-sm text-red-600">{errors.parking.message}</p>

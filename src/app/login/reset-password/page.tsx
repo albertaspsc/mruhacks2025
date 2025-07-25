@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
-import { createClient } from "utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 function validatePassword(password: string) {
   if (!password) return "Password is required";

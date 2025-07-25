@@ -49,25 +49,24 @@ export async function updateParkingPreferences(
     return { error };
   }
 
-  if (data.parkingPreference != "Yes" && !data.licensePlate) {
-    return {};
-  }
-
-  if (data.licensePlate) {
-    await db
-      .insert(parkingInfo)
-      .values({ id: userId, licencePlate: data.licensePlate! })
-      .onConflictDoUpdate({
-        target: parkingInfo.id,
-        set: { licencePlate: data.licensePlate },
-      });
-  }
-
-  db.update(users)
+  // Update parking preference in users table
+  await db
+    .update(users)
     .set({ parking: data.parkingPreference })
     .where(eq(users.id, auth.user.id));
 
-  return {};
+  // Update license plate if provided and parking is "Yes"
+  if (data.parkingPreference === "Yes" && data.licensePlate) {
+    await db
+      .insert(parkingInfo)
+      .values({ id: userId, licensePlate: data.licensePlate })
+      .onConflictDoUpdate({
+        target: parkingInfo.id,
+        set: { licensePlate: data.licensePlate },
+      });
+  }
+
+  return { success: true };
 }
 
 export async function updateMarketingPreferences(
@@ -165,16 +164,52 @@ export async function getParkingPreference(supabase?: SupabaseClient) {
     return { error: authError };
   }
 
+  // Use leftJoin instead of rightJoin to ensure we always get user data
   const result = await db
-    .select({ parking: users.parking, licencePlate: parkingInfo.licencePlate })
+    .select({
+      parking: users.parking,
+      licensePlate: parkingInfo.licensePlate,
+    })
     .from(users)
-    .rightJoin(parkingInfo, eq(users.id, parkingInfo.id))
+    .leftJoin(parkingInfo, eq(users.id, parkingInfo.id))
     .where(eq(users.id, auth.user.id))
     .limit(1);
 
   if (!result.length) {
-    return { error: "Parking preference not found" };
+    return { error: "User not found" };
   }
 
-  return { data: result[0] };
+  return {
+    data: {
+      parking: result[0].parking || "Not sure",
+      licensePlate: result[0].licensePlate || "",
+    },
+  };
+}
+
+export async function deleteUserProfile(supabase?: SupabaseClient) {
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    return { error: authError };
+  }
+
+  const userId = auth.user.id;
+
+  try {
+    // Delete from all your tables
+    await db
+      .delete(marketingPreferences)
+      .where(eq(marketingPreferences.id, userId));
+    await db.delete(parkingInfo).where(eq(parkingInfo.id, userId));
+    await db.delete(users).where(eq(users.id, userId));
+    // Add any other tables that contain user data
+
+    return { success: true };
+  } catch (error) {
+    return { error };
+  }
 }

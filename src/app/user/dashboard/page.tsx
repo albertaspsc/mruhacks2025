@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
 import SettingsPage from "../settings/page";
 import ProfilePage from "../profile/page";
@@ -10,8 +9,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RegistrationInput } from "@context/RegisterFormContext";
-import { Registration, getRegistration } from "src/db/registration";
+import { RegistrationInput } from "@/context/RegisterFormContext";
+import { Registration, getRegistration } from "@/db/registration";
 
 // Define available views
 type DashboardView = "dashboard" | "settings" | "profile";

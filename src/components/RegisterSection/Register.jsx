@@ -33,7 +33,7 @@ const RegisterSection = () => {
             rel="noopener noreferrer"
             className={styles.registerButton}
           >
-            Pre-Register Now
+            Register Now
           </a>
         </div>
 

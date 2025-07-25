@@ -23,11 +23,11 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { getRegistration, Registration } from "src/db/registration";
-import { createClient } from "utils/supabase/client";
+import { getRegistration, Registration } from "@/db/registration";
+import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { updateUserNameAndEmail } from "src/db/settings";
+import { updateUserNameAndEmail } from "@/db/settings";
 
 // Types
 type User = Pick<Registration, "firstName" | "lastName" | "email">;
@@ -109,7 +109,7 @@ export default function ProfilePage() {
           setUser(registration ?? null);
           profileForm.setValue("firstName", registration.firstName);
           profileForm.setValue("lastName", registration.lastName);
-          profileForm.setValue("email", registration.email);
+          profileForm.setValue("email", registration.email || "");
         }
       } finally {
         setIsLoading(false);

@@ -2,13 +2,15 @@ import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost";
+  asChild?: boolean;
 }
 
 export function Button({
   variant = "primary",
   className = "",
   children,
-  ...props
+  asChild = false,
+  ...restProps
 }: ButtonProps) {
   const base = "px-4 py-2 rounded-md font-medium transition-opacity";
 
@@ -29,8 +31,22 @@ export function Button({
       styles = "bg-black text-white hover:opacity-90 disabled:opacity-50";
   }
 
+  if (asChild) {
+    if (React.isValidElement(children)) {
+      // Type assertion to handle unknown props
+      const childElement = children as React.ReactElement<any>;
+      const existingClassName = childElement.props?.className || "";
+
+      return React.cloneElement(childElement, {
+        ...restProps,
+        className: `${base} ${styles} ${className} ${existingClassName}`.trim(),
+      });
+    }
+    return children;
+  }
+
   return (
-    <button className={`${base} ${styles} ${className}`} {...props}>
+    <button className={`${base} ${styles} ${className}`} {...restProps}>
       {children}
     </button>
   );

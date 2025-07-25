@@ -139,7 +139,7 @@ const Navbar = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                router.push("/login");
+                router.push("/landing");
               }}
               style={{
                 marginLeft: "20px",
@@ -155,7 +155,7 @@ const Navbar = () => {
               onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
               onMouseOut={(e) => (e.target.style.backgroundColor = "#007bff")}
             >
-              Login (Test)
+              Login
             </button>
           </div>
         </div>
