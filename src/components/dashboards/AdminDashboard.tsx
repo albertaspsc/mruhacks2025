@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { createClient } from "../../../utils/supabase/client";
 import {
   Search,
   Users,
@@ -11,25 +10,25 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+// Updated interface to match your API response
 interface Participant {
   id: string;
   f_name?: string;
   l_name?: string;
-  school_email?: string;
-  status?: "pending" | "confirmed" | "waitlisted";
-  checked_in?: boolean;
+  email?: string;
+  status?: "confirmed" | "pending" | "waitlisted";
+  checked_in?: boolean; // Matches your API response
   university?: string;
-  yearOfStudy?: string;
-  team_name?: string;
-  timestamp?: string;
-  gender?: string;
-  prev_attendance?: string;
-  major?: string;
+  timestamp?: string; // Matches your API response
+  // Additional fields from your API
+  gender?: number;
+  prev_attendance?: boolean;
+  major?: number;
   parking?: string;
-  experience?: string;
+  yearOfStudy?: string;
+  experience?: number;
   accommodations?: string;
-  marketing?: string;
-  resume?: string;
+  marketing?: number;
 }
 
 interface AdminDashboardProps {
@@ -47,26 +46,24 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     [],
   );
 
-  // Initialize Supabase client
-  const supabase = useMemo(() => createClient(), []);
-
-  // Fetch participants from Supabase - wrap in useCallback to stabilize the function
+  // Fetch participants using your API route
   const fetchParticipants = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching participants...");
+      console.log("Fetching participants via API...");
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("timestamp", { ascending: false });
+      const response = await fetch("/api/participants");
 
-      console.log("Supabase response:", { data, error });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      console.log("API response:", data);
       console.log("Number of participants found:", data?.length || 0);
-
-      if (error) throw error;
 
       setParticipants(data || []);
     } catch (err: any) {
@@ -75,54 +72,22 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
-  // Set up real-time subscription
-  useEffect(() => {
-    // Check authentication status
-    const checkAuth = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      console.log("Current user:", user);
-      console.log("Auth error:", error);
-    };
-
-    checkAuth();
-    fetchParticipants();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel("participants-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "profiles",
-        },
-        (payload) => {
-          console.log("Real-time update:", payload);
-          fetchParticipants(); // Refetch data on any change
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchParticipants, supabase]);
-
-  // Update participant status
+  // Update status using your API route
   const updateParticipantStatus = async (id: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({ status: newStatus })
-        .eq("id", id);
+      const response = await fetch(`/api/participants/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       // Update local state
       setParticipants((prev) =>
@@ -136,23 +101,28 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     }
   };
 
-  // Toggle check-in status
+  // Toggle check-in using your API route
   const toggleCheckIn = async (id: string) => {
     try {
       const participant = participants.find((p) => p.id === id);
-      const newCheckedInStatus = !participant?.checked_in;
+      const newCheckedInStatus = !participant?.checked_in; // Use checked_in
 
-      const { error } = await supabase
-        .from("users") // Changed to 'users'
-        .update({ checked_in: newCheckedInStatus })
-        .eq("id", id);
+      const response = await fetch(`/api/participants/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ checkedIn: newCheckedInStatus }), // API expects checkedIn
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       // Update local state
       setParticipants((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, checked_in: newCheckedInStatus } : p,
+        prev.map(
+          (p) => (p.id === id ? { ...p, checked_in: newCheckedInStatus } : p), // Use checked_in
         ),
       );
     } catch (err: any) {
@@ -160,6 +130,51 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
       alert("Failed to update check-in status: " + err.message);
     }
   };
+
+  // Bulk update using your bulk-update API route
+  const bulkUpdateStatus = async (
+    participantIds: string[],
+    newStatus: string,
+  ) => {
+    try {
+      const response = await fetch("/api/participants/bulk-update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          participantIds,
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Update local state
+      setParticipants((prev) =>
+        prev.map((p) =>
+          participantIds.includes(p.id)
+            ? { ...p, status: newStatus as any }
+            : p,
+        ),
+      );
+
+      setSelectedParticipants([]);
+      alert(`${result.updatedCount} participants updated to ${newStatus}`);
+    } catch (err: any) {
+      console.error("Error bulk updating status:", err);
+      alert("Failed to bulk update status: " + err.message);
+    }
+  };
+
+  // Initial load - no Supabase real-time needed
+  useEffect(() => {
+    fetchParticipants();
+  }, [fetchParticipants]);
 
   // Analytics calculations
   const analytics = useMemo(() => {
@@ -173,18 +188,17 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     const pending = participants.filter(
       (p) => p.status === "pending" || !p.status,
     ).length;
-    const checkedIn = participants.filter((p) => p.checked_in).length;
-    const withTeams = participants.filter((p) => p.team_name).length;
+    const checkedIn = participants.filter((p) => p.checked_in).length; // Use checked_in
 
-    return { total, confirmed, waitlisted, pending, checkedIn, withTeams };
+    return { total, confirmed, waitlisted, pending, checkedIn };
   }, [participants]);
 
   // Filtered participants
   const filteredParticipants = useMemo(() => {
     return participants.filter((participant) => {
-      const firstName = participant.f_name || "";
-      const lastName = participant.l_name || "";
-      const email = participant.school_email || "";
+      const firstName = participant.f_name || ""; // Use f_name
+      const lastName = participant.l_name || ""; // Use l_name
+      const email = participant.email || "";
 
       const matchesSearch =
         firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -214,22 +228,16 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
         "Status",
         "Registration Date",
         "University",
-        "Year of Study",
-        "Major",
-        "Experience",
         "Checked In",
       ],
       ...filteredParticipants.map((p) => [
-        p.f_name || "",
-        p.l_name || "",
-        p.school_email || "",
+        p.f_name || "", // Use f_name
+        p.l_name || "", // Use l_name
+        p.email || "",
         p.status || "pending",
-        p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "",
+        p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "", // Use timestamp
         p.university || "",
-        p.yearOfStudy || "",
-        p.major || "",
-        p.experience || "",
-        p.checked_in ? "Yes" : "No",
+        p.checked_in ? "Yes" : "No", // Use checked_in
       ]),
     ]
       .map((row) => row.join(","))
@@ -256,42 +264,11 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     }
   };
 
-  // Bulk update functions
-  const bulkUpdateStatus = async (
-    participantIds: string[],
-    newStatus: string,
-  ) => {
-    try {
-      const { error } = await supabase
-        .from("users")
-        .update({ status: newStatus })
-        .in("id", participantIds);
-
-      if (error) throw error;
-
-      setParticipants((prev) =>
-        prev.map((p) =>
-          participantIds.includes(p.id)
-            ? { ...p, status: newStatus as any }
-            : p,
-        ),
-      );
-
-      setSelectedParticipants([]);
-      alert(`${participantIds.length} participants updated to ${newStatus}`);
-    } catch (err: any) {
-      console.error("Error bulk updating status:", err);
-      alert("Failed to bulk update status: " + err.message);
-    }
-  };
-
   const handleBulkConfirm = () => {
     if (selectedParticipants.length === 0) return;
-
     const confirmed = window.confirm(
       `Are you sure you want to confirm ${selectedParticipants.length} participants?`,
     );
-
     if (confirmed) {
       bulkUpdateStatus(selectedParticipants, "confirmed");
     }
@@ -299,13 +276,21 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
 
   const handleBulkWaitlist = () => {
     if (selectedParticipants.length === 0) return;
-
     const confirmed = window.confirm(
       `Are you sure you want to waitlist ${selectedParticipants.length} participants?`,
     );
-
     if (confirmed) {
       bulkUpdateStatus(selectedParticipants, "waitlisted");
+    }
+  };
+
+  const handleBulkPending = () => {
+    if (selectedParticipants.length === 0) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to set ${selectedParticipants.length} participants to pending?`,
+    );
+    if (confirmed) {
+      bulkUpdateStatus(selectedParticipants, "pending");
     }
   };
 
@@ -340,7 +325,6 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
     );
   }
 
-  // Main render
   return (
     <div className={`${className}`}>
       {/* Header */}
@@ -421,45 +405,6 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold mb-2">Registration Status</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Confirmed:</span>
-              <span className="text-sm font-medium">{analytics.confirmed}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Pending:</span>
-              <span className="text-sm font-medium">{analytics.pending}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Waitlisted:</span>
-              <span className="text-sm font-medium">
-                {analytics.waitlisted}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold mb-2">Event Day</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Checked In:</span>
-              <span className="text-sm font-medium">{analytics.checkedIn}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Not Checked In:</span>
-              <span className="text-sm font-medium">
-                {analytics.confirmed - analytics.checkedIn}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Controls */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-6 border-b border-gray-200">
@@ -495,11 +440,6 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
               >
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
-              </button>
-
-              <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-                <Mail className="h-4 w-4 mr-2" />
-                Send Email
               </button>
             </div>
           </div>
@@ -556,10 +496,11 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {participant.f_name || ""} {participant.l_name || ""}
+                        {participant.f_name || ""} {participant.l_name || ""}{" "}
+                        {/* Use f_name and l_name */}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {participant.school_email || ""}
+                        {participant.email || ""}
                       </div>
                     </div>
                   </td>
@@ -573,38 +514,31 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {participant.university || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {participant.major || "N/A"}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => toggleCheckIn(participant.id)}
                       className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                        participant.checked_in
+                        participant.checked_in // Use checked_in
                           ? "bg-green-100 text-green-800 hover:bg-green-200"
                           : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                       }`}
                     >
-                      {participant.checked_in ? "Checked In" : "Check In"}
+                      {participant.checked_in ? "Checked In" : "Check In"}{" "}
+                      {/* Use checked_in */}
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex space-x-2">
-                      <select
-                        value={participant.status || "pending"}
-                        onChange={(e) =>
-                          updateParticipantStatus(
-                            participant.id,
-                            e.target.value,
-                          )
-                        }
-                        className="text-xs border border-gray-300 rounded px-2 py-1"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="waitlisted">Waitlisted</option>
-                      </select>
-                    </div>
+                    <select
+                      value={participant.status || "pending"}
+                      onChange={(e) =>
+                        updateParticipantStatus(participant.id, e.target.value)
+                      }
+                      className="text-xs border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="waitlisted">Waitlisted</option>
+                    </select>
                   </td>
                 </tr>
               ))}
@@ -638,8 +572,11 @@ export function AdminDashboard({ className = "" }: AdminDashboardProps) {
             >
               Waitlist All
             </button>
-            <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
-              Send Email
+            <button
+              onClick={handleBulkPending}
+              className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
+            >
+              Set to Pending
             </button>
             <button
               onClick={() => setSelectedParticipants([])}

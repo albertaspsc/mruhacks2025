@@ -25,7 +25,11 @@
       "@context/*": ["src/context/*"],
       "@/context/*": ["src/context/*"],
       "@assets/*": ["src/assets/*"],
-      "@/assets/*": ["src/assets/*"]
+      "@/assets/*": ["src/assets/*"],
+      "@/db/*": ["src/db/*"],
+      "@db/*": ["src/db/*"],
+      "@/utils/*": ["utils/*"],
+      "@utils/*": ["src/utils/*"]
     },
     "jsx": "preserve",
     "plugins": [{ "name": "next" }],

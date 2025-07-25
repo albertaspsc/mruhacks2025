@@ -3,42 +3,29 @@ import { db } from "../../../db/drizzle";
 import { users, universities } from "../../../db/schema";
 import { eq, desc } from "drizzle-orm";
 
-// GET - Fetches all participants with minimal fields for debugging
 export async function GET(request: NextRequest) {
   try {
     console.log("🔍 Starting participants fetch...");
 
-    // Test database connection first
-    console.log("📦 Testing database connection...");
-
-    // Start with the simplest possible query
-    const simpleTest = await db.select().from(users).limit(1);
-    console.log(
-      "✅ Database connection successful, sample user:",
-      simpleTest[0] || "No users found",
-    );
-
-    // Test universities table
-    console.log("Testing universities table...");
-    const universityTest = await db.select().from(universities).limit(1);
-    console.log(
-      "✅ Universities table accessible, sample:",
-      universityTest[0] || "No universities found",
-    );
-
-    // Now try the full query
-    console.log("🔄 Executing full query...");
-
+    // Use the correct column names from your actual database
     const participants = await db
       .select({
         id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        f_name: users.firstName, // Drizzle maps f_name column to firstName property
+        l_name: users.lastName, // Drizzle maps l_name column to lastName property
         email: users.email,
         university: universities.university,
         status: users.status,
-        checkedIn: users.checkedIn,
-        registrationDate: users.timestamp,
+        checked_in: users.checkedIn, // This should work now that we added the column
+        timestamp: users.timestamp,
+        gender: users.gender,
+        prev_attendance: users.previousAttendance,
+        major: users.major,
+        parking: users.parking,
+        yearOfStudy: users.yearOfStudy,
+        experience: users.experience,
+        accommodations: users.accommodations,
+        marketing: users.marketing,
       })
       .from(users)
       .leftJoin(universities, eq(users.university, universities.id))
@@ -49,25 +36,33 @@ export async function GET(request: NextRequest) {
       `✅ Query successful, found ${participants.length} participants`,
     );
 
-    // Transform the data
+    // Transform the data for your React component
     const transformedParticipants = participants.map((participant, index) => {
       console.log(`🔄 Transforming participant ${index + 1}:`, {
         id: participant.id,
-        firstName: participant.firstName,
-        university: participant.university,
+        f_name: participant.f_name,
+        l_name: participant.l_name,
       });
 
       return {
         id: participant.id,
-        firstName: participant.firstName,
-        lastName: participant.lastName,
+        f_name: participant.f_name,
+        l_name: participant.l_name,
         email: participant.email,
         university: participant.university || "N/A",
         status: participant.status,
-        checkedIn: participant.checkedIn || false,
-        registrationDate:
-          participant.registrationDate?.toISOString() ||
-          new Date().toISOString(),
+        checked_in: participant.checked_in || false,
+        timestamp:
+          participant.timestamp?.toISOString() || new Date().toISOString(),
+        // Include other fields your component might need
+        gender: participant.gender,
+        prev_attendance: participant.prev_attendance,
+        major: participant.major,
+        parking: participant.parking,
+        yearOfStudy: participant.yearOfStudy,
+        experience: participant.experience,
+        accommodations: participant.accommodations,
+        marketing: participant.marketing,
       };
     });
 
@@ -85,24 +80,6 @@ export async function GET(request: NextRequest) {
       error instanceof Error ? error.stack : "No stack trace",
     );
 
-    // Check if it's a database connection error
-    if (error instanceof Error) {
-      if (
-        error.message.includes("connect") ||
-        error.message.includes("ECONNREFUSED")
-      ) {
-        console.error("🔌 Database connection issue detected");
-      } else if (
-        error.message.includes("column") ||
-        error.message.includes("table")
-      ) {
-        console.error("📋 Database schema issue detected");
-      } else if (error.message.includes("syntax")) {
-        console.error("📝 SQL syntax issue detected");
-      }
-    }
-
-    // Return empty array for safety
     return NextResponse.json([], { status: 200 });
   }
 }

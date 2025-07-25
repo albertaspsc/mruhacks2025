@@ -13,13 +13,13 @@ import {
 
 interface Participant {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  f_name?: string;
+  l_name?: string;
+  email?: string;
+  status?: "confirmed" | "pending" | "waitlisted";
+  checked_in?: boolean;
   university?: string;
-  status: "pending" | "confirmed" | "waitlisted";
-  checkedIn: boolean;
-  registrationDate: string;
+  timestamp?: string;
 }
 
 interface ParticipantManagementProps {
@@ -139,7 +139,7 @@ export function ParticipantManagement({
     }
 
     const participant = participants.find((p) => p.id === id);
-    const newCheckedIn = !participant?.checkedIn;
+    const newCheckedIn = !participant?.checked_in;
 
     try {
       const response = await fetch(`/api/participants/${id}`, {
@@ -153,7 +153,7 @@ export function ParticipantManagement({
       }
 
       setParticipants((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, checkedIn: newCheckedIn } : p)),
+        prev.map((p) => (p.id === id ? { ...p, checked_in: newCheckedIn } : p)),
       );
     } catch (error) {
       console.error("Error updating check-in:", error);
@@ -215,12 +215,12 @@ export function ParticipantManagement({
         "Registration Date",
       ],
       ...filteredParticipants.map((p) => [
-        `${p.firstName} ${p.lastName}`,
+        `${p.f_name} ${p.l_name}`,
         p.email,
         p.university || "N/A",
         p.status,
-        p.checkedIn ? "Yes" : "No",
-        new Date(p.registrationDate).toLocaleDateString(),
+        p.checked_in ? "Yes" : "No",
+        new Date(p.timestamp).toLocaleDateString(),
       ]),
     ]
       .map((row) => row.join(","))
@@ -244,11 +244,9 @@ export function ParticipantManagement({
 
     return participants.filter((participant) => {
       const matchesSearch =
-        participant.firstName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        participant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        participant.email.toLowerCase().includes(searchTerm.toLowerCase());
+        participant.f_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        participant.l_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" || participant.status === statusFilter;
@@ -277,7 +275,7 @@ export function ParticipantManagement({
     const waitlisted = participants.filter(
       (p) => p.status === "waitlisted",
     ).length;
-    const checkedIn = participants.filter((p) => p.checkedIn).length;
+    const checkedIn = participants.filter((p) => p.checked_in).length;
 
     return { total, confirmed, pending, waitlisted, checkedIn };
   }, [participants]);
@@ -557,7 +555,7 @@ export function ParticipantManagement({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {participant.firstName} {participant.lastName}
+                        {participant.f_name} {participant.l_name}
                       </div>
                       <div className="text-sm text-gray-500">
                         {participant.email}
@@ -583,12 +581,12 @@ export function ParticipantManagement({
                       className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                         !permissions.canCheckIn
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : participant.checkedIn
+                          : participant.checked_in
                             ? "bg-green-100 text-green-800 hover:bg-green-200"
                             : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                       }`}
                     >
-                      {participant.checkedIn ? "Checked In" : "Check In"}
+                      {participant.checked_in ? "Checked In" : "Check In"}
                     </button>
                   </td>
                   {permissions.canChangeStatus && (

@@ -6,17 +6,15 @@ import { eq } from "drizzle-orm";
 // PATCH - Update participant status and/or checkedIn status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
     const { status, checkedIn } = body;
 
-    // Prepare update object - use any to avoid type conflicts
     const updateData: any = {};
 
-    // Validate and add status if provided
     if (status !== undefined) {
       if (!["pending", "confirmed", "waitlisted"].includes(status)) {
         return NextResponse.json(
@@ -29,7 +27,6 @@ export async function PATCH(
       updateData.status = status;
     }
 
-    // Validate and add checkedIn if provided
     if (checkedIn !== undefined) {
       if (typeof checkedIn !== "boolean") {
         return NextResponse.json(
@@ -40,7 +37,6 @@ export async function PATCH(
       updateData.checkedIn = checkedIn;
     }
 
-    // Check if there's anything to update
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: "No valid fields to update" },
@@ -48,7 +44,6 @@ export async function PATCH(
       );
     }
 
-    // Check if participant exists and update
     const [updatedParticipant] = await db
       .update(users)
       .set(updateData)
@@ -62,46 +57,20 @@ export async function PATCH(
       );
     }
 
-    // Get participant with university name for response
-    const [participantWithUni] = await db
-      .select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        university: universities.university,
-        status: users.status,
-        checkedIn: users.checkedIn,
-        registrationDate: users.timestamp,
-      })
-      .from(users)
-      .leftJoin(universities, eq(users.university, universities.id))
-      .where(eq(users.id, id))
-      .limit(1);
-
     const response = {
-      id: participantWithUni.id,
-      firstName: participantWithUni.firstName,
-      lastName: participantWithUni.lastName,
-      email: participantWithUni.email,
-      university: participantWithUni.university,
-      status: participantWithUni.status,
-      checkedIn: participantWithUni.checkedIn,
-      registrationDate:
-        participantWithUni.registrationDate?.toISOString() ||
-        new Date().toISOString(),
+      id: updatedParticipant.id,
+      f_name: updatedParticipant.firstName,
+      l_name: updatedParticipant.lastName,
+      email: updatedParticipant.email,
+      status: updatedParticipant.status,
+      checked_in: updatedParticipant.checkedIn,
+      timestamp:
+        updatedParticipant.timestamp?.toISOString() || new Date().toISOString(),
     };
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Error updating participant:", error);
-
-    // More detailed error logging
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
-
+    console.error("Error updating participant:", error); // Keep minimal error logging
     return NextResponse.json(
       { error: "Failed to update participant" },
       { status: 500 },
@@ -112,21 +81,21 @@ export async function PATCH(
 // GET - Get single participant
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     const [participant] = await db
       .select({
         id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        f_name: users.firstName,
+        l_name: users.lastName,
         email: users.email,
         university: universities.university,
         status: users.status,
-        checkedIn: users.checkedIn,
-        registrationDate: users.timestamp,
+        checked_in: users.checkedIn,
+        timestamp: users.timestamp,
       })
       .from(users)
       .leftJoin(universities, eq(users.university, universities.id))
@@ -142,19 +111,19 @@ export async function GET(
 
     const response = {
       id: participant.id,
-      firstName: participant.firstName,
-      lastName: participant.lastName,
+      f_name: participant.f_name,
+      l_name: participant.l_name,
       email: participant.email,
       university: participant.university,
       status: participant.status,
-      checkedIn: participant.checkedIn,
-      registrationDate:
-        participant.registrationDate?.toISOString() || new Date().toISOString(),
+      checked_in: participant.checked_in,
+      timestamp:
+        participant.timestamp?.toISOString() || new Date().toISOString(),
     };
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Error fetching participant:", error);
+    console.error("❌ Error fetching participant:", error);
     return NextResponse.json(
       { error: "Failed to fetch participant" },
       { status: 500 },
