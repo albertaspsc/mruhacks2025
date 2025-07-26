@@ -1,8 +1,14 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "../utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  // return await updateSession(request);
+  // Allows admin login page to bypass all auth checks
+  if (request.nextUrl.pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
+  // For all other routes, run existing Supabase session logic
+  return await updateSession(request);
 }
 
 export const config = {

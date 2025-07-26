@@ -12,26 +12,42 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ProgressBar from "@/components/Register/ProgressBar";
 import { ExternalLink, FileText, MessageSquare, Trophy } from "lucide-react";
-import { Registration } from "src/db/registration";
+import { Registration } from "@/db/registration";
 
 interface ParticipantDashboardProps {
   user?: Registration;
 }
 
+interface ChecklistState {
+  discordJoined: boolean;
+  devpostSignup: boolean;
+}
+
+interface ChecklistItem {
+  id: keyof ChecklistState;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  link: string;
+  linkText: string;
+  required: boolean;
+  note: string | null;
+}
+
 const Checklist = ({ user }: { user?: Registration }) => {
-  const [checklist, setChecklist] = useState({
+  const [checklist, setChecklist] = useState<ChecklistState>({
     discordJoined: false,
     devpostSignup: false,
   });
 
-  const handleChecklistChange = (item: string) => {
+  const handleChecklistChange = (item: keyof ChecklistState) => {
     setChecklist((prev) => ({
       ...prev,
       [item]: !prev[item],
     }));
   };
 
-  const checklistItems = [
+  const checklistItems: ChecklistItem[] = [
     {
       id: "discordJoined",
       title: "Join our Discord server",
@@ -47,7 +63,7 @@ const Checklist = ({ user }: { user?: Registration }) => {
       title: "Sign up through DevPost",
       description: "Required for project submission and judging",
       icon: <Trophy className="w-5 h-5" />,
-      link: "https://devpost.com/mruhacks", // Replace with DevPost link
+      link: "https://devpost.com/mruhacks", // Replace with actual DevPost link
       linkText: "Go to DevPost",
       required: false,
       note:
@@ -143,8 +159,6 @@ const Checklist = ({ user }: { user?: Registration }) => {
 
                     {/* Action Button */}
                     <Button
-                      variant={checklist[item.id] ? "secondary" : "primary"}
-                      size="sm"
                       asChild
                       className={`h-8 flex items-center justify-center ${checklist[item.id] ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}`}
                     >

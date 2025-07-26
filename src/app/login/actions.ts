@@ -19,7 +19,8 @@ export async function loginWithGoogle() {
   });
 
   if (error) {
-    redirect("/error");
+    console.error("Google OAuth error:", error);
+    redirect("/login?error=oauth_failed");
   }
 
   redirect(data.url);

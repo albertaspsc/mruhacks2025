@@ -9,9 +9,9 @@ import {
   HelpCircle,
   LogOut,
   MessageSquare,
-  Home,
+  LayoutDashboard,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Popover,
   PopoverContent,
@@ -24,8 +24,8 @@ type DashboardView = "dashboard" | "settings" | "profile";
 // Interface for navigation items
 interface NavItem {
   title: string;
-  view?: DashboardView;
-  href?: string;
+  view?: DashboardView; // For internal navigation
+  href?: string; // For external links
   icon: React.ReactNode;
   external?: boolean;
   onClick?: () => void;
@@ -36,32 +36,25 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   user?: Registration;
   onLogout?: () => void;
-  currentView?: DashboardView;
-  onNavigate?: (view: DashboardView) => void;
+  onNavigate?: (view: DashboardView) => void; // Navigation handler
+  currentView?: DashboardView; // Current active view
 }
 
 export function Sidebar({
   className,
   user,
   onLogout,
-  currentView = "dashboard",
   onNavigate,
+  currentView = "dashboard",
   ...props
 }: SidebarProps) {
-  const pathname = usePathname();
   const userName = user?.firstName || "Hacker";
-
-  const handleViewNavigation = (view: DashboardView) => {
-    if (onNavigate) {
-      onNavigate(view);
-    }
-  };
 
   const topNavItems: NavItem[] = [
     {
       title: "Dashboard",
       view: "dashboard",
-      icon: <Home className="h-5 w-5" />,
+      icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
       title: "Profile",
@@ -76,7 +69,6 @@ export function Sidebar({
     },
     {
       title: "Support",
-      href: "#",
       icon: <HelpCircle className="h-5 w-5" />,
       isPopover: true,
     },
@@ -90,101 +82,21 @@ export function Sidebar({
     },
     {
       title: "Logout",
-      href: "/",
       icon: <LogOut className="h-5 w-5" />,
       onClick: onLogout,
     },
   ];
 
-  const renderNavItem = (item: NavItem, isActive: boolean = false) => {
-    if (item.isPopover) {
-      return (
-        <Popover key={item.title}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full flex items-center justify-start h-10"
-            >
-              <div className="flex items-center">
-                {item.icon}
-                <span className="ml-2">{item.title}</span>
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-4">
-              <h4 className="font-medium text-lg">Need Help?</h4>
-              <p className="text-sm text-gray-500">
-                Have a question that isn&apos;t included in the FAQ? Send us
-                your question in the Discord server or email us at:
-              </p>
-              <p className="text-sm font-medium text-purple-600">
-                hello@mruhacks.ca
-              </p>
-            </div>
-          </PopoverContent>
-        </Popover>
-      );
-    }
-
-    if (item.view) {
-      // Internal navigation using onNavigate
-      return (
-        <Button
-          key={item.title}
-          variant={isActive ? "secondary" : "ghost"}
-          className="w-full flex items-center justify-start h-10"
-          onClick={() => handleViewNavigation(item.view!)}
-        >
-          <div className="flex items-center">
-            {item.icon}
-            <span className="ml-2">{item.title}</span>
-          </div>
-        </Button>
-      );
-    }
-
+  const handleNavClick = (item: NavItem) => {
     if (item.onClick) {
-      // Custom onClick handler (like logout)
-      return (
-        <Button
-          key={item.title}
-          variant={pathname === item.href ? "secondary" : "ghost"}
-          className="w-full flex items-center justify-start h-10"
-          onClick={item.onClick}
-        >
-          <div className="flex items-center">
-            {item.icon}
-            <span className="ml-2">{item.title}</span>
-          </div>
-        </Button>
-      );
+      item.onClick();
+    } else if (item.view && onNavigate) {
+      onNavigate(item.view);
     }
+  };
 
-    if (item.href) {
-      // External links
-      return (
-        <a
-          key={item.title}
-          href={item.href}
-          target={item.external ? "_blank" : undefined}
-          rel={item.external ? "noopener noreferrer" : undefined}
-          className="block"
-        >
-          <Button
-            variant={pathname === item.href ? "secondary" : "ghost"}
-            className="w-full flex items-center justify-start h-10"
-          >
-            <div className="flex items-center">
-              {item.icon}
-              <span className="ml-2">{item.title}</span>
-            </div>
-          </Button>
-        </a>
-      );
-    }
-
-    return null;
+  const isActive = (item: NavItem) => {
+    return item.view === currentView;
   };
 
   return (
@@ -198,20 +110,90 @@ export function Sidebar({
             Hello, {userName}!
           </h2>
           <div className="space-y-1">
-            {topNavItems.map((item) => {
-              const isActive = item.view === currentView;
-              return renderNavItem(item, isActive);
-            })}
+            {topNavItems.map((item) =>
+              item.isPopover ? (
+                <Popover key={item.title}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full flex items-center justify-start h-10"
+                    >
+                      <div className="flex items-center">
+                        {item.icon}
+                        <span className="ml-2">{item.title}</span>
+                      </div>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-lg">Need Help?</h4>
+                      <p className="text-sm text-gray-500">
+                        Have a question that isn&apos;t included in the FAQ?
+                        Send us your question in the Discord server or email us
+                        at:
+                      </p>
+                      <p className="text-sm font-medium text-purple-600">
+                        hello@mruhacks.ca
+                      </p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : item.href && item.external ? (
+                // External links
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="ghost"
+                    className="w-full flex items-center justify-start h-10"
+                  >
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2">{item.title}</span>
+                    </div>
+                  </Button>
+                </Link>
+              ) : (
+                // Internal navigation
+                <Button
+                  key={item.title}
+                  variant={isActive(item) ? "secondary" : "ghost"}
+                  className="w-full flex items-center justify-start h-10"
+                  onClick={() => handleNavClick(item)}
+                >
+                  <div className="flex items-center">
+                    {item.icon}
+                    <span className="ml-2">{item.title}</span>
+                  </div>
+                </Button>
+              ),
+            )}
           </div>
         </div>
       </div>
 
       <div className="px-3 py-2">
         <div className="space-y-1">
-          {bottomNavItems.map((item) => {
-            const isActive = item.view === currentView;
-            return renderNavItem(item, isActive);
-          })}
+          {bottomNavItems.map((item) => (
+            <Button
+              key={item.title}
+              variant={isActive(item) ? "secondary" : "ghost"}
+              className={cn(
+                "w-full flex items-center justify-start h-10",
+                item.title === "Logout" &&
+                  "text-red-600 hover:text-red-700 hover:bg-red-50",
+              )}
+              onClick={() => handleNavClick(item)}
+            >
+              <div className="flex items-center">
+                {item.icon}
+                <span className="ml-2">{item.title}</span>
+              </div>
+            </Button>
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,3 @@
-// src/context/RegisterFormContext.tsx
 "use client";
 import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";

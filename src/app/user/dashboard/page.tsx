@@ -5,9 +5,7 @@ import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
 import SettingsPage from "../settings/page";
 import ProfilePage from "../profile/page";
 import { Sidebar } from "@/components/ui/sidebar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Menu, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RegistrationInput } from "@/context/RegisterFormContext";
 import { Registration, getRegistration } from "@/db/registration";
@@ -110,7 +108,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Get the title for the mobile header
+  // Get the title for the current view
   const getViewTitle = () => {
     switch (currentView) {
       case "settings":
@@ -128,55 +126,35 @@ export default function DashboardPage() {
     return <LoadingSpinner />;
   }
 
-  // Render dashboard with sidebar
+  // Render dashboard with persistent sidebar
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block w-64 bg-white border-r">
+      {/* Persistent Sidebar - Always visible on all screen sizes */}
+      <div className="w-64 sm:w-72 lg:w-80 bg-white border-r shadow-sm flex-shrink-0">
         <Sidebar
-          user={user || undefined}
+          user={user}
           onLogout={handleLogout}
-          currentView={currentView}
           onNavigate={handleNavigation}
+          currentView={currentView}
         />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {/* Mobile Navbar */}
-        <div className="md:hidden flex items-center p-4 border-b">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" className="mr-2">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="p-0 w-64 bg-white !backdrop-blur-none"
-              style={{ backgroundColor: "white" }}
-            >
-              <Sidebar
-                user={user || undefined}
-                onLogout={handleLogout}
-                currentView={currentView}
-                onNavigate={handleNavigation}
-              />
-            </SheetContent>
-          </Sheet>
-
-          <h1 className="text-xl font-bold">{getViewTitle()}</h1>
+      <div className="flex-1 overflow-auto min-w-0">
+        {/* Header with current view title */}
+        <div className="bg-white border-b px-6 py-4 shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-900">{getViewTitle()}</h1>
         </div>
 
         {/* Dashboard Content */}
-        <div className="p-4">
+        <div className="p-6">
           {/* Status Banner - only show on main dashboard */}
           {user && currentView === "dashboard" && (
             <StatusBanner status={user.status} />
           )}
 
           {/* Render Current View */}
-          {renderCurrentView()}
+          <div className="max-w-full">{renderCurrentView()}</div>
         </div>
       </div>
     </div>

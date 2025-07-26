@@ -1,4 +1,5 @@
 "use server";
+
 import {
   experienceTypes,
   gender,
@@ -41,6 +42,7 @@ const LocalRegistrationSchema = z.object({
   interests: z.array(z.string()).min(1, "At least one interest is required"),
   marketing: z.string().min(1, "Please tell us how you heard about us"),
   resume: z.instanceof(File).optional(),
+  checkedIn: z.boolean().optional(),
 });
 
 export type Registration = NonNullable<
@@ -124,7 +126,7 @@ export async function register(
     return { error: authError };
   }
 
-  // CHECK IF USER ALREADY EXISTS
+  // Check if user is already registered
   const existingUser = await db
     .select()
     .from(users)
@@ -178,6 +180,7 @@ export async function register(
       lastName: user.lastName,
       timestamp: new Date(),
       marketing: otherIds[0].marketing,
+      checkedIn: false, // Default value => not checked in
     });
 
     console.log("User created successfully");

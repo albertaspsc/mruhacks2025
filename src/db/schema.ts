@@ -22,6 +22,7 @@ export const dietaryRestrictions = pgTable("dietary_restrictions", {
 export const userRestrictions = pgTable("user_diet_restrictions", {
   user: uuid("id")
     .references(() => users.id)
+    .references(() => users.id)
     .notNull(),
   restriction: integer()
     .references(() => dietaryRestrictions.id)
@@ -35,6 +36,7 @@ export const interests = pgTable("interests", {
 
 export const userInterests = pgTable("user_interests", {
   user: uuid("id")
+    .references(() => users.id)
     .references(() => users.id)
     .notNull(),
   interest: integer()
@@ -105,6 +107,7 @@ export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
     .references(() => authUsers.id)
+    .references(() => authUsers.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }).notNull(),
@@ -130,6 +133,7 @@ export const users = pgTable("users", {
     .notNull(),
   timestamp: timestamp().defaultNow().notNull(),
   status: status().default("pending").notNull(),
+  checkedIn: boolean("checked_in").default(false).notNull(),
 });
 
 export const resumes = pgTable("resumes", {
