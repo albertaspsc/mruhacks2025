@@ -27,12 +27,7 @@ const RegisterSection = () => {
         </div>
 
         <div className={styles.buttonContainer}>
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSehivEoIQAcrrFkfs0sM6_hHIN1kW1oXcAoTtbwG3kw_7JCng/viewform?usp=header"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.registerButton}
-          >
+          <a href="/register" className={styles.registerButton}>
             Register Now
           </a>
         </div>
