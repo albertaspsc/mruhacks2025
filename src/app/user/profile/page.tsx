@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -20,23 +21,39 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  CheckCircle,
+  XCircle,
+  Mail,
+  AlertTriangle,
+} from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { getRegistration, Registration } from "@/db/registration";
 import { createClient } from "@/utils/supabase/client";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateUserNameAndEmail } from "@/db/settings";
 
+// Validation schema
+const profileSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be less than 50 characters"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+});
+
 // Types
 type User = Pick<Registration, "firstName" | "lastName" | "email">;
-type ProfileValues = {
-  firstName: string;
-  lastName: string;
-  email: string;
-};
-type ToastType = "success" | "error";
+type ProfileValues = z.infer<typeof profileSchema>;
+type ToastType = "success" | "error" | "warning" | "info";
+
 interface ToastState {
   type: ToastType;
   title: string;
@@ -46,7 +63,7 @@ interface ToastState {
 const ToastBanner = ({
   toast,
   onClose,
-  duration = 3000,
+  duration = 5000,
 }: {
   toast: ToastState | null;
   onClose: () => void;
@@ -64,33 +81,60 @@ const ToastBanner = ({
 
   if (!toast) return null;
 
-  const baseStyle =
-    "fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md shadow-md z-50 text-sm transition-all duration-300";
-  const variantStyle =
-    toast.type === "success"
-      ? "bg-green-100 text-green-800 border border-green-300"
-      : "bg-red-100 text-red-800 border border-red-300";
+  const getIcon = () => {
+    switch (toast.type) {
+      case "success":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "error":
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case "warning":
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      default:
+        return <Mail className="h-4 w-4 text-blue-600" />;
+    }
+  };
+
+  const getStyles = () => {
+    switch (toast.type) {
+      case "success":
+        return "bg-green-50 border-green-200 text-green-800";
+      case "error":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      default:
+        return "bg-blue-50 border-blue-200 text-blue-800";
+    }
+  };
 
   return (
-    <div className={`${baseStyle} ${variantStyle}`}>
-      <strong className="block">{toast.title}</strong>
-      {toast.description && <div>{toast.description}</div>}
-      <button
-        onClick={onClose}
-        className="absolute top-1 right-2 text-xs underline"
-      >
-        Close
-      </button>
+    <div
+      className={`fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md shadow-lg z-50 text-sm transition-all duration-300 ${getStyles()} min-w-80 max-w-md`}
+    >
+      <div className="flex items-start gap-3">
+        {getIcon()}
+        <div className="flex-1">
+          <strong className="block">{toast.title}</strong>
+          {toast.description && <div className="mt-1">{toast.description}</div>}
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 ml-2"
+        >
+          <XCircle className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const supabase = createClient();
 
   const profileForm = useForm<ProfileValues>({
@@ -99,57 +143,164 @@ export default function ProfilePage() {
       lastName: "",
       email: "",
     },
+    mode: "onChange",
   });
 
+  const showToast = (type: ToastType, title: string, description?: string) => {
+    setToast({ type, title, description });
+  };
+
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadUserData = async () => {
+      setIsLoading(true);
       try {
-        const { data: registration } = await getRegistration();
-        if (registration) {
-          setUser(registration ?? null);
-          profileForm.setValue("firstName", registration.firstName);
-          profileForm.setValue("lastName", registration.lastName);
-          profileForm.setValue("email", registration.email || "");
+        const { data: registration, error } = await getRegistration();
+
+        if (error) {
+          showToast(
+            "error",
+            "Failed to load profile",
+            "Please refresh the page and try again.",
+          );
+          return;
         }
+
+        if (registration) {
+          setUser(registration);
+          profileForm.reset({
+            firstName: registration.firstName || "",
+            lastName: registration.lastName || "",
+            email: registration.email || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        showToast(
+          "error",
+          "Unexpected error",
+          "Failed to load your profile data.",
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    loadUserData();
   }, []);
 
   async function onProfileSubmit(data: ProfileValues) {
+    // Validate form data
+    const validation = profileSchema.safeParse(data);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      showToast("error", "Validation Error", firstError.message);
+      return;
+    }
+
     setIsSaving(true);
-    setSaveSuccess(false);
+    setEmailVerificationSent(false);
 
     try {
-      const isValidEmail = z.string().email().safeParse(data.email).success;
-      if (data.email !== user?.email && isValidEmail) {
+      const emailChanged = data.email !== user?.email;
+
+      // If email changed, update it through Supabase Auth (will send verification email)
+      if (emailChanged) {
         const { error: emailUpdateError } = await supabase.auth.updateUser({
           email: data.email,
         });
-        if (emailUpdateError) throw new Error("Email update failed.");
+
+        if (emailUpdateError) {
+          if (emailUpdateError.message.includes("rate limit")) {
+            showToast(
+              "error",
+              "Too many requests",
+              "Please wait a moment before trying again.",
+            );
+            return;
+          }
+
+          if (emailUpdateError.message.includes("already registered")) {
+            showToast(
+              "error",
+              "Email already in use",
+              "This email is already associated with another account.",
+            );
+            return;
+          }
+
+          throw new Error(emailUpdateError.message || "Failed to update email");
+        }
+
+        setEmailVerificationSent(true);
       }
 
-      const { error } = await updateUserNameAndEmail(data);
-      if (error) throw new Error("Failed to update name or email.");
+      // Update name and email in database
+      const { error: dbUpdateError } = await updateUserNameAndEmail(data);
 
-      setSaveSuccess(true);
-    } catch (err: any) {
-      setToast({
-        type: "error",
-        title: "Update failed",
-        description: err?.message || "Something went wrong.",
-      });
+      if (dbUpdateError) {
+        throw new Error("Failed to update profile information in database");
+      }
+
+      // Update local user state
+      setUser((prev) => (prev ? { ...prev, ...data } : null));
+
+      if (emailChanged) {
+        showToast(
+          "info",
+          "Verification email sent",
+          `Please check ${data.email} and click the verification link to confirm your new email address.`,
+        );
+      } else {
+        showToast(
+          "success",
+          "Profile updated",
+          "Your profile information has been saved successfully.",
+        );
+      }
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+
+      // Handle specific error cases
+      if (error.message?.includes("session")) {
+        showToast(
+          "error",
+          "Session expired",
+          "Please log in again to continue.",
+        );
+        setTimeout(() => router.push("/login"), 2000);
+        return;
+      }
+
+      showToast(
+        "error",
+        "Update failed",
+        error.message || "Failed to update your profile. Please try again.",
+      );
     } finally {
       setIsSaving(false);
-      setTimeout(() => setSaveSuccess(false), 3000);
     }
   }
 
+  const handleGoBack = () => {
+    router.push("/user/dashboard");
+  };
+
   if (isLoading && !user) {
     return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return (
+      <div className="container max-w-2xl py-10">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Unable to load your profile. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
@@ -159,12 +310,16 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
       <p className="text-gray-500 mb-6">Manage your personal information</p>
 
-      {saveSuccess && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <Save className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Changes saved</AlertTitle>
-          <AlertDescription className="text-green-700">
-            Your profile has been updated successfully.
+      {emailVerificationSent && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Mail className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800">
+            Email verification sent
+          </AlertTitle>
+          <AlertDescription className="text-blue-700">
+            We&apos;ve sent a verification email to your new address. Please
+            check your inbox and click the verification link to confirm the
+            change.
           </AlertDescription>
         </Alert>
       )}
@@ -172,7 +327,10 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Update your name and email address.</CardDescription>
+          <CardDescription>
+            Update your name and email address. Email changes require
+            verification.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...profileForm}>
@@ -186,22 +344,31 @@ export default function ProfilePage() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>First Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="First Name" {...field} />
+                        <Input
+                          placeholder="Enter your first name"
+                          {...field}
+                          disabled={isSaving}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={profileForm.control}
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel>Last Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Last Name" {...field} />
+                        <Input
+                          placeholder="Enter your last name"
+                          {...field}
+                          disabled={isSaving}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -214,36 +381,51 @@ export default function ProfilePage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email Address *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Email" type="email" {...field} />
+                      <Input
+                        placeholder="Enter your email address"
+                        type="email"
+                        {...field}
+                        disabled={isSaving}
+                      />
                     </FormControl>
                     <FormDescription>
-                      This is the email used for communication and login.
+                      This email is used for login and all communications.
+                      Changing it will require email verification.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" disabled={isSaving}>
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
-              </Button>
-
-              <Button
-                type="button"
-                className="ml-4"
-                disabled={isSaving}
-                onClick={() => redirect("/user/dashboard")}
-              >
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Back
-              </Button>
+              <div className="flex gap-4 pt-4">
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>Save Changes</>
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
       </Card>
+
+      {/* Additional Info Alert */}
+      <Alert className="mt-6">
+        <Mail className="h-4 w-4" />
+        <AlertTitle>Email Change Security</AlertTitle>
+        <AlertDescription>
+          For security reasons, email changes require verification. You&apos;ll
+          receive an email at your new address with a verification link. Your
+          login email won&apos;t change until you verify the new address.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
