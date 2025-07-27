@@ -100,7 +100,7 @@ export default function LoginPage() {
         <button
           type="button"
           className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 block"
-          onClick={() => router.push("/login/forgot-password")}
+          onClick={() => router.push("/auth/forgot-password")}
         >
           Forgot password?
         </button>

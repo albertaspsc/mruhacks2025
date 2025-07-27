@@ -16,8 +16,26 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type");
   const access_token = searchParams.get("access_token");
   const refresh_token = searchParams.get("refresh_token");
-  const next = searchParams.get("next") ?? "/register/step-1";
   const error = searchParams.get("error");
+
+  // Handle 'next' parameter with different defaults based on type
+  let next = searchParams.get("next");
+  if (!next) {
+    // Set default redirect based on auth type
+    switch (type) {
+      case "recovery":
+        next = "/auth/reset-password"; // Back to auth folder
+        break;
+      case "signup":
+        next = "/register/step-1";
+        break;
+      case "email_change":
+        next = "/user/dashboard";
+        break;
+      default:
+        next = "/register/step-1";
+    }
+  }
 
   console.log("Extracted params:", {
     code: code ? "present" : "missing",
@@ -32,6 +50,12 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("Auth error received:", error);
+    // Different error redirects based on type
+    if (type === "recovery") {
+      return NextResponse.redirect(
+        `${origin}/auth/forgot-password?error=verification_failed`,
+      );
+    }
     return NextResponse.redirect(
       `${origin}/register?error=verification_failed`,
     );
@@ -47,6 +71,11 @@ export async function GET(request: NextRequest) {
 
     if (codeError) {
       console.error("Code exchange failed:", codeError);
+      if (type === "recovery") {
+        return NextResponse.redirect(
+          `${origin}/auth/forgot-password?error=code_exchange_failed`,
+        );
+      }
       return NextResponse.redirect(
         `${origin}/register?error=code_exchange_failed`,
       );
@@ -68,6 +97,11 @@ export async function GET(request: NextRequest) {
 
     if (sessionError) {
       console.error("Session setting failed:", sessionError);
+      if (type === "recovery") {
+        return NextResponse.redirect(
+          `${origin}/auth/forgot-password?error=session_failed`,
+        );
+      }
       return NextResponse.redirect(`${origin}/register?error=session_failed`);
     }
 
@@ -77,22 +111,95 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Method 3: Handle token hash verification
+  // Method 3: Handle token hash verification (MOST IMPORTANT FOR PASSWORD RESET)
   if (token_hash && type) {
-    console.log("Attempting OTP verification...");
-    const { data, error: otpError } = await supabase.auth.verifyOtp({
-      type: type as any,
-      token_hash,
-    });
+    console.log(`Attempting OTP verification for type: ${type}...`);
 
-    if (otpError) {
-      console.error("OTP verification failed:", otpError);
-      return NextResponse.redirect(`${origin}/register?error=otp_failed`);
-    }
+    try {
+      const { data, error: otpError } = await supabase.auth.verifyOtp({
+        type: type as any,
+        token_hash,
+      });
 
-    if (data.user) {
-      console.log("OTP verification successful for:", data.user.email);
-      return NextResponse.redirect(`${origin}${next}`);
+      if (otpError) {
+        console.error("OTP verification failed:", otpError);
+
+        // Handle different types of OTP verification failures
+        if (type === "recovery") {
+          return NextResponse.redirect(
+            `${origin}/login/forgot-password?error=invalid_or_expired_token`,
+          );
+        } else if (type === "signup") {
+          return NextResponse.redirect(
+            `${origin}/register?error=invalid_verification_link`,
+          );
+        } else if (type === "email_change") {
+          return NextResponse.redirect(
+            `${origin}/user/dashboard?error=email_change_failed`,
+          );
+        }
+
+        return NextResponse.redirect(`${origin}/register?error=otp_failed`);
+      }
+
+      if (data.user && data.session) {
+        console.log(`${type} verification successful for:`, data.user.email);
+
+        // For password recovery, set the session in cookies
+        if (type === "recovery") {
+          console.log("Password recovery session established");
+
+          // Create a response that will redirect
+          const response = NextResponse.redirect(`${origin}${next}`);
+
+          // Set session cookies manually to ensure they persist
+          response.cookies.set(
+            "supabase-auth-token",
+            data.session.access_token,
+            {
+              httpOnly: false,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24, // 24 hours
+            },
+          );
+
+          response.cookies.set(
+            "supabase-refresh-token",
+            data.session.refresh_token,
+            {
+              httpOnly: false,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+            },
+          );
+
+          return response;
+        }
+
+        return NextResponse.redirect(`${origin}${next}`);
+      } else {
+        console.error("OTP verification returned no user/session");
+        if (type === "recovery") {
+          return NextResponse.redirect(
+            `${origin}/login/forgot-password?error=verification_incomplete`,
+          );
+        }
+        return NextResponse.redirect(
+          `${origin}/register?error=verification_incomplete`,
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error during OTP verification:", error);
+      if (type === "recovery") {
+        return NextResponse.redirect(
+          `${origin}/login/forgot-password?error=verification_error`,
+        );
+      }
+      return NextResponse.redirect(
+        `${origin}/register?error=verification_error`,
+      );
     }
   }
 
@@ -105,9 +212,28 @@ export async function GET(request: NextRequest) {
 
   if (user && !userError) {
     console.log("User already authenticated:", user.email);
+
+    // If user is already authenticated but this was a recovery type,
+    // they might be trying to reset password while logged in
+    if (type === "recovery") {
+      return NextResponse.redirect(`${origin}/auth/reset-password`);
+    }
+
     return NextResponse.redirect(`${origin}${next}`);
   }
 
   console.log("No valid authentication method found");
+
+  // Different fallback redirects based on type
+  if (type === "recovery") {
+    return NextResponse.redirect(
+      `${origin}/auth/forgot-password?error=no_valid_recovery_session`,
+    );
+  } else if (type === "email_change") {
+    return NextResponse.redirect(
+      `${origin}/user/dashboard?error=email_change_invalid`,
+    );
+  }
+
   return NextResponse.redirect(`${origin}/register?error=no_valid_auth`);
 }
