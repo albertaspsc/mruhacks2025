@@ -141,19 +141,7 @@ const Navbar = () => {
                 setIsOpen(false);
                 router.push("/landing");
               }}
-              style={{
-                marginLeft: "20px",
-                padding: "8px 16px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-              }}
-              onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
-              onMouseOut={(e) => (e.target.style.backgroundColor = "#007bff")}
+              className={`${styles.loginButton} ${styles.loginButton}`}
             >
               Login
             </button>
