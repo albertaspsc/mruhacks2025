@@ -27,7 +27,7 @@ const RegisterSection = () => {
         </div>
 
         <div className={styles.buttonContainer}>
-          <a href="/register" className={styles.registerButton}>
+          <a href="/landing" className={styles.registerButton}>
             Register Now
           </a>
         </div>

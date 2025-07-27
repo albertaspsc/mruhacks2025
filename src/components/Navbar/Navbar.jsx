@@ -135,11 +135,10 @@ const Navbar = () => {
               Sponsors
             </a>
 
-            {/* Temporary login button for testing */}
             <button
               onClick={() => {
                 setIsOpen(false);
-                router.push("/landing");
+                router.push("/login");
               }}
               className={`${styles.loginButton} ${styles.loginButton}`}
             >
