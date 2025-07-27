@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Home, RefreshCw, ArrowLeft } from "lucide-react";
 
-export default function ErrorPage() {
+function ErrorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [errorMessage, setErrorMessage] = useState("");
@@ -190,5 +190,32 @@ export default function ErrorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for suspense fallback
+function ErrorPageLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div className="mb-6">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+            <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-3">Loading...</h1>
+        <p className="text-gray-600 mb-6 leading-relaxed">
+          Please wait while we load the error details.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={<ErrorPageLoading />}>
+      <ErrorPageContent />
+    </Suspense>
   );
 }
