@@ -35,7 +35,7 @@ export async function grantAdmin(email: string) {
       .select({
         id: profilesTable.id,
         email: profilesTable.email,
-        status: sql<string>`waitlisted`.as("status"),
+        status: sql<string>`pending`.as("status"),
       })
       .from(profilesTable)
       .where(eq(profilesTable.email, email)),

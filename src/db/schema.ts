@@ -154,7 +154,7 @@ export const admins = pgTable("admins", {
     .references(() => users.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
-  status: status().default("waitlisted").notNull(),
+  status: status().default("pending").notNull(),
 });
 
 export const marketingPreferences = pgTable("mktg_preferences", {
