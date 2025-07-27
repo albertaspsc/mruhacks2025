@@ -19,7 +19,7 @@ interface Participant {
   status?: "confirmed" | "pending" | "waitlisted";
   checked_in?: boolean;
   university?: string;
-  gender?: string; // Added gender field
+  gender?: string;
   timestamp?: string;
 }
 
@@ -39,7 +39,7 @@ export function ParticipantManagement({
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all"); // Added gender filter
+  const [genderFilter, setGenderFilter] = useState("all");
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     [],
   );
@@ -70,9 +70,6 @@ export function ParticipantManagement({
       }
 
       const data = await response.json();
-
-      // Debug: Log the response to see what we're getting
-      console.log("API Response:", data);
 
       // Ensure data is an array
       if (Array.isArray(data)) {
@@ -253,7 +250,6 @@ export function ParticipantManagement({
 
   // Filter participants - ensure participants is always an array
   const filteredParticipants = useMemo(() => {
-    // Safety check: ensure participants is an array
     if (!Array.isArray(participants)) {
       console.warn("participants is not an array:", participants);
       return [];
@@ -461,7 +457,7 @@ export function ParticipantManagement({
         </div>
       </div>
 
-      {/* Gender Statistics - Additional row for gender breakdown */}
+      {/* Gender Statistics */}
       {Object.keys(stats.genderStats).length > 0 && (
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-lg font-medium text-gray-900 mb-3">
@@ -638,10 +634,10 @@ export function ParticipantManagement({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        participant.status,
+                        participant.status || "pending",
                       )}`}
                     >
-                      {participant.status}
+                      {participant.status || "pending"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -662,7 +658,7 @@ export function ParticipantManagement({
                   {permissions.canChangeStatus && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <select
-                        value={participant.status}
+                        value={participant.status || "pending"}
                         onChange={(e) =>
                           updateStatus(participant.id, e.target.value)
                         }
@@ -695,6 +691,12 @@ export function ParticipantManagement({
             <span className="text-sm font-medium text-gray-700">
               {selectedParticipants.length} selected
             </span>
+            <button
+              onClick={() => bulkUpdateStatus("pending")}
+              className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition-colors"
+            >
+              Make Pending
+            </button>
             <button
               onClick={() => bulkUpdateStatus("confirmed")}
               className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"

@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
         {status === "success" && (
           <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3">
             <p className="text-green-800 text-sm text-center">
-              ✅ Password reset link sent! Check your email and follow the
+              Password reset link sent! Check your email and follow the
               instructions to reset your password.
             </p>
           </div>

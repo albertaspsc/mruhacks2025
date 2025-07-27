@@ -15,6 +15,10 @@ export async function loginWithGoogle() {
     provider: "google",
     options: {
       redirectTo: `${origin}/auth/callback`,
+      queryParams: {
+        prompt: "select_account", // Forces account selection for security
+      },
+      scopes: "email profile",
     },
   });
 
