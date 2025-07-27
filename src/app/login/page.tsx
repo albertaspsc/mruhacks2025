@@ -8,10 +8,8 @@ import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { login, loginWithGoogle } from "./actions";
 import { FcGoogle } from "react-icons/fc";
-import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
