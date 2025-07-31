@@ -133,19 +133,9 @@ export const users = pgTable("users", {
     .notNull(),
   timestamp: timestamp().defaultNow().notNull(),
   status: status().default("pending").notNull(),
+  resumeUrl: varchar("resume_url", { length: 500 }),
+  resumeFilename: varchar("resume_filename", { length: 255 }),
   checkedIn: boolean("checked_in").default(false).notNull(),
-});
-
-export const resumes = pgTable("resumes", {
-  id: uuid("id")
-    .primaryKey()
-    .references(() => users.id)
-    .notNull(),
-  fileName: varchar("file_name", { length: 255 }).notNull(),
-  filePath: varchar("file_path", { length: 500 }).notNull(),
-  fileSize: integer("file_size").notNull(),
-  mimeType: varchar("mime_type", { length: 100 }).notNull(),
-  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
 export const admins = pgTable("admins", {

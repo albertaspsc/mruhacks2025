@@ -109,7 +109,7 @@ export default function CompletePage() {
         <p className="text-center text-gray-700 z-10">
           Thanks{" "}
           <span className="font-medium text-indigo-600">{data.firstName}</span>!
-          We’ve got your details and can’t wait to see you at MRUHacks.
+          We&apos;ve got your details and can’t wait to see you at MRUHacks.
         </p>
 
         {/* Dashboard button */}

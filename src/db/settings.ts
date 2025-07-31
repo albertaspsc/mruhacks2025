@@ -10,7 +10,6 @@ import {
   userInterests,
   userRestrictions,
   admins,
-  resumes,
   profiles,
 } from "./schema";
 import { Registration } from "./registration";
@@ -216,7 +215,6 @@ export async function deleteUserProfile(supabase?: SupabaseClient) {
       db.delete(userInterests).where(eq(userInterests.user, userId)),
       db.delete(userRestrictions).where(eq(userRestrictions.user, userId)),
       db.delete(admins).where(eq(admins.id, userId)),
-      db.delete(resumes).where(eq(resumes.id, userId)),
       db.delete(profiles).where(eq(profiles.id, userId)),
     ]);
 

@@ -11,7 +11,6 @@ import {
   interests as interestsTable,
   userRestrictions,
   userInterests,
-  resumes,
   yearOfStudy,
   parkingSituation,
 } from "./schema";
@@ -41,7 +40,7 @@ const LocalRegistrationSchema = z.object({
   dietaryRestrictions: z.array(z.string()),
   interests: z.array(z.string()).min(1, "At least one interest is required"),
   marketing: z.string().min(1, "Please tell us how you heard about us"),
-  resume: z.instanceof(File).optional(),
+  resume: z.string().optional(), // Changed from File to string (URL)
   checkedIn: z.boolean().optional(),
 });
 
@@ -167,6 +166,17 @@ export async function register(
   }
 
   try {
+    // Extract resume filename from URL if present
+    let resumeFilename: string | undefined;
+    if (user.resume) {
+      try {
+        const url = new URL(user.resume);
+        resumeFilename = url.pathname.split("/").pop() || undefined;
+      } catch (e) {
+        console.warn("Could not extract filename from resume URL");
+      }
+    }
+
     await db.insert(users).values({
       id,
       gender: genderId,
@@ -180,7 +190,10 @@ export async function register(
       lastName: user.lastName,
       timestamp: new Date(),
       marketing: otherIds[0].marketing,
-      checkedIn: false, // Default value => not checked in
+      checkedIn: false,
+      status: "pending",
+      resumeUrl: user.resume, // Save the resume URL
+      resumeFilename, // Save the extracted filename
     });
 
     console.log("User created successfully");
@@ -195,14 +208,6 @@ export async function register(
   );
   if (multiOptionsError) {
     return { error: multiOptionsError };
-  }
-
-  if (user.resume) {
-    const resumeResult = await saveResume(user.resume, user, supabase);
-    if (resumeResult?.error) {
-      console.error("Resume save failed:", resumeResult.error);
-      // Don't fail registration for resume issues
-    }
   }
 
   console.log("Registration completed successfully");
@@ -280,11 +285,12 @@ export async function getStaticOptions() {
   };
 }
 
-async function saveResume(
+// Keep this function for other use cases, but it's no longer used in registration
+export async function uploadResume(
   resume: File,
-  user: RegistrationInput,
+  userId: string,
   supabase?: SupabaseClient,
-) {
+): Promise<{ success?: boolean; resumeUrl?: string; error?: any }> {
   if (!supabase) {
     supabase = await createClient();
   }
@@ -294,46 +300,43 @@ async function saveResume(
     return { error: authError };
   }
 
+  if (!auth.user) {
+    return { error: new Error("User not authenticated") };
+  }
+
   try {
-    // Organize by last name (folder), first name + last name is in filename
-    const cleanLastName = user.lastName.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-    const cleanFirstName = user.firstName
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
-
     const fileExt = resume.name.split(".").pop();
     const timestamp = Date.now();
+    const fileName = `resume_${userId}_${timestamp}.${fileExt}`;
 
-    // Structure: lastName/firstName_lastName_timestamp.ext
-    const fileName = `${cleanLastName}/${cleanFirstName}_${cleanLastName}_${timestamp}.${fileExt}`;
-
-    // Upload file to Supabase Storage
+    // Upload file to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("resumes")
       .upload(fileName, resume, {
         cacheControl: "3600",
-        upsert: false,
+        upsert: true,
       });
 
     if (uploadError) {
-      console.error("Resume upload error:", uploadError);
       return { error: uploadError };
     }
 
-    // Save file metadata to database
-    await db.insert(resumes).values({
-      id: auth.user.id,
-      fileName: resume.name,
-      filePath: uploadData.path,
-      fileSize: resume.size,
-      mimeType: resume.type,
-      uploadedAt: new Date(),
-    });
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("resumes").getPublicUrl(fileName);
 
-    return { success: true, filePath: uploadData.path };
+    if (!publicUrl) {
+      return { error: new Error("Failed to generate public URL") };
+    }
+
+    // Just return the URL - don't save to database here
+    return {
+      success: true,
+      resumeUrl: publicUrl,
+    };
   } catch (error) {
-    console.error("Resume save error:", error);
+    console.error("Resume upload error:", error);
     return { error };
   }
 }

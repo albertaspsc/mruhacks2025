@@ -22,6 +22,7 @@ import {
 import { Upload, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React, { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 type FinalForm = Pick<
   RegistrationInput,
@@ -64,26 +65,32 @@ const MARKETING_OPTIONS = [
 export default function Step2Page() {
   const router = useRouter();
   const { data, setValues } = useRegisterForm();
+  const supabase = createClient();
+
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<FinalForm>({
     defaultValues: { interests: [], dietaryRestrictions: [], marketing: "" },
   });
 
-  // A database call is not always the fastest, thus const defaults
+  // States
   const [dietaryOptions, setDietaryOptions] =
     useState<string[]>(DIETARY_OPTIONS);
   const [interestOptions, setInterestOptions] =
     useState<string[]>(INTEREST_OPTIONS);
   const [marketingOptions, setMarketingOptions] =
     useState<string[]>(MARKETING_OPTIONS);
+  const [resume, setResume] = useState<File>();
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
+    useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>("");
 
   useEffect(() => {
-    // The defaults may not accurately repersent whats actually in the database, hence the database call
     const loadStaticOptions = async () => {
       const { dietaryRestrictions, interests, marketingTypes } =
         await getStaticOptions();
@@ -94,14 +101,7 @@ export default function Step2Page() {
     loadStaticOptions();
   }, []);
 
-  const [resume, setResume] = useState<File>();
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
-    useState<string[]>([]);
-
-  {
-    /* Update form values when selections change */
-  }
+  // Update form values when selections change
   useEffect(() => {
     setValue("interests", selectedInterests);
   }, [selectedInterests, setValue]);
@@ -110,9 +110,53 @@ export default function Step2Page() {
     setValue("dietaryRestrictions", selectedDietaryRestrictions);
   }, [selectedDietaryRestrictions, setValue]);
 
-  useEffect(() => {
-    setValue("resume", resume);
-  }, [resume, setValue]);
+  // Function to upload resume to Supabase Storage
+  const uploadResumeToSupabase = async (file: File): Promise<string | null> => {
+    try {
+      setIsUploading(true);
+      setUploadError("");
+
+      // Check authentication
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) {
+        setUploadError("Authentication required");
+        return null;
+      }
+
+      // Generate filename using original name - prefixed with user ID (required by RLS policy)
+      const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const userPrefixedFilename = `${user.id}_${originalName}`;
+
+      // Upload with user-ID-prefixed filename
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("resumes")
+        .upload(userPrefixedFilename, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        setUploadError(`Upload error: ${uploadError.message}`);
+        return null;
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("resumes").getPublicUrl(userPrefixedFilename);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Resume upload error:", error);
+      setUploadError("Upload failed unexpectedly");
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleInterestChange = (interest: string, checked: boolean) => {
     if (checked) {
@@ -142,27 +186,66 @@ export default function Step2Page() {
     }
   };
 
-  const onSubmit: SubmitHandler<FinalForm> = (partial) => {
-    setValues(partial);
-    // build full payload
-    const full = { ...data, ...partial };
-    // always forward to 2fa with the saved email
-    router.push(`/register/complete`);
+  const onSubmit: SubmitHandler<FinalForm> = async (partial) => {
+    try {
+      setIsUploading(true);
+
+      let resumeUrl: string | undefined;
+
+      // Upload resume if one was selected
+      if (resume) {
+        const uploadResult = await uploadResumeToSupabase(resume);
+        if (!uploadResult) {
+          // Upload failed, don't proceed
+          return;
+        }
+        resumeUrl = uploadResult;
+      }
+
+      // Update the partial data with the resume URL instead of the File object
+      const updatedPartial = {
+        ...partial,
+        resume: resumeUrl,
+      };
+
+      setValues(updatedPartial);
+
+      // Build full payload
+      const full = { ...data, ...updatedPartial };
+
+      // Forward to completion page
+      router.push(`/register/complete`);
+    } catch (error) {
+      console.error("Error during form submission:", error);
+      setUploadError("Failed to process form. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  {
-    /* Validation functions */
-  }
+  // Validation functions
   const onFileValidate = (file: File) => {
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       return "File size must be less than 5MB";
     }
+
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      return "Only PDF, DOC, and DOCX files are allowed";
+    }
+
     return null;
   };
 
   const onFileReject = (file: File, message: string) => {
     console.error(`File rejected: ${file.name} - ${message}`);
+    setUploadError(message);
   };
 
   const [acknowledgments, setAcknowledgments] = useState({
@@ -171,7 +254,6 @@ export default function Step2Page() {
     mediaConsent: false,
   });
 
-  // Acknowledgment validation function
   const allAcknowledgmentsChecked =
     Object.values(acknowledgments).every(Boolean);
 
@@ -325,7 +407,7 @@ export default function Step2Page() {
         )}
       </div>
 
-      {/* Resume */}
+      {/* Resume Upload */}
       <div>
         <div className="space-y-1">
           <Label htmlFor="resume" className="text-sm font-semibold">
@@ -339,9 +421,19 @@ export default function Step2Page() {
             opportunities and internships.
           </p>
         </div>
+
+        {uploadError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-3">
+            <p className="text-sm text-red-600">{uploadError}</p>
+          </div>
+        )}
+
         <FileUpload
-          value={resume ? [resume] : resume}
-          onValueChange={([file]) => setResume(file)}
+          value={resume ? [resume] : []}
+          onValueChange={([file]) => {
+            setResume(file);
+            setUploadError(""); // Clear any previous errors
+          }}
           onFileValidate={onFileValidate}
           onFileReject={onFileReject}
           accept=".pdf,.doc,.docx"
@@ -361,11 +453,13 @@ export default function Step2Page() {
               </p>
             </div>
             <FileUploadTrigger asChild>
-              <Button className="mt-2 w-fit">Browse files</Button>
+              <Button className="mt-2 w-fit" disabled={isUploading}>
+                Browse files
+              </Button>
             </FileUploadTrigger>
           </FileUploadDropzone>
           <FileUploadList>
-            {resume ? (
+            {resume && (
               <FileUploadItem key={resume.name} value={resume}>
                 <FileUploadItemPreview />
                 <FileUploadItemMetadata />
@@ -373,13 +467,12 @@ export default function Step2Page() {
                   <Button
                     variant="ghost"
                     className="size-7 flex-shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                    disabled={isUploading}
                   >
                     <X className="size-4" />
                   </Button>
                 </FileUploadItemDelete>
               </FileUploadItem>
-            ) : (
-              <></>
             )}
           </FileUploadList>
         </FileUpload>
@@ -394,103 +487,111 @@ export default function Step2Page() {
             registration:
           </p>
         </div>
-      </div>
-      {/* Permission to use information */}
-      <div className="flex items-start space-x-3">
-        <Checkbox
-          id="informationUsage"
-          checked={acknowledgments.informationUsage}
-          onCheckedChange={(checked) =>
-            setAcknowledgments((prev) => ({
-              ...prev,
-              informationUsage: checked as boolean,
-            }))
-          }
-          required
-        />
-        <div className="grid gap-1.5 leading-none">
-          <Label
-            htmlFor="informationUsage"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I give permission to MRUHacks to use my information for the purpose
-            of the event
-            <span className="text-red-500">*</span>
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            This includes event logistics, communication, and administration
-            purposes.
-          </p>
+
+        {/* Permission to use information */}
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="informationUsage"
+            checked={acknowledgments.informationUsage}
+            onCheckedChange={(checked) =>
+              setAcknowledgments((prev) => ({
+                ...prev,
+                informationUsage: checked as boolean,
+              }))
+            }
+            required
+          />
+          <div className="grid gap-1.5 leading-none">
+            <Label
+              htmlFor="informationUsage"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              I give permission to MRUHacks to use my information for the
+              purpose of the event
+              <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              This includes event logistics, communication, and administration
+              purposes.
+            </p>
+          </div>
+        </div>
+
+        {/* Permission to share with sponsors */}
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="sponsorSharing"
+            checked={acknowledgments.sponsorSharing}
+            onCheckedChange={(checked) =>
+              setAcknowledgments((prev) => ({
+                ...prev,
+                sponsorSharing: checked as boolean,
+              }))
+            }
+            required
+          />
+          <div className="grid gap-1.5 leading-none">
+            <Label
+              htmlFor="sponsorSharing"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              I give my permission to MRUHacks to share my information with our
+              sponsors
+              <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Your information may be shared with event sponsors for recruitment
+              and networking opportunities.
+            </p>
+          </div>
+        </div>
+
+        {/* Photo/media consent */}
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="mediaConsent"
+            checked={acknowledgments.mediaConsent}
+            onCheckedChange={(checked) =>
+              setAcknowledgments((prev) => ({
+                ...prev,
+                mediaConsent: checked as boolean,
+              }))
+            }
+            required
+          />
+          <div className="grid gap-1.5 leading-none">
+            <Label
+              htmlFor="mediaConsent"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              I consent to the use of my likeness in photographs, videos, and
+              other media for promotional purposes
+              <span className="text-red-500">*</span>
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Media may be used for social media, marketing materials, and event
+              documentation.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Permission to share with sponsors */}
-      <div className="flex items-start space-x-3">
-        <Checkbox
-          id="sponsorSharing"
-          checked={acknowledgments.sponsorSharing}
-          onCheckedChange={(checked) =>
-            setAcknowledgments((prev) => ({
-              ...prev,
-              sponsorSharing: checked as boolean,
-            }))
-          }
-          required
-        />
-        <div className="grid gap-1.5 leading-none">
-          <Label
-            htmlFor="sponsorSharing"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I give my permission to MRUHacks to share my information with our
-            sponsors
-            <span className="text-red-500">*</span>
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            Your information may be shared with event sponsors for recruitment
-            and networking opportunities.
-          </p>
-        </div>
-      </div>
-
-      {/* Photo/media consent */}
-      <div className="flex items-start space-x-3">
-        <Checkbox
-          id="mediaConsent"
-          checked={acknowledgments.mediaConsent}
-          onCheckedChange={(checked) =>
-            setAcknowledgments((prev) => ({
-              ...prev,
-              mediaConsent: checked as boolean,
-            }))
-          }
-          required
-        />
-        <div className="grid gap-1.5 leading-none">
-          <Label
-            htmlFor="mediaConsent"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I consent to the use of my likeness in photographs, videos, and
-            other media for promotional purposes
-            <span className="text-red-500">*</span>
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            Media may be used for social media, marketing materials, and event
-            documentation.
-          </p>
-        </div>
-      </div>
       <Button
         type="submit"
-        disabled={!allAcknowledgmentsChecked || selectedInterests.length === 0}
+        disabled={
+          !allAcknowledgmentsChecked ||
+          selectedInterests.length === 0 ||
+          isUploading
+        }
         className="w-full"
       >
-        {allAcknowledgmentsChecked && selectedInterests.length > 0
-          ? "Complete Registration"
-          : selectedInterests.length === 0
-            ? "Please select at least one interest"
-            : "Please accept all acknowledgments"}
+        {isUploading
+          ? "Uploading resume..."
+          : allAcknowledgmentsChecked && selectedInterests.length > 0
+            ? "Complete Registration"
+            : selectedInterests.length === 0
+              ? "Please select at least one interest"
+              : "Please accept all acknowledgments"}
       </Button>
     </form>
   );
