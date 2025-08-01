@@ -46,6 +46,13 @@ export default function Step1Page() {
   const [authError, setAuthError] = useState("");
   const hasSetInitialValues = useRef(false); // Prevent multiple calls
 
+  const GENDER_OPTIONS = [
+    { value: "1", label: "Male" },
+    { value: "2", label: "Female" },
+    { value: "3", label: "Other" },
+    { value: "4", label: "Prefer not to say" },
+  ];
+
   // Handle authentication and session verification
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -338,10 +345,11 @@ export default function Step1Page() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-            <option value="preferNot">Prefer not to say</option>
+            {GENDER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           {errors.gender && (
             <p className="mt-1 text-sm text-red-600">{errors.gender.message}</p>
