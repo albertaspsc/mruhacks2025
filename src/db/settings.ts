@@ -1,6 +1,6 @@
 "use server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "utils/supabase/server";
+import { createClient } from "@utils/supabase/server";
 import { db } from "./drizzle";
 import {
   marketingPreferences,

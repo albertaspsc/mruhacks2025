@@ -7,7 +7,6 @@
     "checkJs": false,
     "skipLibCheck": true,
     "strict": true,
-    "strictNullChecks": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
@@ -30,11 +29,15 @@
       "@/assets/*": ["src/assets/*"],
       "@/db/*": ["src/db/*"],
       "@db/*": ["src/db/*"],
-      "@/utils/*": ["utils/*"],
-      "@utils/*": ["src/utils/*"]
+      "@/utils/*": ["./utils/*"],
+      "@utils/*": ["./utils/*"]
     },
     "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "forceConsistentCasingInFileNames": true
   },
   "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import styles from "./Sponsor.module.scss";
 import crt2 from "../../assets/mascots/crt2.svg";

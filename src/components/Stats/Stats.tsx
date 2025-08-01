@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./Stats.module.scss";
-import crt from "../../assets/mascots/crt.svg";
+import crt from "@/assets/mascots/crt.svg";
 import Image from "next/image";
 
 export default function Stats() {
@@ -15,7 +15,11 @@ export default function Stats() {
       <h1 className={styles.statsHeader}>MRUHacks 2024 Stats:</h1>
       <div className={styles.stats}>
         {facts.map((fact, i) => (
-          <div className="stat" key={`statistic-${i}`} style={{ "--x": i + 1 }}>
+          <div
+            className="stat"
+            key={`statistic-${i}`}
+            style={{ "--x": i + 1 } as React.CSSProperties}
+          >
             <span className={styles.number}>{fact.number}</span>
             <span className={styles.text}>{fact.text}</span>
           </div>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
-import logo from "../../assets/logos/color-logo.svg";
+import logo from "@/assets/logos/color-logo.svg";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,14 +56,19 @@ const Navbar = () => {
   };
 
   // Smooth scroll function
-  const scrollToSection = (sectionId, event) => {
+  const scrollToSection = (
+    sectionId: string,
+    event: React.MouseEvent<HTMLAnchorElement>,
+  ) => {
     event.preventDefault();
     setIsOpen(false); // Close the mobile menu
 
     const section = document.getElementById(sectionId);
     if (section) {
       // Get the navbar height to offset the scroll position
-      const navbar = document.querySelector(`.${styles.navbarCustom}`);
+      const navbar = document.querySelector<HTMLElement>(
+        `.${styles.navbarCustom}`,
+      );
       const navbarHeight = navbar ? navbar.offsetHeight : 0;
 
       const offsetTop = section.offsetTop - navbarHeight;
@@ -76,7 +81,7 @@ const Navbar = () => {
   };
 
   // Determines if a section is active
-  const isActive = (sectionId) => activeSection === sectionId;
+  const isActive = (sectionId: string) => activeSection === sectionId;
 
   return (
     <nav className={styles.navbarCustom}>
