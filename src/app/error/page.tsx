@@ -181,7 +181,7 @@ function ErrorPageContent() {
           <p className="text-sm text-blue-800">
             Still having trouble?{" "}
             <a
-              href="mailto:support@mruhacks.ca"
+              href="mailto:hello@mruhacks.ca"
               className="font-medium underline hover:no-underline"
             >
               Contact Support

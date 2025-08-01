@@ -13,20 +13,25 @@ export default function VolunteerLayout({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const isDev = process.env.NODE_ENV === "development";
 
   const handleSignOut = async () => {
     try {
-      console.log("🚪 Signing out...");
+      if (isDev) {
+        console.log("Signing out...");
+      }
 
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        console.error("Sign out error:", error);
+        console.error("Sign out error:", { error: error.message });
         alert("Error signing out. Please try again.");
         return;
       }
 
-      console.log("✅ Signed out successfully");
+      if (isDev) {
+        console.log("Signed out successfully");
+      }
       router.push("/");
     } catch (error) {
       console.error("Unexpected sign out error:", error);

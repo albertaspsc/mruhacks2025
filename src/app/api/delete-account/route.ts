@@ -39,7 +39,7 @@ export async function DELETE() {
     const { error: signOutError } = await supabase.auth.signOut();
 
     if (signOutError) {
-      console.warn("⚠️ Sign out failed (non-critical):", signOutError);
+      console.warn("Sign out failed (non-critical):", signOutError);
     }
 
     console.log("Account deletion completed successfully");

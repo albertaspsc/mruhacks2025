@@ -30,7 +30,7 @@ function UnauthorizedPageContent() {
         return {
           title: "Account Inactive",
           message:
-            "Your admin account has been deactivated. Please contact the system administrator.",
+            "Your admin account has been deactivated. Please contact one of the organizers.",
           icon: <Mail className="w-16 h-16 text-orange-500" />,
           showContact: true,
         };

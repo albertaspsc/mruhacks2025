@@ -136,7 +136,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// POST /api/participants/bulk-update - Alternative endpoint for bulk operations
+// Alternative endpoint for bulk operations
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

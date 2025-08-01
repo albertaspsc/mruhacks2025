@@ -40,7 +40,7 @@ const LocalRegistrationSchema = z.object({
   dietaryRestrictions: z.array(z.string()),
   interests: z.array(z.string()).min(1, "At least one interest is required"),
   marketing: z.string().min(1, "Please tell us how you heard about us"),
-  resume: z.string().optional(), // Changed from File to string (URL)
+  resume: z.string().optional(),
   checkedIn: z.boolean().optional(),
 });
 
@@ -192,8 +192,8 @@ export async function register(
       marketing: otherIds[0].marketing,
       checkedIn: false,
       status: "pending",
-      resumeUrl: user.resume, // Save the resume URL
-      resumeFilename, // Save the extracted filename
+      resumeUrl: user.resume,
+      resumeFilename,
     });
 
     console.log("User created successfully");

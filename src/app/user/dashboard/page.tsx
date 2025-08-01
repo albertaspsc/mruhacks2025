@@ -231,7 +231,7 @@ export default function DashboardPage() {
               {getViewTitle()}
             </h1>
 
-            {/* Optional: Add user avatar or other header elements for mobile */}
+            {/* User header element for mobile */}
             <div className="lg:hidden">
               {user && (
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">

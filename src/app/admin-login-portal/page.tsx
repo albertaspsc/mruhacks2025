@@ -177,7 +177,7 @@ export default function AdminLoginPage() {
         {/* Footer info */}
         <div className="text-center text-xs text-gray-400 pt-2">
           <p>MRUHacks Staff Portal</p>
-          <p>Contact admin if you need access</p>
+          <p>Contact organizers if you need access</p>
         </div>
       </div>
     </div>
