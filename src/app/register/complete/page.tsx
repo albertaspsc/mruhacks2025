@@ -75,89 +75,6 @@ export default function CompletePage() {
     sendRegistration();
   }, [data]);
 
-  // Add this to your Complete page for client-side RLS testing
-  const testRLSInsert = async () => {
-    console.log("=== CLIENT-SIDE RLS INSERT TEST ===");
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.error("❌ No authenticated user");
-      return;
-    }
-
-    console.log("Testing RLS insert for user:", user.id, user.email);
-
-    // Test 1: Try inserting into users table
-    console.log("1. Testing users table insert...");
-    const testUserData = {
-      id: user.id,
-      f_name: "RLS",
-      l_name: "Test",
-      email: user.email,
-      gender: 1,
-      university: "Test University",
-      major: "Test Major",
-      prev_attendance: false,
-      yearOfStudy: "1st",
-    };
-
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .insert(testUserData)
-      .select();
-
-    console.log("Users table result:", {
-      success: !userError,
-      data: userData,
-      error: userError
-        ? {
-            code: userError.code,
-            message: userError.message,
-            details: userError.details,
-            hint: userError.hint,
-          }
-        : null,
-    });
-
-    // Test 2: Try inserting into profile table
-    console.log("2. Testing profile table insert...");
-    const testProfileData = {
-      id: user.id,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data: profileData, error: profileError } = await supabase
-      .from("profile")
-      .insert(testProfileData)
-      .select();
-
-    console.log("Profile table result:", {
-      success: !profileError,
-      data: profileData,
-      error: profileError
-        ? {
-            code: profileError.code,
-            message: profileError.message,
-            details: profileError.details,
-          }
-        : null,
-    });
-
-    // Cleanup test data if successful
-    if (userData) {
-      await supabase.from("users").delete().eq("id", user.id);
-      console.log("✅ Cleaned up users test data");
-    }
-
-    if (profileData) {
-      await supabase.from("profile").delete().eq("id", user.id);
-      console.log("✅ Cleaned up profile test data");
-    }
-  };
-
   return (
     <div className="flex items-start justify-center min-h-screen bg-white pt-8 px-4">
       <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-xl px-6 py-8 space-y-6 z-10">
@@ -200,18 +117,11 @@ export default function CompletePage() {
         {/* Dashboard button */}
         <Button
           type="button"
-          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition z-10" // Changed to black button style
+          className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg transition z-10"
           onClick={() => router.push("/user/dashboard")}
         >
           Take Me to Dashboard
         </Button>
-
-        <button
-          onClick={testRLSInsert}
-          className="bg-red-500 text-white px-4 py-2 rounded text-sm"
-        >
-          Test RLS Insert
-        </button>
 
         {/* Mascot */}
         <div className="flex justify-center pt-4 z-10">
