@@ -53,45 +53,6 @@ export default function Step1Page() {
     { value: "4", label: "Prefer not to say" },
   ];
 
-  const debugSession = async () => {
-    console.log("=== SESSION DEBUG ===");
-
-    // Check current session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-    console.log("Current session:", {
-      hasSession: !!session,
-      sessionError,
-      expiresAt: session?.expires_at,
-      accessToken: session?.access_token ? "present" : "missing",
-    });
-
-    // Check user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    console.log("Current user:", {
-      hasUser: !!user,
-      userError,
-      email: user?.email,
-      id: user?.id,
-    });
-
-    // If no session, try to refresh
-    if (!session) {
-      console.log("No session found, attempting refresh...");
-      const { data: refreshData, error: refreshError } =
-        await supabase.auth.refreshSession();
-      console.log("Refresh result:", {
-        hasSession: !!refreshData.session,
-        refreshError,
-      });
-    }
-  };
-
   // Handle authentication and session verification
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -307,19 +268,6 @@ export default function Step1Page() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* ADD DEBUG BUTTON HERE */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-        <p className="text-sm text-yellow-800 mb-2">
-          Debug (remove in production):
-        </p>
-        <button
-          onClick={debugSession}
-          className="bg-yellow-500 text-white px-4 py-2 rounded text-sm hover:bg-yellow-600"
-        >
-          Debug Session
-        </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
