@@ -265,7 +265,7 @@ export async function getMajorsAndUniversities() {
 
     const [majorsResult, universitiesResult] = await Promise.all([
       supabase.from("majors").select("major").order("major"),
-      supabase.from("universities").select("university").order("university"),
+      supabase.from("universities").select("uni").order("uni"),
     ]);
 
     if (majorsResult.error) {
@@ -280,7 +280,7 @@ export async function getMajorsAndUniversities() {
 
     return {
       majors: majorsResult.data?.map((row) => row.major) || [],
-      universities: universitiesResult.data?.map((row) => row.university) || [],
+      universities: universitiesResult.data?.map((row) => row.uni) || [],
     };
   } catch (error) {
     console.error("getMajorsAndUniversities error:", error);
