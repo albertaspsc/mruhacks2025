@@ -53,89 +53,24 @@ export default function CompletePage() {
   const hasLogged = useRef(false);
   const confettiRef = useRef<HTMLCanvasElement>(null);
 
-  const testRLSInsert = async () => {
-    console.log("=== CLIENT-SIDE RLS INSERT TEST ===");
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.error("❌ No authenticated user");
-      return;
-    }
-
-    console.log("Testing RLS insert for user:", user.id, user.email);
-
-    // Test users table with corrected column name
-    const testUserData = {
-      id: user.id,
-      f_name: "RLS",
-      l_name: "Test",
-      email: user.email,
-      gender: 1,
-      university: 1,
-      major: 1,
-      prev_attendance: false,
-      yearOfStudy: "1st",
-      experience: 1,
-      marketing: 1,
-    };
-
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .insert(testUserData)
-      .select();
-
-    console.log("Users table result:", {
-      success: !userError,
-      data: userData,
-      error: userError,
-    });
-
-    // Test profile table (no updated_at)
-    const testProfileData = {
-      id: user.id,
-      email: user.email,
-      f_name: "RLS",
-      l_name: "Test",
-      marketing_emails: false,
-    };
-
-    const { data: profileData, error: profileError } = await supabase
-      .from("profile")
-      .insert(testProfileData)
-      .select();
-
-    console.log("Profile table result:", {
-      success: !profileError,
-      data: profileData,
-      error: profileError,
-    });
-
-    // Cleanup
-    if (userData) {
-      await supabase.from("users").delete().eq("id", user.id);
-      console.log("✅ Cleaned up users test data");
-    }
-    if (profileData) {
-      await supabase.from("profile").delete().eq("id", user.id);
-      console.log("✅ Cleaned up profile test data");
-    }
-  };
-
   useEffect(() => {
     const sendRegistration = async () => {
       if (!hasLogged.current) {
         const { data: registration, error: validationError } =
           RegistrationSchema.safeParse(data);
         if (validationError) {
-          console.error(validationError);
+          console.error("Validation error:", validationError);
           router.push("/register?error");
         } else {
+          console.log(
+            "Validation successful, sending registration:",
+            registration,
+          );
           const { error } = await register(registration);
           if (error) {
-            console.error(error);
+            console.error("Registration failed:", error);
+          } else {
+            console.log("Registration successful!");
           }
         }
         hasLogged.current = true;
@@ -193,18 +128,6 @@ export default function CompletePage() {
         >
           Take Me to Dashboard
         </Button>
-
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-          <p className="text-sm text-red-800 mb-2">
-            Debug (remove in production):
-          </p>
-          <button
-            onClick={testRLSInsert}
-            className="bg-red-500 text-white px-4 py-2 rounded text-sm hover:bg-red-600 w-full"
-          >
-            Test RLS Insert
-          </button>
-        </div>
 
         {/* Mascot */}
         <div className="flex justify-center pt-4 z-10">
