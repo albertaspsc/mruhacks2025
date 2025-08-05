@@ -56,19 +56,24 @@ export default function CompletePage() {
   useEffect(() => {
     const sendRegistration = async () => {
       if (!hasLogged.current) {
+        console.log("=== COMPLETE REGISTRATION DEBUG ===");
+        console.log("Raw form data:", data);
+
         const { data: registration, error: validationError } =
           RegistrationSchema.safeParse(data);
+
         if (validationError) {
-          console.error("Validation error:", validationError);
+          console.error("Validation error:", validationError.errors);
           router.push("/register?error");
         } else {
-          console.log(
-            "Validation successful, sending registration:",
-            registration,
-          );
-          const { error } = await register(registration);
-          if (error) {
-            console.error("Registration failed:", error);
+          console.log("Validation successful");
+          console.log("Validated registration data:", registration);
+
+          const result = await register(registration);
+          console.log("Register function result:", result);
+
+          if (result.error) {
+            console.error(" Registration failed:", result.error);
           } else {
             console.log("Registration successful!");
           }
@@ -79,7 +84,7 @@ export default function CompletePage() {
     };
 
     sendRegistration();
-  }, [data]);
+  }, [data, router]);
 
   return (
     <div className="flex items-start justify-center min-h-screen bg-white pt-8 px-4">
@@ -117,7 +122,8 @@ export default function CompletePage() {
         <p className="text-center text-gray-700 z-10">
           Thanks{" "}
           <span className="font-medium text-indigo-600">{data.firstName}</span>!
-          We&apos;ve got your details and can’t wait to see you at MRUHacks.
+          We&apos;ve got your details and can&apos;t wait to see you at
+          MRUHacks.
         </p>
 
         {/* Dashboard button */}
