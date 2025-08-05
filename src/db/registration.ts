@@ -260,15 +260,35 @@ async function getOrInsertGenderId(user: RegistrationInput) {
 }
 
 export async function getMajorsAndUniversities() {
-  const [majorsResult, universitiesResult] = await Promise.all([
-    db.select().from(majors),
-    db.select().from(universities),
-  ]);
+  try {
+    const supabase = await createClient();
 
-  return {
-    majors: majorsResult.map((row) => row.major),
-    universities: universitiesResult.map((row) => row.university),
-  };
+    const [majorsResult, universitiesResult] = await Promise.all([
+      supabase.from("majors").select("major").order("major"),
+      supabase.from("universities").select("university").order("university"),
+    ]);
+
+    if (majorsResult.error) {
+      console.error("Majors query error:", majorsResult.error);
+      throw majorsResult.error;
+    }
+
+    if (universitiesResult.error) {
+      console.error("Universities query error:", universitiesResult.error);
+      throw universitiesResult.error;
+    }
+
+    return {
+      majors: majorsResult.data?.map((row) => row.major) || [],
+      universities: universitiesResult.data?.map((row) => row.university) || [],
+    };
+  } catch (error) {
+    console.error("getMajorsAndUniversities error:", error);
+    return {
+      majors: [],
+      universities: [],
+    };
+  }
 }
 
 export async function getStaticOptions() {
