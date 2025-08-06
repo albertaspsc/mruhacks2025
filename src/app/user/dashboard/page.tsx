@@ -36,7 +36,7 @@ const StatusBanner = ({
       icon: <Clock className="h-5 w-5 text-blue-500 mr-2" />,
       title: "Registration Pending",
       message:
-        "Your registration is currently under review. We'll notify you once it's confirmed.",
+        "Your registration is currently under review. Please check back later for updates.",
     },
     waitlisted: {
       bgColor: "bg-yellow-100",
