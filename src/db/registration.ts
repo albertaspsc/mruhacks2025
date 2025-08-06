@@ -224,6 +224,13 @@ export async function register(
     supabase = await createClient();
   }
 
+  const genderMapping = {
+    "1": "Male",
+    "2": "Female",
+    "3": "Other",
+    "4": "Prefer not to say",
+  };
+
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
     console.error("Auth error:", authError);
@@ -265,30 +272,25 @@ export async function register(
 
     const id = auth.user.id;
 
-    // Get or create gender ID using Supabase client
+    // Get gender ID using mapping (no insertion)
     console.log("Getting gender ID...");
-    let genderId;
-    const { data: existingGender } = await supabase
+    const genderText = genderMapping[user.gender as keyof typeof genderMapping];
+    if (!genderText) {
+      return { error: `Invalid gender value: ${user.gender}` };
+    }
+
+    const { data: existingGender, error: genderError } = await supabase
       .from("gender")
       .select("id")
-      .eq("gender", user.gender)
+      .eq("gender", genderText)
       .single();
 
-    if (existingGender) {
-      genderId = existingGender.id;
-    } else {
-      const { data: newGender, error: genderError } = await supabase
-        .from("gender")
-        .insert({ gender: user.gender })
-        .select("id")
-        .single();
-
-      if (genderError) {
-        console.error("Gender insert failed:", genderError);
-        return { error: `Failed to create gender: ${genderError.message}` };
-      }
-      genderId = newGender.id;
+    if (genderError || !existingGender) {
+      console.error("Gender lookup failed:", genderError);
+      return { error: `Gender not found in database: ${genderText}` };
     }
+
+    const genderId = existingGender.id;
     console.log("Gender ID:", genderId);
 
     // Get or create university ID
@@ -398,11 +400,11 @@ export async function register(
       .select();
 
     if (userError) {
-      console.error("❌ User insert failed:", userError);
+      console.error("User insert failed:", userError);
       return { error: `User registration failed: ${userError.message}` };
     }
 
-    console.log("✅ User created successfully:", userData);
+    console.log("User created successfully:", userData);
 
     // Handle interests and dietary restrictions using Supabase client
     console.log("Registering interests and restrictions...");
