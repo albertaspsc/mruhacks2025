@@ -1,5 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import { deleteUserProfile } from "@/db/settings";
 
 export async function DELETE() {
   const supabase = await createClient();
@@ -17,35 +16,32 @@ export async function DELETE() {
   console.log("Starting account deletion for user:", user.id);
 
   try {
-    // Delete all user data from database tables
-    console.log("Deleting user data from database...");
-    const { error: dbError } = await deleteUserProfile(supabase);
+    // With cascade DELETE constraints, deleting the auth user will automatically
+    // delete from public.users and public.profiles
+    console.log(
+      "Deleting Auth user (will cascade to public.users and public.profiles)...",
+    );
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
+      user.id,
+    );
 
-    if (dbError) {
-      console.error("Database deletion failed:", dbError);
+    if (deleteAuthError) {
+      console.error("Auth user deletion failed:", deleteAuthError);
       return Response.json(
         {
-          error: "Failed to delete account data",
-          details: dbError,
+          error: "Failed to delete authentication account",
+          details: deleteAuthError,
         },
         { status: 500 },
       );
     }
 
-    console.log("Database deletion successful");
-
-    // Sign out the user - they won't be able to log in anymore since their profile is gone0
-    console.log("Signing out user...");
-    const { error: signOutError } = await supabase.auth.signOut();
-
-    if (signOutError) {
-      console.warn("Sign out failed (non-critical):", signOutError);
-    }
-
-    console.log("Account deletion completed successfully");
+    console.log(
+      "Account deletion completed successfully - user deleted from all tables",
+    );
     return Response.json({
       success: true,
-      message: "Account data deleted successfully",
+      message: "Account deleted successfully",
     });
   } catch (error) {
     console.error("Unexpected error during deletion:", error);
