@@ -219,7 +219,6 @@ export async function register(
   supabase?: SupabaseClient,
 ) {
   console.log("REGISTRATION - Starting registration for:", user.email);
-  console.log("DATABASE_URL check:", !!process.env.DATABASE_URL);
 
   if (!supabase) {
     supabase = await createClient();
@@ -234,17 +233,15 @@ export async function register(
   console.log("Auth successful, user ID:", auth.user.id);
 
   try {
-    // Check if user is already registered
+    // Check if user is already registered using Supabase client
     console.log("Checking for existing user...");
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, auth.user.id))
-      .limit(1);
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", auth.user.id)
+      .single();
 
-    console.log("Existing user check result:", existingUser.length);
-
-    if (existingUser.length > 0) {
+    if (existingUser) {
       console.log("User already registered..");
       return { success: true, message: "User already registered" };
     }
@@ -268,20 +265,98 @@ export async function register(
 
     const id = auth.user.id;
 
+    // Get or create gender ID using Supabase client
     console.log("Getting gender ID...");
-    const genderId = await getOrInsertGenderId(user);
+    let genderId;
+    const { data: existingGender } = await supabase
+      .from("gender")
+      .select("id")
+      .eq("gender", user.gender)
+      .single();
+
+    if (existingGender) {
+      genderId = existingGender.id;
+    } else {
+      const { data: newGender, error: genderError } = await supabase
+        .from("gender")
+        .insert({ gender: user.gender })
+        .select("id")
+        .single();
+
+      if (genderError) {
+        console.error("Gender insert failed:", genderError);
+        return { error: `Failed to create gender: ${genderError.message}` };
+      }
+      genderId = newGender.id;
+    }
     console.log("Gender ID:", genderId);
 
-    console.log("Getting other IDs...");
-    const otherIds = await getOtherIds(user);
-    console.log("Other IDs result:", otherIds);
+    // Get or create university ID
+    console.log("Getting university ID...");
+    let universityId;
+    const { data: existingUni } = await supabase
+      .from("universities")
+      .select("id")
+      .eq("uni", user.university)
+      .single();
 
-    if (otherIds.length != 1) {
-      console.log("Other IDs failed:", otherIds);
-      return {
-        error:
-          "one or more of marketing, experience, university, or major was not found in the database.",
-      };
+    if (existingUni) {
+      universityId = existingUni.id;
+    } else {
+      const { data: newUni, error: uniError } = await supabase
+        .from("universities")
+        .insert({ uni: user.university })
+        .select("id")
+        .single();
+
+      if (uniError) {
+        console.error("University insert failed:", uniError);
+        return { error: `Failed to create university: ${uniError.message}` };
+      }
+      universityId = newUni.id;
+    }
+
+    // Get or create major ID
+    console.log("Getting major ID...");
+    let majorId;
+    const { data: existingMajor } = await supabase
+      .from("majors")
+      .select("id")
+      .eq("major", user.major)
+      .single();
+
+    if (existingMajor) {
+      majorId = existingMajor.id;
+    } else {
+      const { data: newMajor, error: majorError } = await supabase
+        .from("majors")
+        .insert({ major: user.major })
+        .select("id")
+        .single();
+
+      if (majorError) {
+        console.error("Major insert failed:", majorError);
+        return { error: `Failed to create major: ${majorError.message}` };
+      }
+      majorId = newMajor.id;
+    }
+
+    // Get experience and marketing IDs (these must exist)
+    console.log("Getting experience and marketing IDs...");
+    const { data: experienceData } = await supabase
+      .from("experience_types")
+      .select("id")
+      .eq("experience", user.experience)
+      .single();
+
+    const { data: marketingData } = await supabase
+      .from("marketing_types")
+      .select("id")
+      .eq("marketing", user.marketing)
+      .single();
+
+    if (!experienceData || !marketingData) {
+      return { error: "Experience or marketing type not found in database" };
     }
 
     // Extract resume filename from URL if present
@@ -296,50 +371,100 @@ export async function register(
     }
 
     console.log("Attempting to insert user into database...");
-    console.log("otherIds[0] contains:", otherIds[0]);
 
-    const userInsertData = {
-      id,
-      email: auth.user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      gender: genderId,
-      university: otherIds[0].university,
-      major: otherIds[0].major,
-      experience: otherIds[0].experience,
-      marketing: otherIds[0].marketing,
-      previousAttendance: user.previousAttendance,
-      parking: user.parking,
-      yearOfStudy: user.yearOfStudy,
-      accommodations: user.accommodations,
-      timestamp: new Date(),
-      status: "pending" as const,
-      resumeUrl: user.resume,
-      resumeFilename,
-      checkedIn: false,
-    };
+    // Insert user using Supabase client with correct field names
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .insert({
+        id,
+        email: auth.user.email,
+        f_name: user.firstName,
+        l_name: user.lastName,
+        gender: genderId,
+        university: universityId,
+        major: majorId,
+        experience: experienceData.id,
+        marketing: marketingData.id,
+        prev_attendance: user.previousAttendance,
+        parking: user.parking,
+        yearOfStudy: user.yearOfStudy,
+        accommodations: user.accommodations,
+        timestamp: new Date().toISOString(),
+        status: "pending",
+        resume_url: user.resume,
+        resume_filename: resumeFilename,
+        checked_in: false,
+      })
+      .select();
 
-    console.log("User insert data:", userInsertData);
+    if (userError) {
+      console.error("❌ User insert failed:", userError);
+      return { error: `User registration failed: ${userError.message}` };
+    }
 
-    await db.insert(users).values(userInsertData);
+    console.log("✅ User created successfully:", userData);
 
-    console.log("User created successfully");
-
+    // Handle interests and dietary restrictions using Supabase client
     console.log("Registering interests and restrictions...");
-    const { error: multiOptionsError } = await registerInterestsAndRestrictions(
-      id,
-      user,
-    );
-    if (multiOptionsError) {
-      console.log("Interests/restrictions failed:", multiOptionsError);
-      return { error: multiOptionsError };
+
+    // Handle dietary restrictions
+    if (user.dietaryRestrictions.length > 0) {
+      // Insert new dietary restrictions
+      for (const restriction of user.dietaryRestrictions) {
+        await supabase
+          .from("dietary_restrictions")
+          .insert({ restriction })
+          .select();
+      }
+
+      // Get restriction IDs
+      const { data: restrictionIds } = await supabase
+        .from("dietary_restrictions")
+        .select("id")
+        .in("restriction", user.dietaryRestrictions);
+
+      // Link user to restrictions
+      if (restrictionIds) {
+        const userRestrictions = restrictionIds.map(
+          ({ id: restrictionId }) => ({
+            user_id: id,
+            restriction_id: restrictionId,
+          }),
+        );
+
+        await supabase.from("user_diet_restrictions").insert(userRestrictions);
+      }
+    }
+
+    // Handle interests
+    const { data: interestIds } = await supabase
+      .from("interests")
+      .select("id")
+      .in("interest", user.interests);
+
+    if (!interestIds || interestIds.length !== user.interests.length) {
+      return { error: "Some interests not found in database" };
+    }
+
+    const userInterests = interestIds.map(({ id: interestId }) => ({
+      user_id: id,
+      interest_id: interestId,
+    }));
+
+    const { error: interestsError } = await supabase
+      .from("user_interests")
+      .insert(userInterests);
+
+    if (interestsError) {
+      console.error("Interests insert failed:", interestsError);
+      return { error: `Failed to save interests: ${interestsError.message}` };
     }
 
     console.log("Registration completed successfully");
     return { success: true };
-  } catch (insertError) {
-    console.error("User insert failed:", insertError);
-    return { error: `Database insert failed: ${insertError}` };
+  } catch (error) {
+    console.error("Registration function crashed:", error);
+    return { error: `Registration failed: ${error}` };
   }
 }
 
