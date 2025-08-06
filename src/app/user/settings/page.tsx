@@ -203,18 +203,28 @@ export default function SettingsPage() {
         // Get user registration data
         const { data: userData, error: userError } = await getRegistration();
         if (userError) throw userError;
-        setUser(userData);
+        setUser(userData || undefined);
 
         // Get parking preferences
         const { data: parkingData, error: parkingError } =
           await getParkingPreference();
         if (parkingError) {
+          let errorMessage = "";
+
+          if (typeof parkingError === "string") {
+            errorMessage = parkingError;
+          } else if (parkingError && typeof parkingError === "object") {
+            errorMessage =
+              parkingError.message ||
+              parkingError.toString() ||
+              "Unknown error";
+          }
+
           // Only log actual errors, not "not found" cases
-          const errorMessage =
-            typeof parkingError === "string"
-              ? parkingError
-              : parkingError.message;
-          if (!errorMessage?.toLowerCase().includes("not found")) {
+          if (
+            errorMessage &&
+            !errorMessage.toLowerCase().includes("not found")
+          ) {
             console.error("Error loading parking preferences:", parkingError);
           }
           // Set default values for new users
@@ -232,25 +242,47 @@ export default function SettingsPage() {
         // Get marketing preferences
         const { data: marketingData, error: marketingError } =
           await getMarketingPreference();
+
         if (marketingError) {
-          // Only log actual errors, not "not found" cases
-          const errorMessage =
-            typeof marketingError === "string"
-              ? marketingError
-              : marketingError.message;
-          if (!errorMessage?.toLowerCase().includes("not found")) {
+          let shouldLogError = false;
+          let errorMessage = "";
+
+          if (typeof marketingError === "string") {
+            errorMessage = marketingError;
+            shouldLogError = !errorMessage.toLowerCase().includes("not found");
+          } else if (marketingError && typeof marketingError === "object") {
+            // Check if it's an empty object
+            const isEmptyObject = Object.keys(marketingError).length === 0;
+            if (!isEmptyObject) {
+              errorMessage =
+                marketingError.message || JSON.stringify(marketingError);
+              shouldLogError = !errorMessage
+                .toLowerCase()
+                .includes("not found");
+            }
+            // For empty objects, don't log anything - this is expected for new users
+          }
+
+          // Only log if it's a real error
+          if (shouldLogError) {
             console.error(
               "Error loading marketing preferences:",
               marketingError,
             );
           }
-          // Set default values for new users
+
+          // Set default values - NEW USERS SUBSCRIBED BY DEFAULT
           emailPreferencesForm.reset({
-            marketingEmails: false,
+            marketingEmails: true,
           });
         } else if (marketingData) {
           emailPreferencesForm.reset({
-            marketingEmails: marketingData.sendEmails || false,
+            marketingEmails: marketingData.sendEmails !== false,
+          });
+        } else {
+          // Fallback case - also default to subscribed
+          emailPreferencesForm.reset({
+            marketingEmails: true,
           });
         }
       } catch (error) {

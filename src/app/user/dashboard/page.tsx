@@ -7,7 +7,6 @@ import ProfilePage from "../profile/page";
 import { Sidebar } from "@/components/ui/sidebar";
 import { CheckCircle, Clock, AlertTriangle, Menu, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RegistrationInput } from "@/context/RegisterFormContext";
 import { Registration, getRegistration } from "@/db/registration";
 
 // Define available views
@@ -79,7 +78,7 @@ export default function DashboardPage() {
     const checkAuth = async () => {
       try {
         const { data: registration } = await getRegistration();
-        setUser(registration);
+        setUser(registration || undefined);
       } finally {
         setIsLoading(false);
       }
@@ -236,7 +235,7 @@ export default function DashboardPage() {
               {user && (
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-semibold">
-                    {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                    {user.f_name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </span>
                 </div>
               )}
@@ -249,7 +248,15 @@ export default function DashboardPage() {
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner - only show on main dashboard */}
             {user && currentView === "dashboard" && (
-              <StatusBanner status={user.status} />
+              <StatusBanner
+                status={
+                  user.status === "confirmed" ||
+                  user.status === "pending" ||
+                  user.status === "waitlisted"
+                    ? user.status
+                    : "pending" // default fallback
+                }
+              />
             )}
 
             {/* Render Current View */}

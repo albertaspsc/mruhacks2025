@@ -35,7 +35,7 @@ type FinalForm = Pick<
   | "resume"
 >;
 
-const INTEREST_OPTIONS = [
+const FALLBACK_INTERESTS = [
   "Mobile App Development",
   "Web Development",
   "Data Science and ML",
@@ -43,23 +43,21 @@ const INTEREST_OPTIONS = [
   "Game Development",
 ];
 
-const DIETARY_OPTIONS = [
+const FALLBACK_DIETARY = [
   "Kosher",
   "Vegetarian",
   "Vegan",
   "Halal",
   "Gluten-free",
   "Peanuts & Treenuts allergy",
-  "None",
 ];
 
-const MARKETING_OPTIONS = [
+const FALLBACK_MARKETING = [
   "Poster",
   "Social Media",
   "Word of Mouth",
-  "Website / Googling it",
+  "Website/Googling it",
   "Attended the event before",
-  "Other…",
 ];
 
 export default function Step2Page() {
@@ -77,29 +75,15 @@ export default function Step2Page() {
   });
 
   // States
-  const [dietaryOptions, setDietaryOptions] =
-    useState<string[]>(DIETARY_OPTIONS);
-  const [interestOptions, setInterestOptions] =
-    useState<string[]>(INTEREST_OPTIONS);
-  const [marketingOptions, setMarketingOptions] =
-    useState<string[]>(MARKETING_OPTIONS);
+  const [dietaryOptions, setDietaryOptions] = useState<string[]>([]);
+  const [interestOptions, setInterestOptions] = useState<string[]>([]);
+  const [marketingOptions, setMarketingOptions] = useState<string[]>([]);
   const [resume, setResume] = useState<File>();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
     useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>("");
-
-  useEffect(() => {
-    const loadStaticOptions = async () => {
-      const { dietaryRestrictions, interests, marketingTypes } =
-        await getStaticOptions();
-      setDietaryOptions(dietaryRestrictions);
-      setInterestOptions(interests);
-      setMarketingOptions(marketingTypes);
-    };
-    loadStaticOptions();
-  }, []);
 
   // Update form values when selections change
   useEffect(() => {
@@ -109,6 +93,35 @@ export default function Step2Page() {
   useEffect(() => {
     setValue("dietaryRestrictions", selectedDietaryRestrictions);
   }, [selectedDietaryRestrictions, setValue]);
+
+  useEffect(() => {
+    const loadStaticOptions = async () => {
+      try {
+        const { dietaryRestrictions, interests, marketingTypes } =
+          await getStaticOptions();
+
+        // Use loaded data or fallback to hardcoded options
+        setDietaryOptions(
+          dietaryRestrictions.length > 0
+            ? dietaryRestrictions
+            : FALLBACK_DIETARY,
+        );
+        setInterestOptions(
+          interests.length > 0 ? interests : FALLBACK_INTERESTS,
+        );
+        setMarketingOptions(
+          marketingTypes.length > 0 ? marketingTypes : FALLBACK_MARKETING,
+        );
+      } catch (error) {
+        // Use fallbacks on error
+        setDietaryOptions(FALLBACK_DIETARY);
+        setInterestOptions(FALLBACK_INTERESTS);
+        setMarketingOptions(FALLBACK_MARKETING);
+      }
+    };
+
+    loadStaticOptions();
+  }, []);
 
   // Function to upload resume to Supabase Storage
   const uploadResumeToSupabase = async (file: File): Promise<string | null> => {
@@ -126,7 +139,7 @@ export default function Step2Page() {
         return null;
       }
 
-      // Generate filename using original name - prefixed with user ID (required by RLS policy)
+      // Generate filename using original name - prefixed with user ID
       const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
       const userPrefixedFilename = `${user.id}_${originalName}`;
 
@@ -150,7 +163,6 @@ export default function Step2Page() {
 
       return publicUrl;
     } catch (error) {
-      console.error("Resume upload error:", error);
       setUploadError("Upload failed unexpectedly");
       return null;
     } finally {
@@ -210,13 +222,9 @@ export default function Step2Page() {
 
       setValues(updatedPartial);
 
-      // Build full payload
-      const full = { ...data, ...updatedPartial };
-
       // Forward to completion page
       router.push(`/register/complete`);
     } catch (error) {
-      console.error("Error during form submission:", error);
       setUploadError("Failed to process form. Please try again.");
     } finally {
       setIsUploading(false);
@@ -244,7 +252,6 @@ export default function Step2Page() {
   };
 
   const onFileReject = (file: File, message: string) => {
-    console.error(`File rejected: ${file.name} - ${message}`);
     setUploadError(message);
   };
 
@@ -432,7 +439,7 @@ export default function Step2Page() {
           value={resume ? [resume] : []}
           onValueChange={([file]) => {
             setResume(file);
-            setUploadError(""); // Clear any previous errors
+            setUploadError("");
           }}
           onFileValidate={onFileValidate}
           onFileReject={onFileReject}

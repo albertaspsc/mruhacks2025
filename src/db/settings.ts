@@ -1,25 +1,13 @@
 "use server";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@utils/supabase/server";
-import { db } from "./drizzle";
-import {
-  marketingPreferences,
-  parkingInfo,
-  parkingSituation,
-  users,
-  userInterests,
-  userRestrictions,
-  admins,
-  profiles,
-} from "./schema";
-import { Registration } from "./registration";
-import z from "zod";
-import { eq } from "drizzle-orm";
-import { createSelectSchema } from "drizzle-zod";
 
+import { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/server";
+import { z } from "zod";
+
+// Simple schemas for validation
 const parkingPreferencesSchema = z
   .object({
-    parkingPreference: createSelectSchema(parkingSituation),
+    parkingPreference: z.enum(["Yes", "No", "Not sure"]),
     licensePlate: z.string().optional(),
   })
   .refine(
@@ -32,6 +20,15 @@ const parkingPreferencesSchema = z
     },
   );
 
+const userNameAndEmailSchema = z
+  .object({
+    f_name: z.string().min(1).optional(),
+    l_name: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+  })
+  .partial();
+
+// Update parking preferences
 export async function updateParkingPreferences(
   data: z.infer<typeof parkingPreferencesSchema>,
   supabase?: SupabaseClient,
@@ -45,34 +42,43 @@ export async function updateParkingPreferences(
     return { error: authError };
   }
 
-  const userId = auth.user.id;
-
-  const { success, error } =
-    await parkingPreferencesSchema.safeParseAsync(data);
-  if (!success) {
-    return { error };
+  const validation = parkingPreferencesSchema.safeParse(data);
+  if (!validation.success) {
+    return { error: validation.error };
   }
 
-  // Update parking preference in users table
-  await db
-    .update(users)
-    .set({ parking: data.parkingPreference })
-    .where(eq(users.id, auth.user.id));
+  try {
+    // Update parking preference in users table
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ parking: data.parkingPreference })
+      .eq("id", auth.user.id);
 
-  // Update license plate if provided and parking is "Yes"
-  if (data.parkingPreference === "Yes" && data.licensePlate) {
-    await db
-      .insert(parkingInfo)
-      .values({ id: userId, licensePlate: data.licensePlate })
-      .onConflictDoUpdate({
-        target: parkingInfo.id,
-        set: { licensePlate: data.licensePlate },
-      });
+    if (updateError) {
+      return { error: updateError };
+    }
+
+    // Update license plate if provided and parking is "Yes"
+    if (data.parkingPreference === "Yes" && data.licensePlate) {
+      const { error: parkingError } = await supabase
+        .from("parking_info")
+        .upsert({
+          id: auth.user.id,
+          license_plate: data.licensePlate,
+        });
+
+      if (parkingError) {
+        return { error: parkingError };
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update parking preferences" };
   }
-
-  return { success: true };
 }
 
+// Update marketing preferences
 export async function updateMarketingPreferences(
   sendEmails: boolean,
   supabase?: SupabaseClient,
@@ -86,29 +92,25 @@ export async function updateMarketingPreferences(
     return { error: authError };
   }
 
-  const userId = auth.user.id;
-
-  await db
-    .insert(marketingPreferences)
-    .values({ id: userId, sendEmails })
-    .onConflictDoUpdate({
-      target: [marketingPreferences.id],
-      set: { sendEmails },
+  try {
+    const { error } = await supabase.from("marketing_preferences").upsert({
+      id: auth.user.id,
+      send_emails: sendEmails,
     });
 
-  return {};
+    if (error) {
+      return { error };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to update marketing preferences" };
+  }
 }
 
-const userNameAndEmailSchema = z
-  .object({
-    firstName: z.string().nonempty(),
-    lastName: z.string().nonempty(),
-    email: z.string().email(),
-  })
-  .partial();
-
+// Update user name and email
 export async function updateUserNameAndEmail(
-  user: Partial<Pick<Registration, "firstName" | "lastName" | "email">>,
+  user: { f_name?: string; l_name?: string; email?: string },
   supabase?: SupabaseClient,
 ) {
   if (!supabase) {
@@ -120,77 +122,97 @@ export async function updateUserNameAndEmail(
     return { error: authError };
   }
 
-  const userId = auth.user.id;
-
-  const { error, success } = await userNameAndEmailSchema.safeParseAsync(user);
-  if (!success) {
-    return { error };
+  const validation = userNameAndEmailSchema.safeParse(user);
+  if (!validation.success) {
+    return { error: validation.error };
   }
 
   try {
-    await db.update(users).set(user).where(eq(users.id, userId));
+    const { error: updateError } = await supabase
+      .from("users")
+      .update(validation.data)
+      .eq("id", auth.user.id);
+
+    if (updateError) {
+      return { error: updateError };
+    }
 
     return { success: true };
   } catch (error) {
-    return { error: "Failed to update user profile", details: error };
+    return { error: "Failed to update user profile" };
   }
 }
 
+// Get marketing preference
 export async function getMarketingPreference(supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
   }
-  const { data: auth, error: authError } = await supabase.auth.getUser();
 
+  const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
     return { error: authError };
   }
 
-  const results = await db
-    .select({ sendEmails: marketingPreferences.sendEmails })
-    .from(marketingPreferences)
-    .where(eq(marketingPreferences.id, auth.user.id));
+  try {
+    const { data, error } = await supabase
+      .from("marketing_preferences")
+      .select("send_emails")
+      .eq("id", auth.user.id)
+      .single();
 
-  if (results.length < 1) {
-    return { error: "Marketing preference not found" };
+    if (error && error.code !== "PGRST116") {
+      return { error };
+    }
+
+    return { data: { sendEmails: data?.send_emails || false } };
+  } catch (error) {
+    return { error: "Failed to get marketing preference" };
   }
-
-  return { data: results[0] };
 }
 
+// Get parking preference
 export async function getParkingPreference(supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
   }
-  const { data: auth, error: authError } = await supabase.auth.getUser();
 
+  const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
     return { error: authError };
   }
 
-  // Use leftJoin instead of rightJoin to ensure we always get user data
-  const result = await db
-    .select({
-      parking: users.parking,
-      licensePlate: parkingInfo.licensePlate,
-    })
-    .from(users)
-    .leftJoin(parkingInfo, eq(users.id, parkingInfo.id))
-    .where(eq(users.id, auth.user.id))
-    .limit(1);
+  try {
+    // Get user parking preference
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("parking")
+      .eq("id", auth.user.id)
+      .single();
 
-  if (!result.length) {
-    return { error: "User not found" };
+    if (userError) {
+      return { error: userError };
+    }
+
+    // Get license plate if exists
+    const { data: parkingData } = await supabase
+      .from("parking_info")
+      .select("license_plate")
+      .eq("id", auth.user.id)
+      .single();
+
+    return {
+      data: {
+        parking: userData.parking || "Not sure",
+        licensePlate: parkingData?.license_plate || "",
+      },
+    };
+  } catch (error) {
+    return { error: "Failed to get parking preference" };
   }
-
-  return {
-    data: {
-      parking: result[0].parking || "Not sure",
-      licensePlate: result[0].licensePlate || "",
-    },
-  };
 }
 
+// Delete user profile
 export async function deleteUserProfile(supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
@@ -206,25 +228,29 @@ export async function deleteUserProfile(supabase?: SupabaseClient) {
   try {
     console.log("Deleting user data for:", userId);
 
-    // Delete from all related tables first (children tables)
-    await Promise.all([
-      db
-        .delete(marketingPreferences)
-        .where(eq(marketingPreferences.id, userId)),
-      db.delete(parkingInfo).where(eq(parkingInfo.id, userId)),
-      db.delete(userInterests).where(eq(userInterests.user, userId)),
-      db.delete(userRestrictions).where(eq(userRestrictions.user, userId)),
-      db.delete(admins).where(eq(admins.id, userId)),
-      db.delete(profiles).where(eq(profiles.id, userId)),
+    // Delete from all related tables first (foreign key constraints)
+    const deletions = await Promise.allSettled([
+      supabase.from("marketing_preferences").delete().eq("id", userId),
+      supabase.from("parking_info").delete().eq("id", userId),
+      supabase.from("user_interests").delete().eq("user_id", userId),
+      supabase.from("user_diet_restrictions").delete().eq("user_id", userId),
+      supabase.from("admins").delete().eq("id", userId),
+      supabase.from("profiles").delete().eq("id", userId),
     ]);
 
     console.log("Deleted from child tables");
 
     // Delete from users table last (parent table)
-    await db.delete(users).where(eq(users.id, userId));
+    const { error: userDeleteError } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", userId);
+
+    if (userDeleteError) {
+      return { error: userDeleteError };
+    }
 
     console.log("Deleted from users table");
-
     return { success: true };
   } catch (error) {
     console.error("Database deletion error:", error);
