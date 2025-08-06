@@ -175,14 +175,15 @@ export function Sidebar({
         </div>
       </div>
 
-      <div className="px-3 py-2">
+      {/* Bottom navigation with mobile-safe padding */}
+      <div className="px-3 py-2 pb-6 sm:pb-2">
         <div className="space-y-1">
           {bottomNavItems.map((item) => (
             <Button
               key={item.title}
               variant={isActive(item) ? "secondary" : "ghost"}
               className={cn(
-                "w-full flex items-center justify-start h-10",
+                "w-full flex items-center justify-start h-12 sm:h-10", // Increased height on mobile
                 item.title === "Logout" &&
                   "text-red-600 hover:text-red-700 hover:bg-red-50",
               )}
