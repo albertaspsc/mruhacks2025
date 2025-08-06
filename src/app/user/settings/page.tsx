@@ -28,6 +28,9 @@ import {
   Info,
   CheckCircle,
   XCircle,
+  Mail,
+  Lock,
+  User,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -452,7 +455,7 @@ export default function SettingsPage() {
   const parkingPreference = parkingPreferencesForm.watch("parkingPreference");
 
   return (
-    <div className="container max-w-4xl py-10 relative">
+    <div className="container max-w-4xl py-6 px-2 sm:px-4 relative">
       {/* Toast notifications */}
       {toast && (
         <Toast
@@ -462,14 +465,49 @@ export default function SettingsPage() {
         />
       )}
 
-      <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">
+        Account Settings
+      </h1>
 
       <Tabs defaultValue="email" className="w-full">
-        <TabsList className="mb-8">
-          <TabsTrigger value="email">Email Preferences</TabsTrigger>
-          <TabsTrigger value="parking">Parking</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+        {/* Ultra-mobile-friendly tabs - icons only on very small screens */}
+        <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
+          <TabsTrigger
+            value="email"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+          >
+            <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+              Email
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="parking"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+          >
+            <Car className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+              Parking
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="password"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+          >
+            <Lock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+              Password
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="account"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+          >
+            <User className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+              Account
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Email Preferences Tab */}
@@ -520,7 +558,11 @@ export default function SettingsPage() {
                     )}
                   />
 
-                  <Button type="submit" disabled={isSubmitting.email}>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting.email}
+                    className="w-full sm:w-auto"
+                  >
                     {isSubmitting.email && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
@@ -624,7 +666,11 @@ export default function SettingsPage() {
                     </AlertDescription>
                   </Alert>
 
-                  <Button type="submit" disabled={isSubmitting.parking}>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting.parking}
+                    className="w-full sm:w-auto"
+                  >
                     {isSubmitting.parking && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
@@ -712,7 +758,11 @@ export default function SettingsPage() {
                     )}
                   />
 
-                  <Button type="submit" disabled={isSubmitting.password}>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting.password}
+                    className="w-full sm:w-auto"
+                  >
                     {isSubmitting.password && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
@@ -753,14 +803,19 @@ export default function SettingsPage() {
                     This action cannot be undone. This will permanently delete
                     your account and remove your data from our servers.
                   </p>
-                  <div className="flex space-x-4">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                     <Button
                       onClick={() => setShowDeleteConfirm(false)}
                       disabled={isDeleting}
+                      className="w-full sm:w-auto"
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleDeleteProfile} disabled={isDeleting}>
+                    <Button
+                      onClick={handleDeleteProfile}
+                      disabled={isDeleting}
+                      className="w-full sm:w-auto"
+                    >
                       {isDeleting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -773,7 +828,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ) : (
-                <Button onClick={() => setShowDeleteConfirm(true)}>
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full sm:w-auto"
+                >
                   Delete Account
                 </Button>
               )}
