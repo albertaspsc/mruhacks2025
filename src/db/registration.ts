@@ -109,11 +109,117 @@ async function registerInterestsAndRestrictions(
   return {};
 }
 
+// export async function register(
+//   user: RegistrationInput,
+//   supabase?: SupabaseClient,
+// ) {
+//   console.log("REGISTRATION - Starting registration for:", user.email);
+
+//   if (!supabase) {
+//     supabase = await createClient();
+//   }
+
+//   const { data: auth, error: authError } = await supabase.auth.getUser();
+//   if (authError) {
+//     console.error("Auth error:", authError);
+//     return { error: authError };
+//   }
+
+//   // Check if user is already registered
+//   const existingUser = await db
+//     .select()
+//     .from(users)
+//     .where(eq(users.id, auth.user.id))
+//     .limit(1);
+
+//   if (existingUser.length > 0) {
+//     console.log("User already registered..");
+//     return { success: true, message: "User already registered" };
+//   }
+
+//   // USE LOCAL VALIDATION SCHEMA
+//   const result = LocalRegistrationSchema.safeParse(user);
+//   if (!result.success) {
+//     console.error("Validation failed:", result.error.issues);
+//     return {
+//       error: result.error.issues
+//         .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+//         .join(", "),
+//     };
+//   }
+//   console.log("Validation passed");
+
+//   if (!auth.user.email) {
+//     return { error: "user not registered with email" };
+//   }
+
+//   const id = auth.user.id;
+//   const genderId = await getOrInsertGenderId(user);
+//   const otherIds = await getOtherIds(user);
+
+//   if (otherIds.length != 1) {
+//     console.log("Other IDs failed:", otherIds);
+//     return {
+//       error:
+//         "one or more of marketing, experience, university, or major was not found in the database.",
+//     };
+//   }
+
+//   try {
+//     // Extract resume filename from URL if present
+//     let resumeFilename: string | undefined;
+//     if (user.resume) {
+//       try {
+//         const url = new URL(user.resume);
+//         resumeFilename = url.pathname.split("/").pop() || undefined;
+//       } catch (e) {
+//         console.warn("Could not extract filename from resume URL");
+//       }
+//     }
+
+//     await db.insert(users).values({
+//       id,
+//       gender: genderId,
+//       ...otherIds[0],
+//       previousAttendance: user.previousAttendance,
+//       parking: user.parking,
+//       yearOfStudy: user.yearOfStudy,
+//       accommodations: user.accommodations,
+//       email: auth.user.email,
+//       firstName: user.firstName,
+//       lastName: user.lastName,
+//       timestamp: new Date(),
+//       marketing: otherIds[0].marketing,
+//       checkedIn: false,
+//       status: "pending",
+//       resumeUrl: user.resume,
+//       resumeFilename,
+//     });
+
+//     console.log("User created successfully");
+//   } catch (insertError) {
+//     console.error("User insert failed:", insertError);
+//     return { error: `Database insert failed: ${insertError}` };
+//   }
+
+//   const { error: multiOptionsError } = await registerInterestsAndRestrictions(
+//     id,
+//     user,
+//   );
+//   if (multiOptionsError) {
+//     return { error: multiOptionsError };
+//   }
+
+//   console.log("Registration completed successfully");
+//   return { success: true };
+// }
+
 export async function register(
   user: RegistrationInput,
   supabase?: SupabaseClient,
 ) {
   console.log("REGISTRATION - Starting registration for:", user.email);
+  console.log("DATABASE_URL check:", !!process.env.DATABASE_URL);
 
   if (!supabase) {
     supabase = await createClient();
@@ -125,47 +231,59 @@ export async function register(
     return { error: authError };
   }
 
-  // Check if user is already registered
-  const existingUser = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, auth.user.id))
-    .limit(1);
-
-  if (existingUser.length > 0) {
-    console.log("User already registered..");
-    return { success: true, message: "User already registered" };
-  }
-
-  // USE LOCAL VALIDATION SCHEMA
-  const result = LocalRegistrationSchema.safeParse(user);
-  if (!result.success) {
-    console.error("Validation failed:", result.error.issues);
-    return {
-      error: result.error.issues
-        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-        .join(", "),
-    };
-  }
-  console.log("Validation passed");
-
-  if (!auth.user.email) {
-    return { error: "user not registered with email" };
-  }
-
-  const id = auth.user.id;
-  const genderId = await getOrInsertGenderId(user);
-  const otherIds = await getOtherIds(user);
-
-  if (otherIds.length != 1) {
-    console.log("Other IDs failed:", otherIds);
-    return {
-      error:
-        "one or more of marketing, experience, university, or major was not found in the database.",
-    };
-  }
+  console.log("Auth successful, user ID:", auth.user.id);
 
   try {
+    // Check if user is already registered
+    console.log("Checking for existing user...");
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, auth.user.id))
+      .limit(1);
+
+    console.log("Existing user check result:", existingUser.length);
+
+    if (existingUser.length > 0) {
+      console.log("User already registered..");
+      return { success: true, message: "User already registered" };
+    }
+
+    // Validation
+    console.log("Validating user data...");
+    const result = LocalRegistrationSchema.safeParse(user);
+    if (!result.success) {
+      console.error("Validation failed:", result.error.issues);
+      return {
+        error: result.error.issues
+          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join(", "),
+      };
+    }
+    console.log("Validation passed");
+
+    if (!auth.user.email) {
+      return { error: "user not registered with email" };
+    }
+
+    const id = auth.user.id;
+
+    console.log("Getting gender ID...");
+    const genderId = await getOrInsertGenderId(user);
+    console.log("Gender ID:", genderId);
+
+    console.log("Getting other IDs...");
+    const otherIds = await getOtherIds(user);
+    console.log("Other IDs result:", otherIds);
+
+    if (otherIds.length != 1) {
+      console.log("Other IDs failed:", otherIds);
+      return {
+        error:
+          "one or more of marketing, experience, university, or major was not found in the database.",
+      };
+    }
+
     // Extract resume filename from URL if present
     let resumeFilename: string | undefined;
     if (user.resume) {
@@ -177,41 +295,52 @@ export async function register(
       }
     }
 
-    await db.insert(users).values({
+    console.log("Attempting to insert user into database...");
+    console.log("otherIds[0] contains:", otherIds[0]);
+
+    const userInsertData = {
       id,
+      email: auth.user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
       gender: genderId,
-      ...otherIds[0],
+      university: otherIds[0].university,
+      major: otherIds[0].major,
+      experience: otherIds[0].experience,
+      marketing: otherIds[0].marketing,
       previousAttendance: user.previousAttendance,
       parking: user.parking,
       yearOfStudy: user.yearOfStudy,
       accommodations: user.accommodations,
-      email: auth.user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
       timestamp: new Date(),
-      marketing: otherIds[0].marketing,
-      checkedIn: false,
-      status: "pending",
+      status: "pending" as const,
       resumeUrl: user.resume,
       resumeFilename,
-    });
+      checkedIn: false,
+    };
+
+    console.log("User insert data:", userInsertData);
+
+    await db.insert(users).values(userInsertData);
 
     console.log("User created successfully");
+
+    console.log("Registering interests and restrictions...");
+    const { error: multiOptionsError } = await registerInterestsAndRestrictions(
+      id,
+      user,
+    );
+    if (multiOptionsError) {
+      console.log("Interests/restrictions failed:", multiOptionsError);
+      return { error: multiOptionsError };
+    }
+
+    console.log("Registration completed successfully");
+    return { success: true };
   } catch (insertError) {
     console.error("User insert failed:", insertError);
     return { error: `Database insert failed: ${insertError}` };
   }
-
-  const { error: multiOptionsError } = await registerInterestsAndRestrictions(
-    id,
-    user,
-  );
-  if (multiOptionsError) {
-    return { error: multiOptionsError };
-  }
-
-  console.log("Registration completed successfully");
-  return { success: true };
 }
 
 async function getOtherIds(user: RegistrationInput) {
