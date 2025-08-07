@@ -1,55 +1,48 @@
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-export async function DELETE() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    console.error("Auth error:", error);
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  console.log("Starting account deletion for user:", user.id);
-
+export async function DELETE(request: NextRequest) {
   try {
-    // With cascade DELETE constraints, deleting the auth user will automatically
-    // delete from public.users and public.profiles
-    console.log(
-      "Deleting Auth user (will cascade to public.users and public.profiles)...",
-    );
-    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
-      user.id,
-    );
+    // Create Supabase client
+    const supabase = await createClient();
 
-    if (deleteAuthError) {
-      console.error("Auth user deletion failed:", deleteAuthError);
-      return Response.json(
-        {
-          error: "Failed to delete authentication account",
-          details: deleteAuthError,
-        },
+    // Check if user is authenticated
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Authentication error:", authError);
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    console.log("Deleting account for user:", user.id);
+
+    // Call the database function that handles all deletions
+    const { error: deleteError } = await supabase.rpc("delete_user_completely");
+
+    if (deleteError) {
+      console.error("Delete error:", deleteError);
+      return NextResponse.json(
+        { error: "Failed to delete account. Please try again." },
         { status: 500 },
       );
     }
 
-    console.log(
-      "Account deletion completed successfully - user deleted from all tables",
-    );
-    return Response.json({
+    console.log("Account deleted successfully from all tables");
+
+    return NextResponse.json({
       success: true,
       message: "Account deleted successfully",
     });
   } catch (error) {
-    console.error("Unexpected error during deletion:", error);
-    return Response.json(
-      {
-        error: "Internal server error during account deletion",
-        details: error instanceof Error ? error.message : String(error),
-      },
+    console.error("API delete-account error:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred while deleting your account" },
       { status: 500 },
     );
   }
