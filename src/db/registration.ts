@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { syncUserToProfile } from "@/db/settings";
 import { z } from "zod";
 
 export interface Registration {
@@ -236,6 +237,30 @@ export async function register(user: RegistrationInput) {
 
     // Handle interests and dietary restrictions
     await handleUserSelections(supabase, auth.user.id, user);
+
+    // Syncs information to public.profile table
+    console.log("User registered successfully, syncing to profile table...");
+
+    const profileSyncResult = await syncUserToProfile(
+      {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: auth.user.email,
+        parking: user.parking,
+      },
+      supabase,
+    );
+
+    if (profileSyncResult.error) {
+      console.error(
+        "Profile sync failed during registration:",
+        profileSyncResult.error,
+      );
+      // Don't fail the entire registration, but log the error
+      console.warn("User registered successfully but profile sync failed");
+    } else {
+      console.log("User registered and profile synced successfully");
+    }
 
     return { success: true };
   } catch (error) {

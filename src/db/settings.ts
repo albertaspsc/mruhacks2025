@@ -22,65 +22,350 @@ const parkingPreferencesSchema = z
 
 const userNameAndEmailSchema = z
   .object({
-    f_name: z.string().min(1).optional(),
-    l_name: z.string().min(1).optional(),
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().min(1).optional(),
     email: z.string().email().optional(),
   })
   .partial();
 
-// Update parking preferences
+// PARKING PREFERENCES FUNCTIONS
 export async function updateParkingPreferences(
   data: z.infer<typeof parkingPreferencesSchema>,
   supabase?: SupabaseClient,
 ) {
+  console.log("=== updateParkingPreferences called ===");
+  console.log("Input data:", data);
+
   if (!supabase) {
     supabase = await createClient();
   }
 
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
+    console.error("Auth error:", authError);
     return { error: authError };
   }
 
   const validation = parkingPreferencesSchema.safeParse(data);
   if (!validation.success) {
+    console.error("Validation error:", validation.error);
     return { error: validation.error };
   }
 
   try {
-    // Update parking preference in users table
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ parking: data.parkingPreference })
-      .eq("id", auth.user.id);
+    const userId = auth.user.id;
+    const currentTime = new Date().toISOString();
 
-    if (updateError) {
-      return { error: updateError };
+    // Update users table
+    const { error: usersError } = await supabase
+      .from("users")
+      .update({
+        parking: data.parkingPreference,
+        updated_at: currentTime,
+      })
+      .eq("id", userId);
+
+    if (usersError) {
+      console.error("Users table update failed:", usersError);
+      return { error: usersError };
     }
 
-    // Update license plate if provided and parking is "Yes"
-    if (data.parkingPreference === "Yes" && data.licensePlate) {
-      const { error: parkingError } = await supabase
-        .from("parking_info")
-        .upsert({
-          id: auth.user.id,
-          license_plate: data.licensePlate,
-        });
+    console.log("Users table updated successfully");
 
-      if (parkingError) {
-        return { error: parkingError };
+    // Sync to profile table using the helper function
+    const syncResult = await syncUserToProfile(
+      { parking: data.parkingPreference },
+      supabase,
+    );
+
+    if (syncResult.error) {
+      console.error("Profile sync failed:", syncResult.error);
+      console.warn(
+        "Parking preference updated in users table but failed to sync to profile",
+      );
+    } else {
+      console.log("Parking preference synced to profile table successfully");
+    }
+
+    // Handle license plate in profile table
+    if (data.parkingPreference === "Yes" && data.licensePlate) {
+      console.log(
+        "Updating license plate in profile table:",
+        data.licensePlate,
+      );
+
+      const { error: licenseError } = await supabase
+        .from("profile")
+        .update({
+          license_plate: data.licensePlate,
+          updated_at: currentTime,
+        })
+        .eq("id", userId);
+
+      if (licenseError) {
+        console.error("License plate update failed:", licenseError);
+      } else {
+        console.log("License plate updated successfully in profile table");
+      }
+    } else if (data.parkingPreference !== "Yes") {
+      // Clear license plate if parking is not "Yes"
+      const { error: clearLicenseError } = await supabase
+        .from("profile")
+        .update({
+          license_plate: null,
+          updated_at: currentTime,
+        })
+        .eq("id", userId);
+
+      if (clearLicenseError) {
+        console.error("Failed to clear license plate:", clearLicenseError);
+      } else {
+        console.log("License plate cleared successfully");
       }
     }
 
     return { success: true };
   } catch (error) {
+    console.error("updateParkingPreferences exception:", error);
     return { error: "Failed to update parking preferences" };
   }
 }
 
-// Update marketing preferences
+export async function getParkingPreference(supabase?: SupabaseClient) {
+  console.log("=== getParkingPreference called ===");
+
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("Auth error:", authError);
+    return { error: authError };
+  }
+
+  try {
+    const userId = auth.user.id;
+    console.log("Getting parking preferences for user:", userId);
+
+    // Get parking preference from users table (primary source)
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("parking")
+      .eq("id", userId)
+      .single();
+
+    if (userError) {
+      console.error("Error fetching parking preference from users:", userError);
+      return { error: userError };
+    }
+
+    // Get license plate from profile table
+    let licensePlate = "";
+    try {
+      const { data: profileData } = await supabase
+        .from("profile")
+        .select("license_plate")
+        .eq("id", userId)
+        .single();
+
+      licensePlate = profileData?.license_plate || "";
+    } catch (error) {
+      console.log("No license plate found in profile table");
+    }
+
+    console.log("Retrieved parking preference:", userData.parking);
+    console.log("Retrieved license plate:", licensePlate);
+
+    return {
+      data: {
+        parking: userData.parking || "Not sure",
+        licensePlate: licensePlate,
+      },
+    };
+  } catch (error) {
+    console.error("getParkingPreference error:", error);
+    return { error: "Failed to get parking preference" };
+  }
+}
+
+// MARKETING PREFERENCES FUNCTIONS
 export async function updateMarketingPreferences(
   sendEmails: boolean,
+  supabase?: SupabaseClient,
+) {
+  console.log("=== updateMarketingPreferences called ===");
+  console.log("sendEmails:", sendEmails);
+
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("Auth error:", authError);
+    return { error: authError };
+  }
+
+  try {
+    const userId = auth.user.id;
+    console.log("Updating marketing preferences for user:", userId);
+
+    const { error } = await supabase.from("mktg_preferences").upsert({
+      id: userId,
+      send_emails: sendEmails,
+    });
+
+    if (error) {
+      console.error("Marketing preferences update error:", error);
+      return { error };
+    }
+
+    console.log("Marketing preferences updated successfully");
+    return { success: true };
+  } catch (error) {
+    console.error("updateMarketingPreferences exception:", error);
+    return { error: "Failed to update marketing preferences" };
+  }
+}
+
+export async function getMarketingPreference(supabase?: SupabaseClient) {
+  console.log("=== getMarketingPreference called ===");
+
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("Auth error:", authError);
+    return { error: authError };
+  }
+
+  try {
+    const userId = auth.user.id;
+    console.log("Getting marketing preferences for user:", userId);
+
+    const { data, error } = await supabase
+      .from("mktg_preferences")
+      .select("send_emails")
+      .eq("id", userId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Marketing preferences fetch error:", error);
+      return { error };
+    }
+
+    // If no record exists (PGRST116 error), create one with default true
+    if (error && error.code === "PGRST116") {
+      console.log(
+        "No marketing preference record found, creating default (true)",
+      );
+
+      const { error: createError } = await supabase
+        .from("mktg_preferences")
+        .insert({
+          id: userId,
+          send_emails: true, // Default to true
+        });
+
+      if (createError) {
+        console.error(
+          "Failed to create default marketing preference:",
+          createError,
+        );
+        return { error: createError };
+      }
+
+      return { data: { sendEmails: true } };
+    }
+
+    console.log("Marketing preferences retrieved:", data);
+    return { data: { sendEmails: data?.send_emails ?? true } };
+  } catch (error) {
+    console.error("getMarketingPreference exception:", error);
+    return { error: "Failed to get marketing preference" };
+  }
+}
+
+// USER PROFILE FUNCTIONS
+export async function syncUserToProfile(
+  userData: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    parking?: string;
+  },
+  supabase?: SupabaseClient,
+) {
+  console.log("=== syncUserToProfile called ===");
+  console.log("Input data:", userData);
+
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("Auth error:", authError);
+    return { error: authError };
+  }
+
+  try {
+    const userId = auth.user.id;
+    const currentTime = new Date().toISOString();
+
+    // Get current user data from users table
+    const { data: currentUserData, error: getUserError } = await supabase
+      .from("users")
+      .select("f_name, l_name, email, parking")
+      .eq("id", userId)
+      .single();
+
+    if (getUserError) {
+      console.error("Error getting user data:", getUserError);
+      return { error: getUserError };
+    }
+
+    console.log("Current user data:", currentUserData);
+
+    // Prepare profile data using current data + any updates
+    const profileData = {
+      id: userId,
+      first_name: userData.firstName || currentUserData.f_name,
+      last_name: userData.lastName || currentUserData.l_name,
+      email: userData.email || currentUserData.email,
+      parking: userData.parking || currentUserData.parking,
+      updated_at: currentTime,
+    };
+
+    console.log("Profile data to upsert:", profileData);
+
+    if (!profileData.email) {
+      return { error: "Email is required for profile creation" };
+    }
+
+    // Upsert the profile record
+    const { error: profileError } = await supabase
+      .from("profile")
+      .upsert(profileData);
+
+    if (profileError) {
+      console.error("Profile upsert error:", profileError);
+      return { error: profileError };
+    }
+
+    console.log("Profile synced successfully");
+    return { success: true };
+  } catch (error) {
+    console.error("syncUserToProfile exception:", error);
+    return { error: "Failed to sync user to profile" };
+  }
+}
+
+export async function updateUserNameOnly(
+  user: { firstName: string; lastName: string },
   supabase?: SupabaseClient,
 ) {
   if (!supabase) {
@@ -93,126 +378,172 @@ export async function updateMarketingPreferences(
   }
 
   try {
-    const { error } = await supabase.from("marketing_preferences").upsert({
-      id: auth.user.id,
-      send_emails: sendEmails,
-    });
+    const userId = auth.user.id;
+    const currentTime = new Date().toISOString();
 
-    if (error) {
-      return { error };
+    console.log("Updating names for user:", userId);
+    console.log("firstName:", user.firstName, "lastName:", user.lastName);
+
+    const [usersUpdate, profileUpdate] = await Promise.allSettled([
+      supabase
+        .from("users")
+        .update({
+          f_name: user.firstName,
+          l_name: user.lastName,
+          updated_at: currentTime,
+        })
+        .eq("id", userId),
+
+      // Profile table
+      supabase
+        .from("profile")
+        .update({
+          first_name: user.firstName,
+          last_name: user.lastName,
+          updated_at: currentTime,
+        })
+        .eq("id", userId),
+    ]);
+
+    console.log("Users update result:", usersUpdate);
+    console.log("Profile update result:", profileUpdate);
+
+    const usersSuccess =
+      usersUpdate.status === "fulfilled" && !usersUpdate.value.error;
+
+    if (usersSuccess) {
+      console.log("Users table updated successfully");
+      return { success: true };
+    } else {
+      console.error("Users table update failed:", usersUpdate);
+      return {
+        error:
+          usersUpdate.status === "fulfilled"
+            ? usersUpdate.value.error
+            : usersUpdate.reason,
+      };
     }
-
-    return { success: true };
   } catch (error) {
-    return { error: "Failed to update marketing preferences" };
+    console.error("updateUserNameOnly exception:", error);
+    return { error: `Exception: ${error}` };
   }
 }
 
-// Update user name and email
 export async function updateUserNameAndEmail(
-  user: { f_name?: string; l_name?: string; email?: string },
+  user: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  },
   supabase?: SupabaseClient,
 ) {
+  console.log("=== updateUserNameAndEmail called ===");
+  console.log("Input user data:", user);
+
   if (!supabase) {
     supabase = await createClient();
   }
 
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
+    console.error("Auth error:", authError);
     return { error: authError };
   }
 
   const validation = userNameAndEmailSchema.safeParse(user);
   if (!validation.success) {
+    console.error("Validation error:", validation.error);
     return { error: validation.error };
   }
 
   try {
-    const { error: updateError } = await supabase
-      .from("users")
-      .update(validation.data)
-      .eq("id", auth.user.id);
+    const userId = auth.user.id;
+    const currentTime = new Date().toISOString();
 
-    if (updateError) {
-      return { error: updateError };
+    // Prepare update objects
+    const usersUpdate: any = { updated_at: currentTime };
+    const profileUpdate: any = { updated_at: currentTime };
+
+    if (user.firstName !== undefined) {
+      usersUpdate.f_name = user.firstName;
+      profileUpdate.first_name = user.firstName;
     }
 
-    return { success: true };
+    if (user.lastName !== undefined) {
+      usersUpdate.l_name = user.lastName;
+      profileUpdate.last_name = user.lastName;
+    }
+
+    // For email: store as pending in public tables
+    if (user.email !== undefined) {
+      usersUpdate.pending_email = user.email;
+      usersUpdate.email_change_requested_at = currentTime;
+
+      profileUpdate.pending_email = user.email;
+      profileUpdate.email_change_requested_at = currentTime;
+    }
+
+    const updatePromises = [
+      supabase.from("users").update(usersUpdate).eq("id", userId),
+      supabase.from("profile").update(profileUpdate).eq("id", userId),
+    ];
+
+    const results = await Promise.allSettled(updatePromises);
+
+    const usersSuccess =
+      results[0].status === "fulfilled" && !results[0].value.error;
+
+    if (usersSuccess) {
+      return { success: true };
+    } else {
+      const firstError =
+        results[0].status === "fulfilled"
+          ? results[0].value.error
+          : results[0].reason;
+      return { error: firstError };
+    }
   } catch (error) {
-    return { error: "Failed to update user profile" };
+    console.error("updateUserNameAndEmail exception:", error);
+    return { error: `Exception: ${error}` };
   }
 }
 
-// Get marketing preference
-export async function getMarketingPreference(supabase?: SupabaseClient) {
+// UTILITY FUNCTIONS
+export async function enableMarketingForNewUser(supabase?: SupabaseClient) {
+  console.log("=== enableMarketingForNewUser called ===");
+
   if (!supabase) {
     supabase = await createClient();
   }
 
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError) {
+    console.error("Auth error:", authError);
     return { error: authError };
   }
 
   try {
-    const { data, error } = await supabase
-      .from("marketing_preferences")
-      .select("send_emails")
-      .eq("id", auth.user.id)
-      .single();
+    const userId = auth.user.id;
+    console.log("Enabling marketing emails for new user:", userId);
 
-    if (error && error.code !== "PGRST116") {
+    const { error } = await supabase.from("mktg_preferences").upsert({
+      id: userId,
+      send_emails: true,
+    });
+
+    if (error) {
+      console.error("Failed to enable marketing for new user:", error);
       return { error };
     }
 
-    return { data: { sendEmails: data?.send_emails || false } };
+    console.log("Marketing emails enabled for new user");
+    return { success: true };
   } catch (error) {
-    return { error: "Failed to get marketing preference" };
+    console.error("enableMarketingForNewUser exception:", error);
+    return { error: "Failed to enable marketing for new user" };
   }
 }
 
-// Get parking preference
-export async function getParkingPreference(supabase?: SupabaseClient) {
-  if (!supabase) {
-    supabase = await createClient();
-  }
-
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    return { error: authError };
-  }
-
-  try {
-    // Get user parking preference
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("parking")
-      .eq("id", auth.user.id)
-      .single();
-
-    if (userError) {
-      return { error: userError };
-    }
-
-    // Get license plate if exists
-    const { data: parkingData } = await supabase
-      .from("parking_info")
-      .select("license_plate")
-      .eq("id", auth.user.id)
-      .single();
-
-    return {
-      data: {
-        parking: userData.parking || "Not sure",
-        licensePlate: parkingData?.license_plate || "",
-      },
-    };
-  } catch (error) {
-    return { error: "Failed to get parking preference" };
-  }
-}
-
-// Delete user profile
 export async function deleteUserProfile(supabase?: SupabaseClient) {
   if (!supabase) {
     supabase = await createClient();
@@ -228,19 +559,19 @@ export async function deleteUserProfile(supabase?: SupabaseClient) {
   try {
     console.log("Deleting user data for:", userId);
 
-    // Delete from all related tables first (foreign key constraints)
+    // Delete from all related tables first
     const deletions = await Promise.allSettled([
-      supabase.from("marketing_preferences").delete().eq("id", userId),
+      supabase.from("mktg_preferences").delete().eq("id", userId),
       supabase.from("parking_info").delete().eq("id", userId),
       supabase.from("user_interests").delete().eq("user_id", userId),
       supabase.from("user_diet_restrictions").delete().eq("user_id", userId),
       supabase.from("admins").delete().eq("id", userId),
-      supabase.from("profiles").delete().eq("id", userId),
+      supabase.from("profile").delete().eq("id", userId),
     ]);
 
     console.log("Deleted from child tables");
 
-    // Delete from users table last (parent table)
+    // Delete from users table last
     const { error: userDeleteError } = await supabase
       .from("users")
       .delete()

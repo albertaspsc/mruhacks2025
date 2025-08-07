@@ -470,41 +470,41 @@ export default function SettingsPage() {
       </h1>
 
       <Tabs defaultValue="email" className="w-full">
-        {/* Ultra-mobile-friendly tabs - icons only on very small screens */}
+        {/* Responsive tabs */}
         <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
           <TabsTrigger
             value="email"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+            <Mail className="h-4 w-4 shrink-0" />
+            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
               Email
             </span>
           </TabsTrigger>
           <TabsTrigger
             value="parking"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            <Car className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+            <Car className="h-4 w-4 shrink-0" />
+            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
               Parking
             </span>
           </TabsTrigger>
           <TabsTrigger
             value="password"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            <Lock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+            <Lock className="h-4 w-4 shrink-0" />
+            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
               Password
             </span>
           </TabsTrigger>
           <TabsTrigger
             value="account"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2 py-1.5 sm:py-2 text-[10px] sm:text-xs min-w-0 h-12 sm:h-auto"
+            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            <User className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-            <span className="hidden min-[375px]:block text-[9px] sm:text-[10px] md:text-xs leading-none">
+            <User className="h-4 w-4 shrink-0" />
+            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
               Account
             </span>
           </TabsTrigger>
@@ -514,7 +514,10 @@ export default function SettingsPage() {
         <TabsContent value="email">
           <Card>
             <CardHeader>
-              <CardTitle>Email Preferences</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email Preferences
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {/* Mandatory Email Notice */}
@@ -686,7 +689,10 @@ export default function SettingsPage() {
         <TabsContent value="password">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Change Password
+              </CardTitle>
               <CardDescription>
                 Update your password for enhanced security.
               </CardDescription>
@@ -778,7 +784,10 @@ export default function SettingsPage() {
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle>Delete Account</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Delete Account
+              </CardTitle>
               <CardDescription>
                 Permanently delete your account and all associated data.
               </CardDescription>

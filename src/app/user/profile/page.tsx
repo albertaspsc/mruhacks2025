@@ -34,7 +34,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { getRegistration, Registration } from "@/db/registration";
 import { createClient } from "@/utils/supabase/client";
 import { z } from "zod";
-import { updateUserNameAndEmail } from "@/db/settings";
+import { updateUserNameAndEmail, updateUserNameOnly } from "@/db/settings";
 
 // Validation schema
 const profileSchema = z.object({
@@ -189,7 +189,6 @@ export default function ProfilePage() {
   }, []);
 
   async function onProfileSubmit(data: ProfileValues) {
-    // Validate form data
     const validation = profileSchema.safeParse(data);
     if (!validation.success) {
       const firstError = validation.error.errors[0];
@@ -202,14 +201,49 @@ export default function ProfilePage() {
 
     try {
       const emailChanged = data.email !== user?.email;
+      const nameChanged =
+        data.firstName !== user?.firstName || data.lastName !== user?.lastName;
 
-      // If email changed, update it through Supabase Auth (will send verification email)
+      if (nameChanged) {
+        console.log("Updating name:", {
+          firstName: data.firstName,
+          lastName: data.lastName,
+        });
+
+        const { error: nameUpdateError } = await updateUserNameOnly({
+          firstName: data.firstName,
+          lastName: data.lastName,
+        });
+
+        if (nameUpdateError) {
+          console.error("Name update error:", nameUpdateError);
+          throw new Error("Failed to update name information");
+        }
+
+        // Update local state immediately for name changes
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                firstName: data.firstName,
+                lastName: data.lastName,
+              }
+            : null,
+        );
+      }
+
+      // Handle email change (requires verification)
       if (emailChanged) {
+        console.log("Updating email from", user?.email, "to", data.email);
+
+        // this sends verification email
         const { error: emailUpdateError } = await supabase.auth.updateUser({
           email: data.email,
         });
 
         if (emailUpdateError) {
+          console.error("Supabase auth email update error:", emailUpdateError);
+
           if (emailUpdateError.message.includes("rate limit")) {
             showToast(
               "error",
@@ -231,36 +265,70 @@ export default function ProfilePage() {
           throw new Error(emailUpdateError.message || "Failed to update email");
         }
 
+        console.log(
+          "Supabase auth email update successful, now storing pending email...",
+        );
+
+        try {
+          console.log("Calling updateUserNameAndEmail with email:", data.email);
+
+          const result = await updateUserNameAndEmail({
+            email: data.email, // This stores as pending_email
+          });
+
+          console.log("updateUserNameAndEmail result:", result);
+
+          if (result.error) {
+            console.error(
+              "Failed to store pending email - detailed error:",
+              result.error,
+            );
+            // Log the type of error to understand what's happening
+            console.error("Error type:", typeof result.error);
+            console.error("Error keys:", Object.keys(result.error));
+            console.error(
+              "Error stringified:",
+              JSON.stringify(result.error, null, 2),
+            );
+
+            // Don't fail the whole operation since auth email was sent successfully
+            console.warn("Continuing despite pending email storage failure");
+          } else {
+            console.log("Pending email stored successfully");
+          }
+        } catch (pendingEmailError) {
+          console.error(
+            "Exception while storing pending email:",
+            pendingEmailError,
+          );
+          // Don't fail the whole operation
+        }
+
         setEmailVerificationSent(true);
       }
 
-      // Update name and email in database
-      const { error: dbUpdateError } = await updateUserNameAndEmail(data);
-
-      if (dbUpdateError) {
-        throw new Error("Failed to update profile information in database");
-      }
-
-      // Update local user state
-      setUser((prev) => (prev ? { ...prev, ...data } : null));
-
-      if (emailChanged) {
+      if (emailChanged && nameChanged) {
+        showToast(
+          "info",
+          "Updates saved",
+          `Name updated successfully. Please check ${data.email} for email verification.`,
+        );
+      } else if (emailChanged) {
         showToast(
           "info",
           "Verification email sent",
           `Please check ${data.email} and click the verification link to confirm your new email address.`,
         );
-      } else {
+      } else if (nameChanged) {
         showToast(
           "success",
           "Profile updated",
-          "Your profile information has been saved successfully.",
+          "Your name has been updated successfully.",
         );
       }
     } catch (error: any) {
       console.error("Profile update error:", error);
 
-      // Handle specific error cases
       if (error.message?.includes("session")) {
         showToast(
           "error",
