@@ -56,7 +56,7 @@ export async function updateParkingPreferences(
     const userId = auth.user.id;
     const currentTime = new Date().toISOString();
 
-    // Update users table
+    // Update users table with parking preference
     const { error: usersError } = await supabase
       .from("users")
       .update({
@@ -87,40 +87,38 @@ export async function updateParkingPreferences(
       console.log("Parking preference synced to profile table successfully");
     }
 
-    // Handle license plate in profile table
+    // Handle license plate in parking_info table
     if (data.parkingPreference === "Yes" && data.licensePlate) {
       console.log(
-        "Updating license plate in profile table:",
+        "Updating license plate in parking_info table:",
         data.licensePlate,
       );
 
       const { error: licenseError } = await supabase
-        .from("profile")
-        .update({
+        .from("parking_info")
+        .upsert({
+          id: userId,
           license_plate: data.licensePlate,
-          updated_at: currentTime,
-        })
-        .eq("id", userId);
+        });
 
       if (licenseError) {
         console.error("License plate update failed:", licenseError);
+        return { error: licenseError };
       } else {
-        console.log("License plate updated successfully in profile table");
+        console.log("License plate updated successfully in parking_info table");
       }
     } else if (data.parkingPreference !== "Yes") {
-      // Clear license plate if parking is not "Yes"
-      const { error: clearLicenseError } = await supabase
-        .from("profile")
-        .update({
-          license_plate: null,
-          updated_at: currentTime,
-        })
+      // Delete the parking_info record if parking is not "Yes"
+      const { error: deleteParkingError } = await supabase
+        .from("parking_info")
+        .delete()
         .eq("id", userId);
 
-      if (clearLicenseError) {
-        console.error("Failed to clear license plate:", clearLicenseError);
+      if (deleteParkingError) {
+        console.error("Failed to delete parking info:", deleteParkingError);
+        // Don't return error here as this might be expected if no record exists
       } else {
-        console.log("License plate cleared successfully");
+        console.log("Parking info record deleted successfully");
       }
     }
 
@@ -148,7 +146,7 @@ export async function getParkingPreference(supabase?: SupabaseClient) {
     const userId = auth.user.id;
     console.log("Getting parking preferences for user:", userId);
 
-    // Get parking preference from users table (primary source)
+    // Get parking preference from users table
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("parking")
@@ -160,18 +158,23 @@ export async function getParkingPreference(supabase?: SupabaseClient) {
       return { error: userError };
     }
 
-    // Get license plate from profile table
+    // Get license plate from parking_info table
     let licensePlate = "";
     try {
-      const { data: profileData } = await supabase
-        .from("profile")
+      const { data: parkingData, error: parkingError } = await supabase
+        .from("parking_info")
         .select("license_plate")
         .eq("id", userId)
         .single();
 
-      licensePlate = profileData?.license_plate || "";
+      if (parkingError && parkingError.code !== "PGRST116") {
+        // PGRST116 is "not found" error, which is expected for users without parking info
+        console.error("Error fetching license plate:", parkingError);
+      } else if (parkingData) {
+        licensePlate = parkingData.license_plate || "";
+      }
     } catch (error) {
-      console.log("No license plate found in profile table");
+      console.log("No license plate found in parking_info table");
     }
 
     console.log("Retrieved parking preference:", userData.parking);
@@ -565,6 +568,7 @@ export async function deleteUserProfile(supabase?: SupabaseClient) {
       supabase.from("parking_info").delete().eq("id", userId),
       supabase.from("user_interests").delete().eq("user_id", userId),
       supabase.from("user_diet_restrictions").delete().eq("user_id", userId),
+      supabase.from("parking_info").delete().eq("id", userId),
       supabase.from("admins").delete().eq("id", userId),
       supabase.from("profile").delete().eq("id", userId),
     ]);
