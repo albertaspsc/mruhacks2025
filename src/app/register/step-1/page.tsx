@@ -125,8 +125,8 @@ export default function Step1Page() {
   useEffect(() => {
     const loadLists = async () => {
       const { majors, universities } = await getMajorsAndUniversities();
-      setMajors(majors);
-      setInstitutions(universities);
+      setMajors(majors.map((m) => m.value));
+      setInstitutions(universities.map((u) => u.value));
     };
     loadLists();
   }, []);

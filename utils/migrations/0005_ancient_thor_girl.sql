@@ -18,15 +18,15 @@ CREATE TABLE "user_profiles" (
 --> statement-breakpoint
 ALTER TABLE "users" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
 DROP TABLE "users" CASCADE;--> statement-breakpoint
-ALTER TABLE "admins" DROP CONSTRAINT "admins_id_users_id_fk";
+ALTER TABLE "admins" DROP CONSTRAINT IF EXISTS "admins_id_users_id_fk";
 --> statement-breakpoint
-ALTER TABLE "parking_info" DROP CONSTRAINT "parking_info_id_users_id_fk";
+ALTER TABLE "parking_info" DROP CONSTRAINT IF EXISTS "parking_info_id_users_id_fk";
 --> statement-breakpoint
-ALTER TABLE "resumes" DROP CONSTRAINT "resumes_id_users_id_fk";
+ALTER TABLE "resumes" DROP CONSTRAINT IF EXISTS "resumes_id_users_id_fk";
 --> statement-breakpoint
-ALTER TABLE "user_interests" DROP CONSTRAINT "user_interests_id_users_id_fk";
+ALTER TABLE "user_interests" DROP CONSTRAINT IF EXISTS "user_interests_id_users_id_fk";
 --> statement-breakpoint
-ALTER TABLE "user_diet_restrictions" DROP CONSTRAINT "user_diet_restrictions_id_users_id_fk";
+ALTER TABLE "user_diet_restrictions" DROP CONSTRAINT IF EXISTS "user_diet_restrictions_id_users_id_fk";
 --> statement-breakpoint
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_id_users_id_fk" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_gender_gender_id_fk" FOREIGN KEY ("gender") REFERENCES "public"."gender"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

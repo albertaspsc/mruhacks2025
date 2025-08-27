@@ -99,9 +99,8 @@ export async function updateSession(request: NextRequest) {
       // Verify admin privileges server-side
       const { data: adminData, error: adminError } = await supabase
         .from("admins")
-        .select("id, role, status")
+        .select("id, status")
         .eq("id", user.id)
-        .in("role", ["volunteer", "admin", "super_admin"])
         .single();
 
       if (adminError) {
@@ -129,10 +128,9 @@ export async function updateSession(request: NextRequest) {
       }
 
       // Add admin context headers to the supabaseResponse
-      supabaseResponse.headers.set("x-admin-role", adminData.role);
       supabaseResponse.headers.set("x-admin-status", adminData.status);
 
-      console.log("Admin access granted:", user.id, "Role:", adminData.role);
+      console.log("Admin access granted:", user.id);
 
       // IMPORTANT: Return the original supabaseResponse with cookies intact
       return supabaseResponse;
@@ -151,7 +149,7 @@ export async function updateSession(request: NextRequest) {
     try {
       const { data: adminData } = await supabase
         .from("admins")
-        .select("id, role, status")
+        .select("id, status")
         .eq("id", user.id)
         .single();
 
@@ -174,7 +172,7 @@ export async function updateSession(request: NextRequest) {
     try {
       const { data: adminData } = await supabase
         .from("admins")
-        .select("id, role, status")
+        .select("id, status")
         .eq("id", user.id)
         .single();
 

@@ -103,14 +103,18 @@ export default function Step2Page() {
         // Use loaded data or fallback to hardcoded options
         setDietaryOptions(
           dietaryRestrictions.length > 0
-            ? dietaryRestrictions
+            ? dietaryRestrictions.map((d) => d.value)
             : FALLBACK_DIETARY,
         );
         setInterestOptions(
-          interests.length > 0 ? interests : FALLBACK_INTERESTS,
+          interests.length > 0
+            ? interests.map((i) => i.value)
+            : FALLBACK_INTERESTS,
         );
         setMarketingOptions(
-          marketingTypes.length > 0 ? marketingTypes : FALLBACK_MARKETING,
+          marketingTypes.length > 0
+            ? marketingTypes.map((m) => m.value)
+            : FALLBACK_MARKETING,
         );
       } catch (error) {
         // Use fallbacks on error

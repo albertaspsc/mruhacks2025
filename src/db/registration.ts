@@ -76,7 +76,7 @@ export async function register(user: RegistrationInput) {
   try {
     // Check if already registered
     const { data: existing } = await supabase
-      .from("users")
+      .from("user_profiles")
       .select("id")
       .eq("id", auth.user.id)
       .single();
@@ -93,48 +93,30 @@ export async function register(user: RegistrationInput) {
       return { error: "Gender must be a valid ID" };
     }
 
-    // Experience mapping
-    const experienceMap: { [key: string]: number } = {
-      "Beginner – What is a computer?": 1,
-      "Intermediate – My spaghetti code is made out of tagliatelle.": 2,
-      "Advanced – Firewalls disabled, mainframes bypassed.": 3,
-      "Expert – I know what a computer is.": 4,
-      Beginner: 1,
-      Intermediate: 2,
-      Advanced: 3,
-      Expert: 4,
-    };
-
-    // Marketing mapping
-    const marketingMap: { [key: string]: number } = {
-      Poster: 1,
-      "Social Media": 2,
-      "Word of Mouth": 3,
-      "Website/Googling it": 4,
-      "Attended the event before": 5,
-      Other: 6,
-    };
-
-    const experienceId = experienceMap[user.experience];
-    const marketingId = marketingMap[user.marketing];
-
-    const experienceResult = experienceId
-      ? { data: { id: experienceId }, error: null }
-      : {
-          data: null,
-          error: {
-            message: `Experience "${user.experience}" not found in mapping. Available: ${Object.keys(experienceMap).join(", ")}`,
-          },
-        };
-
-    const marketingResult = marketingId
-      ? { data: { id: marketingId }, error: null }
-      : {
-          data: null,
-          error: {
-            message: `Marketing "${user.marketing}" not found in mapping. Available: ${Object.keys(marketingMap).join(", ")}`,
-          },
-        };
+    // Get all static options with IDs
+    const [
+      experienceResult,
+      marketingResult,
+      majorsResult,
+      universitiesResult,
+    ] = await Promise.all([
+      supabase
+        .from("experience_types")
+        .select("id")
+        .eq("experience", user.experience)
+        .single(),
+      supabase
+        .from("marketing_types")
+        .select("id")
+        .eq("marketing", user.marketing)
+        .single(),
+      supabase.from("majors").select("id").eq("major", user.major).single(),
+      supabase
+        .from("universities")
+        .select("id")
+        .eq("uni", user.university)
+        .single(),
+    ]);
 
     // Check which lookups failed and provide specific error messages
     const errors = [];
@@ -147,73 +129,25 @@ export async function register(user: RegistrationInput) {
     if (marketingResult.error || !marketingResult.data) {
       errors.push(`Marketing option "${user.marketing}" not found in database`);
     }
+    if (majorsResult.error || !majorsResult.data) {
+      errors.push(`Major "${user.major}" not found in database`);
+    }
+    if (universitiesResult.error || !universitiesResult.data) {
+      errors.push(`University "${user.university}" not found in database`);
+    }
 
     if (errors.length > 0) {
       const errorMessage = "Database lookup failed: " + errors.join(", ");
       return { error: errorMessage };
     }
 
-    // Get or create university and major
-    let universityId, majorId;
+    // Use IDs from database lookups
+    const universityId = universitiesResult.data!.id;
+    const majorId = majorsResult.data!.id;
 
-    try {
-      // Try to get or create university
-      const { data: existingUni } = await supabase
-        .from("universities")
-        .select("id")
-        .eq("uni", user.university)
-        .single();
-
-      if (existingUni) {
-        universityId = existingUni.id;
-      } else {
-        const { data: newUni, error: uniError } = await supabase
-          .from("universities")
-          .insert({ uni: user.university })
-          .select("id")
-          .single();
-
-        if (uniError) {
-          universityId = 1;
-        } else {
-          universityId = newUni.id;
-        }
-      }
-    } catch (error) {
-      universityId = 1; // Fallback
-    }
-
-    try {
-      // Try to get or create major
-      const { data: existingMajor } = await supabase
-        .from("majors")
-        .select("id")
-        .eq("major", user.major)
-        .single();
-
-      if (existingMajor) {
-        majorId = existingMajor.id;
-      } else {
-        const { data: newMajor, error: majorError } = await supabase
-          .from("majors")
-          .insert({ major: user.major })
-          .select("id")
-          .single();
-
-        if (majorError) {
-          majorId = 1;
-        } else {
-          majorId = newMajor.id;
-        }
-      }
-    } catch (error) {
-      majorId = 1; // Fallback
-    }
-
-    // Insert user
-    const { error: insertError } = await supabase.from("users").insert({
+    // Insert user profile (only columns that exist on user_profiles)
+    const { error: insertError } = await supabase.from("user_profiles").insert({
       id: auth.user.id,
-      email: auth.user.email,
       f_name: user.firstName,
       l_name: user.lastName,
       gender: genderResult.data!.id,
@@ -223,12 +157,10 @@ export async function register(user: RegistrationInput) {
       marketing: marketingResult.data!.id,
       prev_attendance: user.previousAttendance,
       parking: user.parking,
-      yearOfStudy: user.yearOfStudy,
+      year_of_study: user.yearOfStudy,
       accommodations: user.accommodations || "",
-      resume_url: user.resume || null,
-      timestamp: new Date().toISOString(),
+      marketing_emails: true,
       status: "pending",
-      checked_in: false,
     });
 
     if (insertError) {
@@ -376,16 +308,25 @@ export async function getStaticOptions() {
     const [dietaryResult, interestResult, marketingResult] = await Promise.all([
       supabase
         .from("dietary_restrictions")
-        .select("restriction")
+        .select("id, restriction")
         .order("restriction"),
-      supabase.from("interests").select("interest").order("interest"),
-      supabase.from("marketing_types").select("marketing").order("marketing"),
+      supabase.from("interests").select("id, interest").order("interest"),
+      supabase
+        .from("marketing_types")
+        .select("id, marketing")
+        .order("marketing"),
     ]);
 
     return {
-      dietaryRestrictions: dietaryResult.data?.map((x) => x.restriction) || [],
-      interests: interestResult.data?.map((x) => x.interest) || [],
-      marketingTypes: marketingResult.data?.map((x) => x.marketing) || [],
+      dietaryRestrictions:
+        dietaryResult.data?.map((x) => ({ id: x.id, value: x.restriction })) ||
+        [],
+      interests:
+        interestResult.data?.map((x) => ({ id: x.id, value: x.interest })) ||
+        [],
+      marketingTypes:
+        marketingResult.data?.map((x) => ({ id: x.id, value: x.marketing })) ||
+        [],
     };
   } catch (error) {
     return {
@@ -438,8 +379,8 @@ export async function getMajorsAndUniversities() {
     const supabase = await createClient();
 
     const [majorsResult, universitiesResult] = await Promise.all([
-      supabase.from("majors").select("major").order("major"),
-      supabase.from("universities").select("uni").order("uni"),
+      supabase.from("majors").select("id, major").order("major"),
+      supabase.from("universities").select("id, uni").order("uni"),
     ]);
 
     if (majorsResult.error) {
@@ -451,8 +392,14 @@ export async function getMajorsAndUniversities() {
     }
 
     return {
-      majors: majorsResult.data?.map((row) => row.major) || [],
-      universities: universitiesResult.data?.map((row) => row.uni) || [],
+      majors:
+        majorsResult.data?.map((row) => ({ id: row.id, value: row.major })) ||
+        [],
+      universities:
+        universitiesResult.data?.map((row) => ({
+          id: row.id,
+          value: row.uni,
+        })) || [],
     };
   } catch (error) {
     return {

@@ -319,9 +319,9 @@ export async function syncUserToProfile(
     const userId = auth.user.id;
     const currentTime = new Date().toISOString();
 
-    // Get current user data from users table
+    // Get current user data from user_profiles
     const { data: currentUserData, error: getUserError } = await supabase
-      .from("users")
+      .from("user_profiles")
       .select("f_name, l_name, email, parking")
       .eq("id", userId)
       .single();
@@ -334,7 +334,7 @@ export async function syncUserToProfile(
     console.log("Current user data:", currentUserData);
 
     // Prepare profile data using current data + any updates
-    const profileData = {
+    const profileData: any = {
       id: userId,
       first_name: userData.firstName || currentUserData.f_name,
       last_name: userData.lastName || currentUserData.l_name,
@@ -349,7 +349,7 @@ export async function syncUserToProfile(
       return { error: "Email is required for profile creation" };
     }
 
-    // Upsert the profile record
+    // Upsert the profile record (columns: id, email, f_name, l_name)
     const { error: profileError } = await supabase
       .from("profile")
       .upsert(profileData);
