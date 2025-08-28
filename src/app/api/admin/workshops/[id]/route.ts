@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
-    const workshopId = params.id;
 
     const { data: workshop, error } = await supabase
       .from("workshops")
       .select("*")
-      .eq("id", workshopId)
+      .eq("id", id)
       .single();
 
     if (error || !workshop) {
@@ -34,12 +34,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id: workshopId } = await params;
     const supabase = await createClient(true);
     const body = await request.json();
-    const workshopId = params.id;
 
     // Permission check
     const regularSupabase = await createClient();
@@ -115,11 +115,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id: workshopId } = await params;
     const supabase = await createClient(true);
-    const workshopId = params.id;
 
     // Permission check
     const regularSupabase = await createClient();

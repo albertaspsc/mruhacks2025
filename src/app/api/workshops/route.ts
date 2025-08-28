@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Transform the data to match your frontend interface
     const transformedWorkshops = workshops.map((workshop: any) => ({
       id: workshop.id,
       title: workshop.title,

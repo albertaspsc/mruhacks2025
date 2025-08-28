@@ -1,8 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// Can export both individual workshop and all workshop regsitration info
-
 // Define types for the registration data
 interface WorkshopData {
   title: string;
@@ -16,9 +14,9 @@ interface WorkshopData {
 interface RegistrationData {
   id: string;
   registered_at: string;
-  first_name: string;
-  last_name: string;
-  year_of_study: string;
+  f_name: string;
+  l_name: string;
+  yearOfStudy: string;
   gender: string;
   major: string;
   workshops: WorkshopData[];
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient(true);
     const { searchParams } = new URL(request.url);
-    const workshopId = searchParams.get("workshop"); // Check for specific workshop ID
+    const workshopId = searchParams.get("workshop");
 
     // Get current user for permission check
     const regularSupabase = await createClient();
@@ -59,7 +57,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if admin account is active and has proper role
     if (adminData.status !== "active") {
       return NextResponse.json(
         { error: "Admin account is not active" },
@@ -67,7 +64,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user has required role (volunteer, admin, super_admin)
     if (!["volunteer", "admin", "super_admin"].includes(adminData.role)) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
@@ -75,13 +71,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build query - filter by specific workshop or all workshops for event
+    // Build query with correct column names
     let query = supabase.from("workshop_registrations").select(`
         id,
         registered_at,
-        first_name,
-        last_name,
-        year_of_study,
+        f_name,
+        l_name,
+        yearOfStudy,
         gender,
         major,
         workshops!inner (
@@ -116,7 +112,7 @@ export async function GET(request: NextRequest) {
     const typedRegistrations = registrations as unknown as RegistrationData[];
 
     if (!typedRegistrations || typedRegistrations.length === 0) {
-      // Return empty CSV instead of 404 for no registrations
+      // Return empty CSV for no registrations
       const csvHeaders = [
         "Workshop Title",
         "Date",
@@ -144,7 +140,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Create CSV content
     const csvHeaders = [
       "Workshop Title",
       "Date",
@@ -160,7 +155,6 @@ export async function GET(request: NextRequest) {
     ];
 
     const csvRows = typedRegistrations.map((reg) => {
-      // Get the first workshop (should only be one due to the inner join)
       const workshop = reg.workshops[0];
 
       return [
@@ -168,10 +162,10 @@ export async function GET(request: NextRequest) {
         workshop?.date || "",
         `${workshop?.start_time || ""} - ${workshop?.end_time || ""}`,
         workshop?.location || "",
-        `${reg.first_name || ""} ${reg.last_name || ""}`,
-        reg.first_name || "",
-        reg.last_name || "",
-        reg.year_of_study || "",
+        `${reg.f_name || ""} ${reg.l_name || ""}`,
+        reg.f_name || "",
+        reg.l_name || "",
+        reg.yearOfStudy || "",
         reg.gender || "",
         reg.major || "",
         new Date(reg.registered_at).toLocaleString(),
@@ -183,7 +177,6 @@ export async function GET(request: NextRequest) {
       ...csvRows.map((row) => row.map((field) => `"${field}"`).join(",")),
     ].join("\n");
 
-    // Dynamic filename based on request type
     const filename = workshopId
       ? `workshop-${workshopId}-registrations.csv`
       : "workshop-registrations-mruhacks2025.csv";
