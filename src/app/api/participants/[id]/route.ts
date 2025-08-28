@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
-import { users, universities } from "@/db/schema";
+import { users, universities, gender } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { verifyApiAuth } from "@/app/auth/api-auth";
 
 // PATCH - Update participant status and/or checkedIn status
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  // Verify authentication first
+  const authResult = await verifyApiAuth(request);
+
+  if (authResult.error) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status },
+    );
+  }
+
+  const user = authResult.user!;
+
+  // Check if user has required role
+  if (!["admin", "volunteer"].includes(user.role)) {
+    return NextResponse.json(
+      { error: "Insufficient permissions" },
+      { status: 403 },
+    );
+  }
+
   try {
     const { id } = await context.params;
     const body = await request.json();
@@ -15,26 +36,49 @@ export async function PATCH(
 
     const updateData: any = {};
 
-    if (status !== undefined) {
-      if (!["pending", "confirmed", "waitlisted"].includes(status)) {
+    // Role-based field validation
+    if (user.role === "volunteer") {
+      // Volunteers can only update checkedIn status
+      if (status !== undefined) {
         return NextResponse.json(
-          {
-            error: "Invalid status. Must be: pending, confirmed, or waitlisted",
-          },
-          { status: 400 },
+          { error: "Volunteers can only update check-in status" },
+          { status: 403 },
         );
       }
-      updateData.status = status;
-    }
 
-    if (checkedIn !== undefined) {
-      if (typeof checkedIn !== "boolean") {
-        return NextResponse.json(
-          { error: "checkedIn must be a boolean value" },
-          { status: 400 },
-        );
+      if (checkedIn !== undefined) {
+        if (typeof checkedIn !== "boolean") {
+          return NextResponse.json(
+            { error: "checkedIn must be a boolean value" },
+            { status: 400 },
+          );
+        }
+        updateData.checkedIn = checkedIn;
       }
-      updateData.checkedIn = checkedIn;
+    } else if (user.role === "admin") {
+      // Admins can update both status and checkedIn
+      if (status !== undefined) {
+        if (!["pending", "confirmed", "waitlisted"].includes(status)) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid status. Must be: pending, confirmed, or waitlisted",
+            },
+            { status: 400 },
+          );
+        }
+        updateData.status = status;
+      }
+
+      if (checkedIn !== undefined) {
+        if (typeof checkedIn !== "boolean") {
+          return NextResponse.json(
+            { error: "checkedIn must be a boolean value" },
+            { status: 400 },
+          );
+        }
+        updateData.checkedIn = checkedIn;
+      }
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -57,18 +101,32 @@ export async function PATCH(
       );
     }
 
-    const response = {
-      id: updatedParticipant.id,
-      f_name: updatedParticipant.firstName,
-      l_name: updatedParticipant.lastName,
-      email: updatedParticipant.email,
-      status: updatedParticipant.status,
-      checked_in: updatedParticipant.checkedIn,
-      timestamp:
-        updatedParticipant.timestamp?.toISOString() || new Date().toISOString(),
-    };
-
-    return NextResponse.json(response, { status: 200 });
+    // Return different data based on role
+    if (user.role === "volunteer") {
+      // Limited access for volunteers
+      const response = {
+        id: updatedParticipant.id,
+        f_name: updatedParticipant.firstName,
+        l_name: updatedParticipant.lastName,
+        status: updatedParticipant.status,
+        checked_in: updatedParticipant.checkedIn,
+      };
+      return NextResponse.json(response, { status: 200 });
+    } else {
+      // Full access for admins
+      const response = {
+        id: updatedParticipant.id,
+        f_name: updatedParticipant.firstName,
+        l_name: updatedParticipant.lastName,
+        email: updatedParticipant.email,
+        status: updatedParticipant.status,
+        checked_in: updatedParticipant.checkedIn,
+        timestamp:
+          updatedParticipant.timestamp?.toISOString() ||
+          new Date().toISOString(),
+      };
+      return NextResponse.json(response, { status: 200 });
+    }
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update participant" },
@@ -82,45 +140,104 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  // Verify authentication first
+  const authResult = await verifyApiAuth(request);
+
+  if (authResult.error) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status },
+    );
+  }
+
+  const user = authResult.user!;
+
+  // Check if user has required role
+  if (!["admin", "volunteer"].includes(user.role)) {
+    return NextResponse.json(
+      { error: "Insufficient permissions" },
+      { status: 403 },
+    );
+  }
+
   try {
     const { id } = await context.params;
 
-    const [participant] = await db
-      .select({
-        id: users.id,
-        f_name: users.firstName,
-        l_name: users.lastName,
-        email: users.email,
-        university: universities.university,
-        status: users.status,
-        checked_in: users.checkedIn,
-        timestamp: users.timestamp,
-      })
-      .from(users)
-      .leftJoin(universities, eq(users.university, universities.id))
-      .where(eq(users.id, id))
-      .limit(1);
+    if (user.role === "volunteer") {
+      // Limited data for volunteers
+      const [participant] = await db
+        .select({
+          id: users.id,
+          f_name: users.firstName,
+          l_name: users.lastName,
+          university: universities.university,
+          status: users.status,
+          checked_in: users.checkedIn,
+          gender: gender.gender,
+        })
+        .from(users)
+        .leftJoin(universities, eq(users.university, universities.id))
+        .leftJoin(gender, eq(users.gender, gender.id))
+        .where(eq(users.id, id))
+        .limit(1);
 
-    if (!participant) {
-      return NextResponse.json(
-        { error: "Participant not found" },
-        { status: 404 },
-      );
+      if (!participant) {
+        return NextResponse.json(
+          { error: "Participant not found" },
+          { status: 404 },
+        );
+      }
+
+      const response = {
+        id: participant.id,
+        f_name: participant.f_name,
+        l_name: participant.l_name,
+        university: participant.university || "N/A",
+        status: participant.status,
+        checked_in: participant.checked_in,
+        gender: participant.gender || "Not specified",
+      };
+
+      return NextResponse.json(response, { status: 200 });
+    } else {
+      // Full data for admins
+      const [participant] = await db
+        .select({
+          id: users.id,
+          f_name: users.firstName,
+          l_name: users.lastName,
+          email: users.email,
+          university: universities.university,
+          status: users.status,
+          checked_in: users.checkedIn,
+          timestamp: users.timestamp,
+        })
+        .from(users)
+        .leftJoin(universities, eq(users.university, universities.id))
+        .where(eq(users.id, id))
+        .limit(1);
+
+      if (!participant) {
+        return NextResponse.json(
+          { error: "Participant not found" },
+          { status: 404 },
+        );
+      }
+
+      const response = {
+        id: participant.id,
+        f_name: participant.f_name,
+        l_name: participant.l_name,
+        email: participant.email,
+        university: participant.university,
+        status: participant.status,
+        checked_in: participant.checked_in,
+        timestamp:
+          participant.timestamp?.toISOString() || new Date().toISOString(),
+      };
+
+      return NextResponse.json(response, { status: 200 });
     }
-
-    const response = {
-      id: participant.id,
-      f_name: participant.f_name,
-      l_name: participant.l_name,
-      email: participant.email,
-      university: participant.university,
-      status: participant.status,
-      checked_in: participant.checked_in,
-      timestamp:
-        participant.timestamp?.toISOString() || new Date().toISOString(),
-    };
-
-    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch participant" },
