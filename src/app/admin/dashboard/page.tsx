@@ -24,8 +24,7 @@ import {
   Plus,
   Edit,
   Download,
-  Settings,
-  ArrowLeft,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -130,6 +129,33 @@ export default function AdminDashboardPage() {
     setActiveTab(value);
     const newUrl = `/admin/dashboard${value !== "participants" ? `?tab=${value}` : ""}`;
     router.push(newUrl, { scroll: false });
+  };
+
+  // Handle workshop deletion
+  const handleDeleteWorkshop = async (workshopId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this workshop? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/admin/workshops/${workshopId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        // Remove the workshop from state
+        setWorkshops((prev) => prev.filter((w) => w.id !== workshopId));
+        alert("Workshop deleted successfully");
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete workshop: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Error deleting workshop. Please try again.");
+    }
   };
 
   return (
@@ -352,7 +378,10 @@ export default function AdminDashboardPage() {
                               <div className="flex items-center space-x-1 text-sm">
                                 <Calendar className="w-4 h-4" />
                                 <span>
-                                  {new Date(workshop.date).toLocaleDateString()}
+                                  {new Date(workshop.date).toLocaleDateString(
+                                    "en-US",
+                                    { timeZone: "UTC" },
+                                  )}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-1 text-sm text-gray-500">
@@ -393,7 +422,7 @@ export default function AdminDashboardPage() {
                                   workshop.is_active ? "default" : "secondary"
                                 }
                               >
-                                {workshop.is_active ? "Active" : "Inactive"}
+                                {workshop.is_active ? "Inactive" : "Active"}
                               </Badge>
                             </TableCell>
 
@@ -413,26 +442,18 @@ export default function AdminDashboardPage() {
                                     <Users className="w-4 h-4" />
                                   </Button>
                                 </Link>
+                                <Button
+                                  onClick={() =>
+                                    handleDeleteWorkshop(workshop.id)
+                                  }
+                                  className="text-red-600 hover:text-red-700 hover:border-red-300"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
                         ))}
-
-                        {workshops.length === 0 && !loading && (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8">
-                              <div className="text-gray-500">
-                                <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                <p>No workshops created yet.</p>
-                                <Link href="/admin/workshops/create">
-                                  <Button className="mt-4">
-                                    Create Your First Workshop
-                                  </Button>
-                                </Link>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
                       </TableBody>
                     </Table>
                   )}
