@@ -71,35 +71,64 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build query with correct column names
-    let query = supabase.from("workshop_registrations").select(`
-        id,
-        registered_at,
-        f_name,
-        l_name,
-        yearOfStudy,
-        gender,
-        major,
-        workshops!inner (
+    let query;
+
+    if (workshopId) {
+      query = supabase
+        .from("workshops")
+        .select(
+          `
+          id,
           title,
           date,
           start_time,
           end_time,
           location,
-          event_name
+          event_name,
+          workshop_registrations!inner (
+            id,
+            registered_at,
+            f_name,
+            l_name,
+            yearOfStudy,
+            gender,
+            major
+          )
+        `,
         )
-      `);
-
-    // Apply filters based on request
-    if (workshopId) {
-      query = query.eq("workshop_id", workshopId);
+        .eq("id", workshopId)
+        .order("date", { ascending: true })
+        .order("start_time", { ascending: true });
     } else {
-      query = query.eq("workshops.event_name", "mruhacks2025");
+      // For all workshops in event queries from workshops
+      query = supabase
+        .from("workshops")
+        .select(
+          `
+          id,
+          title,
+          date,
+          start_time,
+          end_time,
+          location,
+          event_name,
+          workshop_registrations!inner (
+            id,
+            registered_at,
+            f_name,
+            l_name,
+            yearOfStudy,
+            gender,
+            major
+          )
+        `,
+        )
+        .eq("event_name", "mruhacks2025")
+        .order("date", { ascending: true })
+        .order("start_time", { ascending: true });
     }
 
-    const { data: registrations, error } = await query
-      .order("workshops.date", { ascending: true })
-      .order("workshops.start_time", { ascending: true });
+    const { data: workshopsWithRegistrations, error } = await query;
 
     if (error) {
       console.error("Database error:", error);
@@ -108,8 +137,33 @@ export async function GET(request: NextRequest) {
         { status: 500 },
       );
     }
+    const registrations: RegistrationData[] = [];
 
-    const typedRegistrations = registrations as unknown as RegistrationData[];
+    workshopsWithRegistrations?.forEach((workshop) => {
+      workshop.workshop_registrations?.forEach((registration: any) => {
+        registrations.push({
+          id: registration.id,
+          registered_at: registration.registered_at,
+          f_name: registration.f_name,
+          l_name: registration.l_name,
+          yearOfStudy: registration.yearOfStudy,
+          gender: registration.gender,
+          major: registration.major,
+          workshops: [
+            {
+              title: workshop.title,
+              date: workshop.date,
+              start_time: workshop.start_time,
+              end_time: workshop.end_time,
+              location: workshop.location,
+              event_name: workshop.event_name,
+            },
+          ],
+        });
+      });
+    });
+
+    const typedRegistrations = registrations;
 
     if (!typedRegistrations || typedRegistrations.length === 0) {
       // Return empty CSV for no registrations
