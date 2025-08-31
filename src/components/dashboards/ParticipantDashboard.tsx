@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import ProgressBar from "@/components/Register/ProgressBar";
 import { ExternalLink, FileText, MessageSquare, Trophy } from "lucide-react";
 import { Registration } from "@/db/registration";
+import Workshops from "@/components/dashboards/Workshops";
 
 interface ParticipantDashboardProps {
   user?: Registration;
@@ -221,19 +222,8 @@ const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
         </CardContent>
       </Card>
 
-      {/* Info Card */}
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle>Upcoming Activities</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p className="text-lg">
-            Event schedules and workshop information will be posted here closer
-            to the event.
-          </p>
-          <p className="mt-4 text-lg">Check back soon for updates!</p>
-        </CardContent>
-      </Card>
+      {/* Workshops */}
+      <Workshops />
     </div>
   );
 };
