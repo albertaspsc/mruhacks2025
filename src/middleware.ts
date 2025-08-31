@@ -3,7 +3,7 @@ import { updateSession } from "../utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   // Allows admin login page to bypass all auth checks
-  if (request.nextUrl.pathname === "/admin/login") {
+  if (request.nextUrl.pathname === "/admin-login-portal") {
     return NextResponse.next();
   }
 

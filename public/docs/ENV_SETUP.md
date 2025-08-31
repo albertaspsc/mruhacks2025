@@ -1,5 +1,7 @@
 # Environment Variables
 
+Follow the instructions in the [Developer Onboarding Document](DEVELOPER_ONBOARDING.md) to setup environment variables for local development. These instructions are for finding environment variables for deployed supabase instances.
+
 ## Database Url
 
 1. Navigate to the supabase dashboard

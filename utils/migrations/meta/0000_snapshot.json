@@ -1,5 +1,5 @@
 {
-  "id": "8cd092ba-8d69-4a18-8fe2-0a0bf2ff7023",
+  "id": "da21d55b-ba1b-4b41-b7ab-5a40b54769ed",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -20,21 +20,29 @@
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
-          "type": "status",
+        "role": {
+          "name": "role",
+          "type": "admin_role",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'waitlisted'"
+          "default": "'volunteer'"
+        },
+        "status": {
+          "name": "status",
+          "type": "admin_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'inactive'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "admins_id_profile_id_fk": {
-          "name": "admins_id_profile_id_fk",
+        "admins_id_users_id_fk": {
+          "name": "admins_id_users_id_fk",
           "tableFrom": "admins",
-          "tableTo": "profile",
+          "tableTo": "users",
           "columnsFrom": ["id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -257,6 +265,42 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.mktg_preferences": {
+      "name": "mktg_preferences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "send_emails": {
+          "name": "send_emails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mktg_preferences_id_users_id_fk": {
+          "name": "mktg_preferences_id_users_id_fk",
+          "tableFrom": "mktg_preferences",
+          "tableTo": "users",
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.marketing_types": {
       "name": "marketing_types",
       "schema": "",
@@ -299,6 +343,41 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.parking_info": {
+      "name": "parking_info",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "license_plate": {
+          "name": "license_plate",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "parking_info_id_users_id_fk": {
+          "name": "parking_info_id_users_id_fk",
+          "tableFrom": "parking_info",
+          "tableTo": "users",
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.profile": {
       "name": "profile",
       "schema": "",
@@ -329,18 +408,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "profile_id_users_id_fk": {
-          "name": "profile_id_users_id_fk",
-          "tableFrom": "profile",
-          "tableTo": "users",
-          "schemaTo": "auth",
-          "columnsFrom": ["id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -408,13 +476,13 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "user_interests_id_profile_id_fk": {
-          "name": "user_interests_id_profile_id_fk",
+        "user_interests_id_users_id_fk": {
+          "name": "user_interests_id_users_id_fk",
           "tableFrom": "user_interests",
-          "tableTo": "profile",
+          "tableTo": "users",
           "columnsFrom": ["id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "user_interests_interest_interests_id_fk": {
@@ -423,11 +491,16 @@
           "tableTo": "interests",
           "columnsFrom": ["interest"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "user_interests_id_interest_pk": {
+          "name": "user_interests_id_interest_pk",
+          "columns": ["id", "interest"]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -452,13 +525,13 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "user_diet_restrictions_id_profile_id_fk": {
-          "name": "user_diet_restrictions_id_profile_id_fk",
+        "user_diet_restrictions_id_users_id_fk": {
+          "name": "user_diet_restrictions_id_users_id_fk",
           "tableFrom": "user_diet_restrictions",
-          "tableTo": "profile",
+          "tableTo": "users",
           "columnsFrom": ["id"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "user_diet_restrictions_restriction_dietary_restrictions_id_fk": {
@@ -467,11 +540,16 @@
           "tableTo": "dietary_restrictions",
           "columnsFrom": ["restriction"],
           "columnsTo": ["id"],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "user_diet_restrictions_id_restriction_pk": {
+          "name": "user_diet_restrictions_id_restriction_pk",
+          "columns": ["id", "restriction"]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -536,14 +614,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "school_email": {
-          "name": "school_email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "yearOfStudy": {
-          "name": "yearOfStudy",
+        "year_of_study": {
+          "name": "year_of_study",
           "type": "year_of_study",
           "typeSchema": "public",
           "primaryKey": false,
@@ -571,23 +643,44 @@
           "name": "timestamp",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "now()"
         },
         "status": {
           "name": "status",
           "type": "status",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'waitlisted'"
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "resume_url": {
+          "name": "resume_url",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resume_filename": {
+          "name": "resume_filename",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "checked_in": {
+          "name": "checked_in",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "users_id_profile_id_fk": {
-          "name": "users_id_profile_id_fk",
+        "users_id_users_id_fk": {
+          "name": "users_id_users_id_fk",
           "tableFrom": "users",
-          "tableTo": "profile",
+          "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": ["id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
@@ -647,6 +740,16 @@
     }
   },
   "enums": {
+    "public.admin_role": {
+      "name": "admin_role",
+      "schema": "public",
+      "values": ["volunteer", "admin", "super_admin"]
+    },
+    "public.admin_status": {
+      "name": "admin_status",
+      "schema": "public",
+      "values": ["active", "inactive"]
+    },
     "public.parking_state": {
       "name": "parking_state",
       "schema": "public",
