@@ -13,7 +13,7 @@ import {
   WorkshopNextButton as NextButton,
 } from "./WorkshopButtons";
 import carouselStyles from "@/components/Carousel/carousel.module.css";
-import styles from "@/components/dashboards/workshopsCarousel.module.css";
+import styles from "./workshopsCarousel.module.css";
 
 type Workshop = {
   id: string;

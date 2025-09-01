@@ -1,9 +1,9 @@
 import React from "react";
 import { Registration } from "@/db/registration";
-import WorkshopsCarousel from "@/components/dashboards/WorkshopsCarousel";
-import DashboardItem from "./DashboardItem";
-import Checklist from "./checklist/Checklist";
-import InfoCard from "./InfoCard";
+import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
+import DashboardItem from "@/components/dashboards/common/DashboardItem";
+import Checklist from "@/components/dashboards/checklist/Checklist";
+import InfoCard from "@/components/dashboards/common/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 
 interface ParticipantDashboardProps {

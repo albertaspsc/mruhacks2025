@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import ParticipantDashboard from "@/components/dashboards/ParticipantDashboard";
+import ParticipantDashboard from "@/components/dashboards/layout/ParticipantDashboard";
 import SettingsPage from "../settings/page";
 import ProfilePage from "../profile/page";
 import { Sidebar } from "@/components/ui/sidebar";
