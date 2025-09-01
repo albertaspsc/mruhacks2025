@@ -1,6 +1,7 @@
 import { DM_Sans } from "next/font/google";
 import "@/assets/styles/globals.css";
 import React from "react";
+import Navbar from "@/components/Navbar/Navbar";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={dmSans.variable}>
+        <Navbar />
         {children}
       </body>
     </html>
