@@ -15,6 +15,13 @@
       "when": 1756675020053,
       "tag": "0001_far_miss_america",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756756675020,
+      "tag": "0004_fix_column_name",
+      "breakpoints": true
     }
   ]
 }
