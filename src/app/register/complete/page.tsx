@@ -85,6 +85,8 @@ export default function CompletePage() {
             error:
               "Missing required registration information. Please go back and complete all fields.",
           });
+          // Reset hasProcessed to allow retry
+          hasProcessed.current = false;
           return;
         }
 
@@ -115,6 +117,8 @@ export default function CompletePage() {
             success: false,
             error: result.error,
           });
+          // Reset hasProcessed to allow retry
+          hasProcessed.current = false;
         } else {
           setStatus({
             loading: false,
@@ -136,6 +140,8 @@ export default function CompletePage() {
           success: false,
           error: "Registration failed. Please try again.",
         });
+        // Reset hasProcessed to allow retry
+        hasProcessed.current = false;
       }
     };
 
