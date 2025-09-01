@@ -8,6 +8,9 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { CheckCircle, Clock, AlertTriangle, Menu, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Registration, getRegistration } from "@/db/registration";
+import Image from "next/image";
+import Link from "next/link";
+import logo from "@/assets/logos/color-logo.svg";
 
 // Define available views
 type DashboardView = "dashboard" | "settings" | "profile";
@@ -224,6 +227,18 @@ export default function DashboardPage() {
             >
               <Menu className="h-5 w-5 text-gray-600" />
             </button>
+
+            {/* Logo - redirects to landing page */}
+            <Link href="/" className="mr-4 flex-shrink-0 hidden sm:block">
+              <Image
+                src={logo}
+                alt="MRUHacks Logo"
+                width={100}
+                height={32}
+                className="cursor-pointer"
+                priority
+              />
+            </Link>
 
             {/* Title */}
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex-1">

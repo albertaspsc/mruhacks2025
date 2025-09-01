@@ -4,6 +4,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
 import { useToast } from "@/components/hooks/use-toast";
 
 type Workshop = {
@@ -27,6 +28,17 @@ function formatDate(date: string | Date) {
     month: "short",
     day: "numeric",
   });
+}
+
+function formatTime(time: string) {
+  if (!time) return "";
+  const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return time;
+  let hour = parseInt(match[1], 10);
+  const minute = match[2];
+  const suffix = hour >= 12 ? "PM" : "AM";
+  hour = ((hour + 11) % 12) + 1; // convert 0/12->12, 13->1, etc.
+  return `${hour}:${minute} ${suffix}`;
 }
 
 export default function Workshops() {
@@ -88,11 +100,11 @@ export default function Workshops() {
   };
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle>Workshops</CardTitle>
+    <Card className="mb-8 rounded-xl overflow-hidden">
+      <CardHeader className="px-3 py-2 flex-shrink-0">
+        <CardTitle className="text-lg">Workshops</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="py-2 px-3">
         {loading && (
           <div className="text-sm text-muted-foreground">
             Loading workshops…
@@ -103,7 +115,7 @@ export default function Workshops() {
             No workshops available right now.
           </div>
         )}
-        <div className="space-y-4">
+        <div className="space-y-8">
           {workshops.map((w) => {
             const capacityLabel =
               w.maxCapacity && w.maxCapacity > 0
@@ -112,20 +124,28 @@ export default function Workshops() {
             return (
               <div
                 key={w.id}
-                className="border rounded-md p-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+                className="border rounded-xl p-4 md:p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between w-full"
               >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">{w.title}</span>
-                    <Badge variant={w.isFull ? "destructive" : "secondary"}>
-                      {capacityLabel}
-                    </Badge>
-                    {w.isRegistered && <Badge>Registered</Badge>}
+                <div className="space-y-2 min-w-[280px] flex-1">
+                  <div className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
+                    {formatDate(w.date)} {formatTime(w.startTime)}–
+                    {formatTime(w.endTime)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-base">{w.title}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {formatDate(w.date)} • {w.startTime}–{w.endTime}
-                    {w.location ? ` • ${w.location}` : ""}
+                    <span>{capacityLabel} participants</span>
+                    {w.isFull && (
+                      <span className="text-red-500 ml-1">(Full)</span>
+                    )}
                   </div>
+                  {w.location && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span>{w.location}</span>
+                    </div>
+                  )}
                   {w.description && (
                     <div className="text-sm text-muted-foreground line-clamp-2">
                       {w.description}
@@ -135,7 +155,7 @@ export default function Workshops() {
                 <div className="flex items-center gap-2">
                   {w.isRegistered ? (
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => handleUnregister(w.id)}
                     >
                       Unregister

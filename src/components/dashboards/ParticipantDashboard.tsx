@@ -1,229 +1,76 @@
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import ProgressBar from "@/components/Register/ProgressBar";
-import { ExternalLink, FileText, MessageSquare, Trophy } from "lucide-react";
+import React from "react";
 import { Registration } from "@/db/registration";
-import Workshops from "@/components/dashboards/Workshops";
+import WorkshopsCarousel from "@/components/dashboards/WorkshopsCarousel";
+import DashboardItem from "./DashboardItem";
+import Checklist from "./checklist/Checklist";
+import InfoCard from "./InfoCard";
+import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 
 interface ParticipantDashboardProps {
   user?: Registration;
 }
 
-interface ChecklistState {
-  discordJoined: boolean;
-  devpostSignup: boolean;
-}
-
-interface ChecklistItem {
-  id: keyof ChecklistState;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  link: string;
-  linkText: string;
-  required: boolean;
-  note: string | null;
-}
-
-const Checklist = ({ user }: { user?: Registration }) => {
-  const [checklist, setChecklist] = useState<ChecklistState>({
-    discordJoined: false,
-    devpostSignup: false,
-  });
-
-  const handleChecklistChange = (item: keyof ChecklistState) => {
-    setChecklist((prev) => ({
-      ...prev,
-      [item]: !prev[item],
-    }));
-  };
-
-  const checklistItems: ChecklistItem[] = [
-    {
-      id: "discordJoined",
-      title: "Join our Discord server",
-      description: "Connect with other participants and get real-time updates",
-      icon: <MessageSquare className="w-5 h-5" />,
-      link: "https://discord.com/invite/e7Fg6jsnrm",
-      linkText: "Join Discord",
-      required: true,
-      note: null,
-    },
-    {
-      id: "devpostSignup",
-      title: "Sign up through DevPost",
-      description: "Required for project submission and judging",
-      icon: <Trophy className="w-5 h-5" />,
-      link: "https://devpost.com/mruhacks", // Replace with actual DevPost link
-      linkText: "Go to DevPost",
-      required: false,
-      note:
-        user?.status === "confirmed"
-          ? "Your registration is confirmed - you can now register on DevPost!"
-          : "Only register on DevPost if your registration has been accepted",
-    },
-  ];
-
-  const completedItems = Object.values(checklist).filter(Boolean).length;
-  const totalItems = checklistItems.length;
-
-  return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle className="text-xl">Pre-Event Checklist</CardTitle>
-        <CardDescription>
-          Complete these steps to prepare for MRUHacks
-        </CardDescription>
-
-        {/* Progress Section */}
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {completedItems} of {totalItems} completed
-            </span>
-            <span>
-              {totalItems > 0
-                ? Math.round((completedItems / totalItems) * 100)
-                : 0}
-              %
-            </span>
-          </div>
-          <ProgressBar step={completedItems} totalSteps={totalItems} />
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Checklist Items */}
-        <div className="space-y-3">
-          {checklistItems.map((item) => (
-            <Card
-              key={item.id}
-              className={`transition-all duration-200 ${
-                checklist[item.id]
-                  ? "bg-green-50 border-green-200"
-                  : "hover:shadow-sm"
-              }`}
-            >
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  {/* Checkbox */}
-                  <div className="flex items-center space-x-2 pt-1">
-                    <Checkbox
-                      id={item.id}
-                      checked={checklist[item.id]}
-                      onCheckedChange={() => handleChecklistChange(item.id)}
-                    />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      {item.icon}
-                      <h4
-                        className={`font-medium text-sm ${checklist[item.id] ? "text-green-800" : "text-foreground"}`}
-                      >
-                        {item.title}
-                        {item.required && (
-                          <span className="text-destructive ml-1">*</span>
-                        )}
-                      </h4>
-                    </div>
-
-                    <p
-                      className={`text-xs ${checklist[item.id] ? "text-green-700" : "text-muted-foreground"}`}
-                    >
-                      {item.description}
-                    </p>
-
-                    {/* Conditional Note */}
-                    {item.note && (
-                      <p
-                        className={`text-xs px-2 py-1 rounded ${
-                          user?.status === "confirmed"
-                            ? "bg-green-100 text-green-700 border border-green-200"
-                            : "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                        }`}
-                      >
-                        💡 {item.note}
-                      </p>
-                    )}
-
-                    {/* Action Button */}
-                    <Button
-                      asChild
-                      className={`h-8 flex items-center justify-center ${checklist[item.id] ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}`}
-                    >
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-1"
-                      >
-                        {checklist[item.id] ? "Completed" : item.linkText}
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Success Message */}
-        {completedItems === totalItems && (
-          <Alert className="border-green-200 bg-green-50">
-            <AlertDescription className="text-green-800 font-medium text-center text-sm">
-              🎉 All set! You&apos;re ready for MRUHacks!
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
 const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
   user,
 }) => {
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        MRUHacks Dashboard
-      </h1>
+    <div className="h-[calc(100vh-4rem)] flex flex-col w-full">
+      {/* Grid Layout for Dashboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto p-1">
+        {/* Left Column - Workshops Carousel and Discord */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-2 h-auto">
+          <DashboardItem
+            title="Upcoming Workshops"
+            className="overflow-hidden"
+            contentClassName="px-0 py-0 overflow-hidden"
+          >
+            <WorkshopsCarousel />
+          </DashboardItem>
 
-      <Checklist user={user} />
+          {/* Discord Card */}
+          <DashboardItem title="Join Our Community">
+            <InfoCard
+              description="Connect with fellow hackers, mentors, and organizers in our Discord community. Get real-time updates, ask questions, and find teammates!"
+              linkUrl="https://discord.gg/e7Fg6jsnrm"
+              linkText="Join Discord"
+              icon={<MessageSquare className="h-5 w-5" />}
+            />
+          </DashboardItem>
+        </div>
 
-      {/* Main Card */}
-      <Card className="mb-8">
-        <CardHeader className="bg-purple-100 dark:bg-purple-900/20 rounded-t-lg text-center">
-          <CardTitle className="flex items-center justify-center gap-2">
-            <FileText className="h-6 w-6" />
-            Hackerpack
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6 text-center">
-          <p className="mb-4">
-            The Hackerpack contains all the important information about
-            MRUHacks, including rules, resources, and tips for a successful
-            hackathon experience.
-          </p>
-          <p className="mt-4 text-lg">Hackerpack will be available soon!</p>
-        </CardContent>
-      </Card>
+        {/* Right Column - Checklist and Hackerpack */}
+        <div className="lg:col-span-5 xl:col-span-4 h-auto flex flex-col gap-2 overflow-auto pb-1">
+          {/* Compact Checklist */}
+          <div className="flex-shrink-0">
+            <DashboardItem
+              title="Pre-Event Checklist"
+              contentClassName="py-2 px-3 space-y-2"
+            >
+              <Checklist user={user} />
+            </DashboardItem>
+          </div>
 
-      {/* Workshops */}
-      <Workshops />
+          {/* Hackerpack Card */}
+          <DashboardItem title="Hackerpack">
+            <InfoCard
+              description="The Hackerpack contains all the important information about MRUHacks, including rules, resources, and tips."
+              linkUrl="/hackerpack"
+              linkText="View Hackerpack"
+              icon={<FileText className="h-5 w-5" />}
+            />
+          </DashboardItem>
+
+          {/* Support Card */}
+          <DashboardItem title="Need Help?">
+            <InfoCard
+              description="Have a question that isn't included in the FAQ? Send us your question or email us at hello@mruhacks.ca."
+              linkUrl="mailto:hello@mruhacks.ca"
+              linkText="Contact Support"
+              icon={<HelpCircle className="h-5 w-5" />}
+            />
+          </DashboardItem>
+        </div>
+      </div>
     </div>
   );
 };

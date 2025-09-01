@@ -61,17 +61,6 @@ export function Sidebar({
       view: "profile",
       icon: <User className="h-5 w-5" />,
     },
-    {
-      title: "Discord",
-      href: "https://discord.gg/e7Fg6jsnrm",
-      icon: <MessageSquare className="h-5 w-5" />,
-      external: true,
-    },
-    {
-      title: "Support",
-      icon: <HelpCircle className="h-5 w-5" />,
-      isPopover: true,
-    },
   ];
 
   const bottomNavItems: NavItem[] = [
