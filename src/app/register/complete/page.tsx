@@ -44,7 +44,7 @@ const fireConfetti = (canvas: HTMLCanvasElement) => {
 
 export default function CompletePage() {
   const router = useRouter();
-  const { data } = useRegisterForm();
+  const { data, clearFormData } = useRegisterForm();
   const hasProcessed = useRef(false);
   const confettiRef = useRef<HTMLCanvasElement>(null);
 
@@ -122,6 +122,9 @@ export default function CompletePage() {
             error: null,
           });
 
+          // Clear form data from local storage since registration is complete
+          clearFormData();
+
           // Fire confetti
           if (confettiRef.current) {
             fireConfetti(confettiRef.current);
@@ -137,7 +140,7 @@ export default function CompletePage() {
     };
 
     processRegistration();
-  }, [data]);
+  }, [data, clearFormData]);
 
   // Loading state
   if (status.loading) {

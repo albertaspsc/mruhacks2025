@@ -29,12 +29,13 @@ type PersonalForm = {
 export default function Step1Page() {
   const supabase = createClient();
   const router = useRouter();
-  const { setValues } = useRegisterForm();
+  const { setValues, data, goBack } = useRegisterForm();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<PersonalForm>({
     defaultValues: {},
   });
@@ -131,7 +132,7 @@ export default function Step1Page() {
     loadLists();
   }, []);
 
-  // Fixed useEffect - prevent infinite loop
+  // Load saved form data from context and set initial values
   useEffect(() => {
     const getUserProfile = async () => {
       try {
@@ -142,13 +143,13 @@ export default function Step1Page() {
 
         console.log("Setting initial values for user:", user.email);
 
-        // Set email in context
-        setValues({ email: user.email || "" });
+        // Load saved data from context first
+        const savedData = data;
 
-        // If user came from Google OAuth, pre-fill form
+        // If user came from Google OAuth and no saved data, pre-fill form
         const isGoogleUser = user.app_metadata?.provider === "google";
 
-        if (isGoogleUser) {
+        if (isGoogleUser && !savedData.firstName && !savedData.lastName) {
           const googleFirstName =
             user.user_metadata?.given_name ||
             user.user_metadata?.first_name ||
@@ -175,8 +176,25 @@ export default function Step1Page() {
             lastName: googleLastName,
           });
         } else {
-          // For non-Google users, just set email
-          setValue("email", user.email || "");
+          // Load saved data into form fields
+          setValue("firstName", savedData.firstName || "");
+          setValue("lastName", savedData.lastName || "");
+          setValue("email", savedData.email || user.email || "");
+          setValue(
+            "previousAttendance",
+            savedData.previousAttendance ? "true" : "false",
+          );
+          setValue("gender", savedData.gender || "");
+          setValue("university", savedData.university || "");
+          setValue("major", savedData.major || "");
+          if (savedData.yearOfStudy) {
+            setValue("yearOfStudy", savedData.yearOfStudy);
+          }
+
+          // Ensure email is in context
+          if (!savedData.email) {
+            setValues({ ...savedData, email: user.email || "" });
+          }
         }
       } catch (err) {
         console.error("Error getting user profile:", err);
@@ -184,8 +202,19 @@ export default function Step1Page() {
     };
 
     getUserProfile();
-  }, [user]); // Removed setValues and setValue from dependencies
+  }, [user, data]); // Include data to react to context changes
 
+  // Save current form data to context
+  const saveCurrentFormData = () => {
+    const formData = watch();
+    const formattedData = {
+      ...formData,
+      previousAttendance: formData.previousAttendance === "true",
+    };
+    setValues(formattedData);
+  };
+
+  // Handle form submission to next step
   const onSubmit: SubmitHandler<PersonalForm> = (data) => {
     console.log("Form submitted with data:", data);
 
@@ -198,6 +227,12 @@ export default function Step1Page() {
 
     setValues(formattedData);
     router.push("/register/step-2");
+  };
+
+  // Handle back navigation with data saving
+  const handleBack = () => {
+    saveCurrentFormData();
+    goBack();
   };
 
   // Show loading state while checking authentication
@@ -434,9 +469,20 @@ export default function Step1Page() {
           )}
         </div>
 
-        <Button type="submit" className="w-full">
-          Next: Final Questions
-        </Button>
+        {/* Navigation Buttons */}
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleBack}
+            className="flex-1"
+          >
+            Back
+          </Button>
+          <Button type="submit" className="flex-1">
+            Next: Final Questions
+          </Button>
+        </div>
       </form>
     </div>
   );

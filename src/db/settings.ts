@@ -336,8 +336,8 @@ export async function syncUserToProfile(
     // Prepare profile data using current data + any updates
     const profileData = {
       id: userId,
-      first_name: userData.firstName || currentUserData.f_name,
-      last_name: userData.lastName || currentUserData.l_name,
+      f_name: userData.firstName || currentUserData.f_name,
+      l_name: userData.lastName || currentUserData.l_name,
       email: userData.email || currentUserData.email,
       parking: userData.parking || currentUserData.parking,
       updated_at: currentTime,
