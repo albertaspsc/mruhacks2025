@@ -31,7 +31,15 @@ type Workshop = {
 };
 
 function formatDate(date: string | Date) {
-  const d = typeof date === "string" ? new Date(date) : date;
+  let d: Date;
+
+  if (typeof date === "string") {
+    const [year, month, day] = date.split("T")[0].split("-").map(Number);
+    d = new Date(year, month - 1, day);
+  } else {
+    d = date;
+  }
+
   return d.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
