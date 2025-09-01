@@ -1,5 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db/drizzle";
+import { users, gender, universities, majors } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 // Helper to compute current registration count efficiently
 async function getRegistrationCount(
@@ -99,13 +102,45 @@ export async function POST(
       return NextResponse.json({ error: "Workshop full" }, { status: 409 });
     }
 
-    // Insert registration
+    // Get user details with joins
+    const userData = await db
+      .select({
+        f_name: users.firstName,
+        l_name: users.lastName,
+        yearOfStudy: users.yearOfStudy,
+        gender: gender.gender,
+        major: majors.major,
+        university: universities.university,
+      })
+      .from(users)
+      .leftJoin(gender, eq(users.gender, gender.id))
+      .leftJoin(universities, eq(users.university, universities.id))
+      .leftJoin(majors, eq(users.major, majors.id))
+      .where(eq(users.id, user.id))
+      .limit(1);
+
+    if (!userData || userData.length === 0) {
+      console.error("User data not found for user:", user.id);
+      return NextResponse.json(
+        { error: "User profile not found" },
+        { status: 404 },
+      );
+    }
+
+    const userInfo = userData[0];
+
+    // Insert registration with text
     const { error: insertError } = await supabase
       .from("workshop_registrations")
       .insert({
         workshop_id: workshopId,
         user_id: user.id,
         registered_at: new Date().toISOString(),
+        f_name: userInfo.f_name,
+        l_name: userInfo.l_name,
+        yearOfStudy: userInfo.yearOfStudy,
+        gender: userInfo.gender || "Not specified",
+        major: userInfo.major || "N/A",
       });
 
     if (insertError) {

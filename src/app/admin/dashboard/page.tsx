@@ -33,12 +33,12 @@ interface Workshop {
   title: string;
   description: string;
   date: string;
-  start_time: string;
-  end_time: string;
+  startTime: string;
+  endTime: string;
   location: string;
-  max_capacity: number;
-  is_active: boolean;
-  current_registrations?: number;
+  maxCapacity: number;
+  isActive: boolean;
+  currentRegistrations?: number;
 }
 
 export default function AdminDashboardPage() {
@@ -244,7 +244,7 @@ export default function AdminDashboardPage() {
               {/* Workshop Management Header */}
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     Workshop Management
                   </h3>
                   <p className="text-gray-600">
@@ -263,79 +263,6 @@ export default function AdminDashboardPage() {
                     </Button>
                   </Link>
                 </div>
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Workshops
-                    </CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{workshops.length}</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Registrations
-                    </CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {workshops.reduce(
-                        (total, w) => total + (w.current_registrations || 0),
-                        0,
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Active Workshops
-                    </CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {workshops.filter((w) => w.is_active).length}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Average Capacity
-                    </CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {workshops.length > 0
-                        ? Math.round(
-                            workshops.reduce((total, w) => {
-                              const percentage =
-                                w.max_capacity > 0
-                                  ? ((w.current_registrations || 0) /
-                                      w.max_capacity) *
-                                    100
-                                  : 0;
-                              return total + percentage;
-                            }, 0) / workshops.length,
-                          )
-                        : 0}
-                      %
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Workshops Table */}
@@ -387,7 +314,7 @@ export default function AdminDashboardPage() {
                               <div className="flex items-center space-x-1 text-sm text-gray-500">
                                 <Clock className="w-4 h-4" />
                                 <span>
-                                  {workshop.start_time} - {workshop.end_time}
+                                  {workshop.startTime} - {workshop.endTime}
                                 </span>
                               </div>
                             </TableCell>
@@ -402,14 +329,14 @@ export default function AdminDashboardPage() {
                             <TableCell>
                               <div className="text-sm">
                                 <div className="font-medium">
-                                  {workshop.current_registrations || 0}/
-                                  {workshop.max_capacity}
+                                  {workshop.currentRegistrations || 0}/
+                                  {workshop.maxCapacity}
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                   <div
                                     className="bg-blue-600 h-2 rounded-full"
                                     style={{
-                                      width: `${Math.min(100, workshop.max_capacity > 0 ? ((workshop.current_registrations || 0) / workshop.max_capacity) * 100 : 0)}%`,
+                                      width: `${Math.min(100, workshop.maxCapacity > 0 ? ((workshop.currentRegistrations || 0) / workshop.maxCapacity) * 100 : 0)}%`,
                                     }}
                                   />
                                 </div>
@@ -419,10 +346,10 @@ export default function AdminDashboardPage() {
                             <TableCell>
                               <Badge
                                 variant={
-                                  workshop.is_active ? "default" : "secondary"
+                                  workshop.isActive ? "default" : "secondary"
                                 }
                               >
-                                {workshop.is_active ? "Inactive" : "Active"}
+                                {workshop.isActive ? "Inactive" : "Active"}
                               </Badge>
                             </TableCell>
 
