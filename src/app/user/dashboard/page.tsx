@@ -45,7 +45,7 @@ export default function DashboardPage() {
         {/* Dashboard Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
-            {/* Status Banner - only show on main dashboard */}
+            {/* Status Banner */}
             {user && (
               <StatusBanner
                 status={
@@ -58,7 +58,7 @@ export default function DashboardPage() {
               />
             )}
 
-            {/* Render Current View */}
+            {/* Dashboard Content */}
             <div className="max-w-full">
               <div className="h-[calc(100vh-4rem)] flex flex-col w-full">
                 {/* Grid Layout for Dashboard */}

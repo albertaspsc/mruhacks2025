@@ -28,7 +28,6 @@ export async function PATCH(
       { status: 403 },
     );
   }
-
   try {
     const { id } = await context.params;
     const body = await request.json();
