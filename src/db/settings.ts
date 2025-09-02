@@ -328,7 +328,18 @@ export async function syncUserToProfile(
 
     if (getUserError) {
       console.error("Error getting user data:", getUserError);
+      console.error("getUserError details:", {
+        code: getUserError.code,
+        message: getUserError.message,
+        details: getUserError.details,
+        hint: getUserError.hint,
+      });
       return { error: getUserError };
+    }
+
+    if (!currentUserData) {
+      console.error("No user data found for user ID:", userId);
+      return { error: "User data not found" };
     }
 
     console.log("Current user data:", currentUserData);
@@ -347,6 +358,17 @@ export async function syncUserToProfile(
       return { error: "Email is required for profile creation" };
     }
 
+    // Ensure f_name and l_name are not null for profile creation
+    if (!profileData.f_name || !profileData.l_name) {
+      console.error("Missing required fields for profile:", {
+        f_name: profileData.f_name,
+        l_name: profileData.l_name,
+      });
+      return {
+        error: "First name and last name are required for profile creation",
+      };
+    }
+
     // Upsert the profile record
     const { error: profileError } = await supabase
       .from("profile")
@@ -354,6 +376,14 @@ export async function syncUserToProfile(
 
     if (profileError) {
       console.error("Profile upsert error:", profileError);
+
+      console.error("profileError details:", {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint,
+      });
+
       return { error: profileError };
     }
 
@@ -391,7 +421,6 @@ export async function updateUserNameOnly(
         .update({
           f_name: user.firstName,
           l_name: user.lastName,
-          updated_at: currentTime,
         })
         .eq("id", userId),
 
@@ -461,7 +490,7 @@ export async function updateUserNameAndEmail(
     const currentTime = new Date().toISOString();
 
     // Prepare update objects
-    const usersUpdate: any = { updated_at: currentTime };
+    const usersUpdate: any = {};
     const profileUpdate: any = {};
 
     if (user.firstName !== undefined) {

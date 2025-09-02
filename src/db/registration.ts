@@ -224,7 +224,7 @@ export async function register(user: RegistrationInput) {
       marketing: marketingResult.data!.id,
       prev_attendance: user.previousAttendance,
       parking: user.parking,
-      year_of_study: user.yearOfStudy,
+      yearOfStudy: user.yearOfStudy,
       accommodations: user.accommodations || "",
       resume_url: user.resume || null,
       timestamp: new Date().toISOString(),
