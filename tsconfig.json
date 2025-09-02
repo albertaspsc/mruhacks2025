@@ -30,7 +30,9 @@
       "@/db/*": ["src/db/*"],
       "@db/*": ["src/db/*"],
       "@/utils/*": ["./utils/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@/auth/*": ["src/auth/*"],
+      "@auth/*": ["src/auth/*"]
     },
     "jsx": "preserve",
     "plugins": [

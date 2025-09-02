@@ -8,6 +8,7 @@ import {
   pgEnum,
   timestamp,
   customType,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
@@ -19,30 +20,40 @@ export const dietaryRestrictions = pgTable("dietary_restrictions", {
   restriction: varchar({ length: 255 }).notNull().unique(),
 });
 
-export const userRestrictions = pgTable("user_diet_restrictions", {
-  user: uuid("id")
-    .references(() => users.id)
-    .references(() => users.id)
-    .notNull(),
-  restriction: integer()
-    .references(() => dietaryRestrictions.id)
-    .notNull(),
-});
+export const userRestrictions = pgTable(
+  "user_diet_restrictions",
+  {
+    user: uuid("id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    restriction: integer()
+      .references(() => dietaryRestrictions.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.user, table.restriction] }),
+  }),
+);
 
 export const interests = pgTable("interests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   interest: varchar({ length: 255 }).notNull().unique(),
 });
 
-export const userInterests = pgTable("user_interests", {
-  user: uuid("id")
-    .references(() => users.id)
-    .references(() => users.id)
-    .notNull(),
-  interest: integer()
-    .references(() => interests.id)
-    .notNull(),
-});
+export const userInterests = pgTable(
+  "user_interests",
+  {
+    user: uuid("id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    interest: integer()
+      .references(() => interests.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.user, table.interest] }),
+  }),
+);
 
 export const profiles = pgTable("profile", {
   id: uuid("id").primaryKey(),
@@ -107,7 +118,6 @@ export const users = pgTable("users", {
   id: uuid("id")
     .primaryKey()
     .references(() => authUsers.id)
-    .references(() => authUsers.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
   firstName: varchar("f_name", { length: 255 }).notNull(),
@@ -138,13 +148,23 @@ export const users = pgTable("users", {
   checkedIn: boolean("checked_in").default(false).notNull(),
 });
 
+// Admin specific enums
+export const adminRole = pgEnum("admin_role", [
+  "volunteer",
+  "admin",
+  "super_admin",
+]);
+
+export const adminStatus = pgEnum("admin_status", ["active", "inactive"]);
+
 export const admins = pgTable("admins", {
   id: uuid("id")
     .primaryKey()
     .references(() => users.id)
     .notNull(),
   email: varchar({ length: 255 }).notNull(),
-  status: status().default("pending").notNull(),
+  role: adminRole().default("volunteer").notNull(),
+  status: adminStatus().default("inactive").notNull(),
 });
 
 export const marketingPreferences = pgTable("mktg_preferences", {
