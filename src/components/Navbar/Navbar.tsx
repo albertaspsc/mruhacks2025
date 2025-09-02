@@ -1,12 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 import logo from "@/assets/logos/color-logo.svg";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -137,6 +139,16 @@ const Navbar = () => {
             >
               Sponsors
             </a>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push("/login");
+              }}
+              className={`${styles.loginButton} ${styles.loginButton}`}
+            >
+              Login
+            </button>
           </div>
         </div>
       </div>

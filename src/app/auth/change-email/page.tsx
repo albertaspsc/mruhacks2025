@@ -1,9 +1,9 @@
 "use client";
 import { use, useState } from "react";
-import { BindInput } from "../../../components/BindInput/BindInput";
+import { BindInput } from "@/components/BindInput/BindInput";
 import { changeEmail } from "./actions";
 import { redirect } from "next/navigation";
-import { createClient } from "../../../../utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 export default function ChangeEmail() {
   const supabase = createClient();

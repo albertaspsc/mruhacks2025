@@ -1,11 +1,10 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers as getHeaders } from "next/headers";
-import { createClient } from "../../../utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { z } from "zod";
-import { isRegistered } from "../../db/registration";
+import { getRegistration } from "@/db/registration";
 
 export async function loginWithGoogle() {
   const headers = await getHeaders();
@@ -15,15 +14,17 @@ export async function loginWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback?next=/register`,
+      redirectTo: `${origin}/auth/callback`,
+      queryParams: {
+        prompt: "select_account", // Forces account selection for security
+      },
+      scopes: "email profile",
     },
   });
 
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
   if (error) {
-    redirect("/error");
+    console.error("Google OAuth error:", error);
+    redirect("/login?error=oauth_failed");
   }
 
   redirect(data.url);
@@ -48,46 +49,37 @@ export async function login(formData: FormData) {
     success,
   } = loginSchema.safeParse(data);
 
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
   if (!success) {
-    redirect("/error?cause=misformatted login");
+    throw new Error("Please enter a valid email and password.");
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword(login);
 
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
-  if (!signInError) {
-    // redirect path needs:
-    // a. to revalidate auth token when loaded
-    // b. to re-render with information relevant to user (provided after auth)
-    // hence the revalidatePath and emptying of nextJs cache.
-    //
-    // The layout is emptied instead of the page,
-    // because the dashboard (and potentially other pages)
-    // have the same needs.
-    revalidatePath("/register", "layout");
-
-    const { data: registered } = await isRegistered();
-
-    if (registered) {
-      redirect("/dashboard");
-    } else {
-      redirect("/register");
+  if (signInError) {
+    // Check for specific error types
+    if (signInError.message.includes("Invalid login credentials")) {
+      throw new Error(
+        "Invalid credentials. Please check your email and password.",
+      );
     }
+    if (signInError.message.includes("Email not confirmed")) {
+      throw new Error("Please verify your email before signing in.");
+    }
+    if (signInError.message.includes("Too many requests")) {
+      throw new Error("Too many login attempts. Please try again later.");
+    }
+    // Generic error fallback
+    throw new Error("Login failed. Please try again.");
   }
 
-  const { error: signUpError } = await supabase.auth.signUp(login);
+  // User signed in successfully
+  revalidatePath("/user", "layout");
 
-  if (signUpError) {
-    redirect(`/error?cause=${signUpError.cause ?? "unable to sign up"}`);
+  const { data: registration } = await getRegistration();
+
+  if (registration) {
+    redirect("/user/dashboard");
+  } else {
+    redirect("/register/step-1");
   }
-  redirect(`/auth/confirm?email=${login.email}`);
-
-  // TODO - redirect the user to an error page with some instructions
-  //
-  // See github issue #70
 }

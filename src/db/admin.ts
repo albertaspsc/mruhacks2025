@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+"use server";
+import { eq, sql } from "drizzle-orm";
 import { db } from "./drizzle";
 import { admins, profiles as profilesTable, users } from "./schema";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "../../utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 
 export async function isAdmin(supabase?: SupabaseClient) {
   if (!supabase) {
@@ -31,7 +32,11 @@ export async function listUsers() {
 export async function grantAdmin(email: string) {
   db.insert(admins).select(
     db
-      .select({ id: profilesTable.id, email: profilesTable.email })
+      .select({
+        id: profilesTable.id,
+        email: profilesTable.email,
+        status: sql<string>`pending`.as("status"),
+      })
       .from(profilesTable)
       .where(eq(profilesTable.email, email)),
   );

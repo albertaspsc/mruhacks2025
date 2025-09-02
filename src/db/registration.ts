@@ -1,154 +1,463 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import {
-  experienceTypes,
-  gender,
-  majors,
-  marketingTypes,
-  universities,
-  users,
-  dietaryRestrictions as dietaryRestrictionsTable,
-  interests as interestsTable,
-  userRestrictions,
-  profiles,
-  parkingSituation,
-  yearOfStudy,
-} from "./schema";
-import { z } from "zod";
-import { createClient } from "../../utils/supabase/server";
-import { db } from "./drizzle";
-import { and, AnyTable, eq, inArray, isNotNull } from "drizzle-orm";
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { PgColumn, PgTable, TableConfig } from "drizzle-orm/pg-core";
+import { syncUserToProfile } from "@/db/settings";
+import { z } from "zod";
 
-export async function isRegistered(supabase?: SupabaseClient) {
-  if (!supabase) {
-    supabase = await createClient();
-  }
+export interface Registration {
+  // Basic user info
+  id?: string;
+  email?: string;
+  f_name?: string;
+  l_name?: string;
+  firstName?: string;
+  lastName?: string;
 
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    return { error: authError };
-  }
+  // Registration details
+  gender?: number | string;
+  university?: number | string;
+  major?: number | string;
+  experience?: number | string;
+  marketing?: number | string;
+  previousAttendance?: boolean;
+  parking?: string;
+  yearOfStudy?: string;
+  accommodations?: string;
+  resume_url?: string;
+  resume?: string;
 
-  const data = await db
-    .select()
-    .from(users)
-    .where(and(eq(users.id, auth.user.id), isNotNull(users.timestamp)));
+  // Status and timestamps
+  status?: "pending" | "confirmed" | "waitlisted" | "rejected";
+  checked_in?: boolean;
+  timestamp?: string;
 
-  return { data: data.length == 1 };
+  // Arrays for interests and dietary restrictions
+  interests?: string[];
+  dietaryRestrictions?: string[];
 }
 
-export const UserInputSchema = z.object({
-  dob: z.date(),
-  gender: z.string(),
-  university: z.string(),
+// Simple validation schema
+const RegistrationSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  gender: z.string().min(1, "Gender is required"),
+  university: z.string().min(1, "University is required"),
+  major: z.string().min(1, "Major is required"),
+  experience: z.string().min(1, "Experience level is required"),
+  marketing: z.string().min(1, "Please tell us how you heard about us"),
   previousAttendance: z.boolean(),
-  major: z.string(),
-  parking: createSelectSchema(parkingSituation),
-  schoolEmail: z.string().email(),
-  yearOfStudy: createSelectSchema(yearOfStudy),
-  experience: z.string(),
-  accomodations: z.string(),
-  marketing: z.string(),
+  parking: z.string().min(1, "Parking preference is required"),
+  yearOfStudy: z.string().min(1, "Year of study is required"),
+  accommodations: z.string().optional(),
   dietaryRestrictions: z.array(z.string()),
-  interests: z.array(z.string()),
+  interests: z.array(z.string()).min(1, "At least one interest is required"),
+  resume: z.string().optional(),
 });
 
-export type UserInput = z.infer<typeof UserInputSchema>;
+export type RegistrationInput = z.infer<typeof RegistrationSchema>;
 
-async function registerInterestsAndRestrictions(
-  userId: string,
-  user: UserInput,
-) {
-  const { error, success } = await UserInputSchema.safeParseAsync(user);
-  if (!success) {
-    return { error };
+// Simple registration function
+export async function register(user: RegistrationInput) {
+  const supabase = await createClient();
+
+  // Get current user
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) {
+    return { error: "Authentication required" };
   }
 
-  db.insert(dietaryRestrictionsTable).values(
-    user.dietaryRestrictions.map((restriction) => ({ restriction })),
-  );
-  db.insert(userRestrictions).select(
-    db
-      .select({ user: profiles.id, restriction: dietaryRestrictionsTable.id })
-      .from(dietaryRestrictionsTable)
-      .innerJoin(profiles, eq(profiles.id, userId)),
-  );
-
-  const interests = await db
-    .select()
-    .from(interestsTable)
-    .where(inArray(interestsTable.interest, user.interests));
-
-  if (interests.length != user.interests.length) {
-    return { error: "request contains invalid user interests" };
+  // Validate input
+  const validation = RegistrationSchema.safeParse(user);
+  if (!validation.success) {
+    return { error: "Invalid registration data" };
   }
-  return {};
+
+  try {
+    // Check if already registered
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", auth.user.id)
+      .single();
+
+    if (existing) {
+      return { success: true, message: "Already registered" };
+    }
+
+    // Gender mapping (form sends the ID)
+    let genderResult;
+    if (!isNaN(Number(user.gender))) {
+      genderResult = { data: { id: Number(user.gender) }, error: null };
+    } else {
+      return { error: "Gender must be a valid ID" };
+    }
+
+    // Experience mapping
+    const experienceMap: { [key: string]: number } = {
+      "Beginner – What is a computer?": 1,
+      "Intermediate – My spaghetti code is made out of tagliatelle.": 2,
+      "Advanced – Firewalls disabled, mainframes bypassed.": 3,
+      "Expert – I know what a computer is.": 4,
+      Beginner: 1,
+      Intermediate: 2,
+      Advanced: 3,
+      Expert: 4,
+    };
+
+    // Marketing mapping
+    const marketingMap: { [key: string]: number } = {
+      Poster: 1,
+      "Social Media": 2,
+      "Word of Mouth": 3,
+      "Website/Googling it": 4,
+      "Attended the event before": 5,
+      Other: 6,
+    };
+
+    const experienceId = experienceMap[user.experience];
+    const marketingId = marketingMap[user.marketing];
+
+    const experienceResult = experienceId
+      ? { data: { id: experienceId }, error: null }
+      : {
+          data: null,
+          error: {
+            message: `Experience "${user.experience}" not found in mapping. Available: ${Object.keys(experienceMap).join(", ")}`,
+          },
+        };
+
+    const marketingResult = marketingId
+      ? { data: { id: marketingId }, error: null }
+      : {
+          data: null,
+          error: {
+            message: `Marketing "${user.marketing}" not found in mapping. Available: ${Object.keys(marketingMap).join(", ")}`,
+          },
+        };
+
+    // Check which lookups failed and provide specific error messages
+    const errors = [];
+    if (genderResult.error || !genderResult.data) {
+      errors.push(`Gender "${user.gender}" not found in database`);
+    }
+    if (experienceResult.error || !experienceResult.data) {
+      errors.push(`Experience "${user.experience}" not found in database`);
+    }
+    if (marketingResult.error || !marketingResult.data) {
+      errors.push(`Marketing option "${user.marketing}" not found in database`);
+    }
+
+    if (errors.length > 0) {
+      const errorMessage = "Database lookup failed: " + errors.join(", ");
+      return { error: errorMessage };
+    }
+
+    // Get or create university and major
+    let universityId, majorId;
+
+    try {
+      // Try to get or create university
+      const { data: existingUni } = await supabase
+        .from("universities")
+        .select("id")
+        .eq("uni", user.university)
+        .single();
+
+      if (existingUni) {
+        universityId = existingUni.id;
+      } else {
+        const { data: newUni, error: uniError } = await supabase
+          .from("universities")
+          .insert({ uni: user.university })
+          .select("id")
+          .single();
+
+        if (uniError) {
+          universityId = 1;
+        } else {
+          universityId = newUni.id;
+        }
+      }
+    } catch (error) {
+      universityId = 1; // Fallback
+    }
+
+    try {
+      // Try to get or create major
+      const { data: existingMajor } = await supabase
+        .from("majors")
+        .select("id")
+        .eq("major", user.major)
+        .single();
+
+      if (existingMajor) {
+        majorId = existingMajor.id;
+      } else {
+        const { data: newMajor, error: majorError } = await supabase
+          .from("majors")
+          .insert({ major: user.major })
+          .select("id")
+          .single();
+
+        if (majorError) {
+          majorId = 1;
+        } else {
+          majorId = newMajor.id;
+        }
+      }
+    } catch (error) {
+      majorId = 1; // Fallback
+    }
+
+    // Insert user
+    const { error: insertError } = await supabase.from("users").insert({
+      id: auth.user.id,
+      email: auth.user.email,
+      f_name: user.firstName,
+      l_name: user.lastName,
+      gender: genderResult.data!.id,
+      university: universityId,
+      major: majorId,
+      experience: experienceResult.data!.id,
+      marketing: marketingResult.data!.id,
+      prev_attendance: user.previousAttendance,
+      parking: user.parking,
+      yearOfStudy: user.yearOfStudy,
+      accommodations: user.accommodations || "",
+      resume_url: user.resume || null,
+      timestamp: new Date().toISOString(),
+      status: "pending",
+      checked_in: false,
+    });
+
+    if (insertError) {
+      return { error: "Registration failed - please try again" };
+    }
+
+    // Handle interests and dietary restrictions
+    await handleUserSelections(supabase, auth.user.id, user);
+
+    // Syncs information to public.profile table
+    console.log("User registered successfully, syncing to profile table...");
+
+    const profileSyncResult = await syncUserToProfile(
+      {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: auth.user.email,
+        parking: user.parking,
+      },
+      supabase,
+    );
+
+    if (profileSyncResult.error) {
+      console.error(
+        "Profile sync failed during registration:",
+        profileSyncResult.error,
+      );
+      // Don't fail the entire registration, but log the error
+      console.warn("User registered successfully but profile sync failed");
+    } else {
+      console.log("User registered and profile synced successfully");
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { error: "Registration failed - please try again" };
+  }
 }
 
-export async function register(user: UserInput, supabase?: SupabaseClient) {
-  if (!supabase) {
-    supabase = await createClient();
+// Helper function to get or create records
+async function getOrCreateRecord(
+  supabase: SupabaseClient,
+  table: string,
+  column: string,
+  value: string,
+): Promise<number | null> {
+  try {
+    // Try to find existing
+    const { data: existing } = await supabase
+      .from(table)
+      .select("id")
+      .eq(column, value)
+      .single();
+
+    if (existing) {
+      return existing.id;
+    }
+
+    // Create new
+    const { data: newRecord, error } = await supabase
+      .from(table)
+      .insert({ [column]: value })
+      .select("id")
+      .single();
+
+    return newRecord?.id || null;
+  } catch {
+    return null;
   }
+}
 
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    return { error: authError };
+// Handle user interests and dietary restrictions
+async function handleUserSelections(
+  supabase: SupabaseClient,
+  userId: string,
+  user: RegistrationInput,
+) {
+  try {
+    // Handle dietary restrictions
+    if (user.dietaryRestrictions && user.dietaryRestrictions.length > 0) {
+      for (const restriction of user.dietaryRestrictions) {
+        // Find the restriction ID
+        const { data: restrictionData, error: restrictionError } =
+          await supabase
+            .from("dietary_restrictions")
+            .select("id")
+            .eq("restriction", restriction)
+            .single();
+
+        if (restrictionError || !restrictionData) {
+          continue;
+        }
+
+        // Insert into junction table
+        const { error: insertError } = await supabase
+          .from("user_diet_restrictions")
+          .insert({
+            id: userId,
+            restriction: restrictionData.id,
+          });
+
+        if (insertError) {
+          // Log error but continue processing
+        }
+      }
+    }
+
+    // Handle interests
+    if (user.interests && user.interests.length > 0) {
+      for (const interest of user.interests) {
+        // Find the interest ID
+        const { data: interestData, error: interestError } = await supabase
+          .from("interests")
+          .select("id")
+          .eq("interest", interest)
+          .single();
+
+        if (interestError || !interestData) {
+          continue;
+        }
+
+        // Insert into junction table
+        const { error: insertError } = await supabase
+          .from("user_interests")
+          .insert({
+            id: userId,
+            interest: interestData.id,
+          });
+
+        if (insertError) {
+          // Log error but continue processing
+        }
+      }
+    }
+  } catch (error) {
+    // Don't throw error
   }
+}
 
-  const id = auth.user.id;
-  const genderId = await getOrInsertGenderId(user);
-  const otherIds = await getOtherIds(user);
+// Get static options for forms
+export async function getStaticOptions() {
+  try {
+    const supabase = await createClient();
 
-  if (otherIds.length != 1) {
+    const [dietaryResult, interestResult, marketingResult] = await Promise.all([
+      supabase
+        .from("dietary_restrictions")
+        .select("restriction")
+        .order("restriction"),
+      supabase.from("interests").select("interest").order("interest"),
+      supabase.from("marketing_types").select("marketing").order("marketing"),
+    ]);
+
     return {
-      error:
-        "one or more of marketing, experience, university, or major was not found in the database.",
+      dietaryRestrictions: dietaryResult.data?.map((x) => x.restriction) || [],
+      interests: interestResult.data?.map((x) => x.interest) || [],
+      marketingTypes: marketingResult.data?.map((x) => x.marketing) || [],
+    };
+  } catch (error) {
+    return {
+      dietaryRestrictions: [],
+      interests: [],
+      marketingTypes: [],
     };
   }
-
-  await db.insert(users).values({
-    id,
-    gender: genderId,
-    ...otherIds[0],
-    dob: user.dob.toDateString(),
-    previousAttendance: user.previousAttendance,
-    parking: user.parking,
-    schoolEmail: user.schoolEmail,
-    yearOfStudy: user.yearOfStudy,
-    accomodations: user.accomodations,
-    timestamp: new Date(),
-  });
-
-  return await registerInterestsAndRestrictions(id, user);
 }
 
-async function getOtherIds(user: UserInput) {
-  return await db
-    .select({
-      marketing: marketingTypes.id,
-      experience: experienceTypes.id,
-      university: universities.id,
-      major: majors.id,
-    })
-    .from(marketingTypes)
-    .innerJoin(experienceTypes, eq(experienceTypes.experience, user.experience))
-    .innerJoin(universities, eq(universities.university, user.university))
-    .innerJoin(majors, eq(majors.major, user.major))
-    .where(eq(marketingTypes.marketing, user.marketing));
+// Get user registration data
+export async function getRegistration() {
+  try {
+    const supabase = await createClient();
+
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) {
+      return { error: "Not authenticated" };
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", auth.user.id)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      return { error: error.message };
+    }
+
+    // Map database fields to component-friendly names
+    const mappedData: Registration | null = data
+      ? {
+          ...data,
+          firstName: data.f_name,
+          lastName: data.l_name,
+          resume: data.resume_url,
+        }
+      : null;
+
+    return { data: mappedData };
+  } catch (error) {
+    return { error: "Failed to get registration" };
+  }
 }
 
-async function getOrInsertGenderId(user: UserInput) {
-  // We have an "other" option for gender in the google form that models this interaction,
-  // hence the insert if not exists
-  await db.insert(gender).values({ gender: user.gender }).onConflictDoNothing();
+// Get majors and universities for forms
+export async function getMajorsAndUniversities() {
+  try {
+    const supabase = await createClient();
 
-  const entry = await db
-    .select()
-    .from(gender)
-    .where(eq(gender.gender, user.gender))
-    .limit(1);
+    const [majorsResult, universitiesResult] = await Promise.all([
+      supabase.from("majors").select("major").order("major"),
+      supabase.from("universities").select("uni").order("uni"),
+    ]);
 
-  const genderId = entry[0].id;
-  return genderId;
+    if (majorsResult.error) {
+      throw majorsResult.error;
+    }
+
+    if (universitiesResult.error) {
+      throw universitiesResult.error;
+    }
+
+    return {
+      majors: majorsResult.data?.map((row) => row.major) || [],
+      universities: universitiesResult.data?.map((row) => row.uni) || [],
+    };
+  } catch (error) {
+    return {
+      majors: [],
+      universities: [],
+    };
+  }
 }

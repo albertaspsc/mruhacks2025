@@ -1,5 +1,4 @@
 import {
-  date,
   integer,
   pgTable,
   text,
@@ -8,81 +7,49 @@ import {
   boolean,
   pgEnum,
   timestamp,
-  pgPolicy,
+  customType,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { authUsers, authenticatedRole } from "drizzle-orm/supabase";
-import { setupDB } from "./setup";
+import { authUsers } from "drizzle-orm/supabase";
+
+// const rlsClient = pgRole("rls_client").existing();
 
 export const dietaryRestrictions = pgTable("dietary_restrictions", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   restriction: varchar({ length: 255 }).notNull().unique(),
 });
 
-export const userRestrictions = pgTable(
-  "user_diet_restrictions",
-  {
-    user: uuid("id")
-      .references(() => profiles.id)
-      .notNull(),
-    restriction: integer()
-      .references(() => dietaryRestrictions.id)
-      .notNull(),
-  },
-  (t) => [
-    pgPolicy("policy", {
-      as: "restrictive",
-      to: authenticatedRole,
-      for: "all",
-      using: sql`((select auth.uid()) = ${t.user}) OR ((select auth.uid()) = ${admins.id})`,
-    }),
-  ],
-).enableRLS();
+export const userRestrictions = pgTable("user_diet_restrictions", {
+  user: uuid("id")
+    .references(() => users.id)
+    .references(() => users.id)
+    .notNull(),
+  restriction: integer()
+    .references(() => dietaryRestrictions.id)
+    .notNull(),
+});
 
 export const interests = pgTable("interests", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   interest: varchar({ length: 255 }).notNull().unique(),
 });
 
-export const userInterests = pgTable(
-  "user_interests",
-  {
-    user: uuid("id")
-      .references(() => profiles.id)
-      .notNull(),
-    interest: integer()
-      .references(() => interests.id)
-      .notNull(),
-  },
-  (t) => [
-    pgPolicy("policy", {
-      as: "restrictive",
-      to: authenticatedRole,
-      for: "all",
-      using: sql`((select auth.uid()) = ${t.user}) OR ((select auth.uid()) = ${admins.id})`,
-    }),
-  ],
-).enableRLS();
+export const userInterests = pgTable("user_interests", {
+  user: uuid("id")
+    .references(() => users.id)
+    .references(() => users.id)
+    .notNull(),
+  interest: integer()
+    .references(() => interests.id)
+    .notNull(),
+});
 
-export const profiles = pgTable(
-  "profile",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .references(() => authUsers.id),
-    email: varchar({ length: 255 }).notNull(),
-    firstName: varchar("f_name", { length: 255 }),
-    lastName: varchar("l_name", { length: 255 }),
-  },
-  (t) => [
-    pgPolicy("policy", {
-      as: "restrictive",
-      to: authenticatedRole,
-      for: "all",
-      using: sql`((select auth.uid()) = ${t.id})`,
-    }),
-  ],
-).enableRLS();
+export const profiles = pgTable("profile", {
+  id: uuid("id").primaryKey(),
+  email: varchar({ length: 255 }).notNull(),
+  firstName: varchar("f_name", { length: 255 }),
+  lastName: varchar("l_name", { length: 255 }),
+});
 
 export const yearOfStudy = pgEnum("year_of_study", [
   "1st",
@@ -92,29 +59,31 @@ export const yearOfStudy = pgEnum("year_of_study", [
   "Recent Grad",
 ]);
 
+// No  RLS
 export const universities = pgTable("universities", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  university: varchar("uni", { length: 255 }).unique(),
+  university: varchar("uni", { length: 255 }).unique().notNull(),
 });
 
+// No  RLS
 export const majors = pgTable("majors", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  major: varchar({ length: 255 }).unique(),
+  major: varchar({ length: 255 }).unique().notNull(),
 });
 
 export const marketingTypes = pgTable("marketing_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  marketing: varchar({ length: 255 }).unique(),
+  marketing: varchar({ length: 255 }).unique().notNull(),
 });
 
 export const experienceTypes = pgTable("experience_types", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  experience: varchar({ length: 255 }).unique(),
+  experience: varchar({ length: 255 }).unique().notNull(),
 });
 
 export const gender = pgTable("gender", {
   id: integer().generatedAlwaysAsIdentity().primaryKey(),
-  gender: varchar({ length: 255 }).unique(),
+  gender: varchar({ length: 255 }).unique().notNull(),
 });
 
 export const parkingSituation = pgEnum("parking_state", [
@@ -123,71 +92,73 @@ export const parkingSituation = pgEnum("parking_state", [
   "Not sure",
 ]);
 
-export const participantStatus = pgEnum("participant_status", [
-  "confirmed",
-  "pending",
-  "waitlisted",
-]);
+export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
 
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .references(() => profiles.id)
-      .notNull(),
-    dob: date().notNull(),
-    gender: integer()
-      .references(() => gender.id)
-      .notNull(),
-    university: integer()
-      .references(() => universities.id)
-      .notNull(),
-    previousAttendance: boolean("prev_attendance").notNull(),
-    major: integer()
-      .references(() => majors.id)
-      .notNull(),
-    parking: parkingSituation().notNull(),
-    schoolEmail: varchar("school_email", { length: 255 }).notNull(),
-    yearOfStudy: yearOfStudy().notNull(),
-    experience: integer()
-      .references(() => experienceTypes.id)
-      .notNull(),
-    accomodations: text().notNull(),
-    marketing: integer()
-      .references(() => marketingTypes.id)
-      .notNull(),
-    timestamp: timestamp(),
-    status: participantStatus().default(participantStatus.enumValues[2]),
+const bytea = customType<{
+  data: Buffer;
+  default: false;
+}>({
+  dataType() {
+    return "bytea";
   },
-  (t) => [
-    pgPolicy("policy", {
-      as: "restrictive",
-      to: authenticatedRole,
-      for: "all",
-      using: sql`((select auth.uid()) = ${t.id}) OR ((select auth.uid()) = ${admins.id})`,
-    }),
-  ],
-).enableRLS();
+});
 
-export const admins = pgTable(
-  "admins",
-  {
-    id: uuid("id")
-      .primaryKey()
-      .references(() => profiles.id)
-      .notNull(),
-    email: varchar({ length: 255 }).notNull(),
-  },
-  (t) => [
-    pgPolicy("policy", {
-      as: "restrictive",
-      to: authenticatedRole,
-      for: "all",
-      using: sql`true`,
-      withCheck: sql`((select auth.uid()) = ${t.id})`,
-    }),
-  ],
-).enableRLS();
+export const users = pgTable("users", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => authUsers.id)
+    .references(() => authUsers.id)
+    .notNull(),
+  email: varchar({ length: 255 }).notNull(),
+  firstName: varchar("f_name", { length: 255 }).notNull(),
+  lastName: varchar("l_name", { length: 255 }).notNull(),
+  gender: integer()
+    .references(() => gender.id)
+    .notNull(),
+  university: integer()
+    .references(() => universities.id)
+    .notNull(),
+  previousAttendance: boolean("prev_attendance").notNull(),
+  major: integer()
+    .references(() => majors.id)
+    .notNull(),
+  parking: parkingSituation().notNull(),
+  yearOfStudy: yearOfStudy().notNull(),
+  experience: integer()
+    .references(() => experienceTypes.id)
+    .notNull(),
+  accommodations: text().notNull(),
+  marketing: integer()
+    .references(() => marketingTypes.id)
+    .notNull(),
+  timestamp: timestamp().defaultNow().notNull(),
+  status: status().default("pending").notNull(),
+  resumeUrl: varchar("resume_url", { length: 500 }),
+  resumeFilename: varchar("resume_filename", { length: 255 }),
+  checkedIn: boolean("checked_in").default(false).notNull(),
+});
 
-setupDB();
+export const admins = pgTable("admins", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  email: varchar({ length: 255 }).notNull(),
+  status: status().default("pending").notNull(),
+});
+
+export const marketingPreferences = pgTable("mktg_preferences", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  sendEmails: boolean("send_emails").default(true).notNull(),
+});
+
+export const parkingInfo = pgTable("parking_info", {
+  id: uuid("id")
+    .primaryKey()
+    .references(() => users.id)
+    .notNull(),
+  licensePlate: varchar("license_plate", { length: 8 }).notNull(),
+});

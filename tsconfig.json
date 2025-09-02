@@ -1,27 +1,50 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2020",
+    "downlevelIteration": true,
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "checkJs": false,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "baseUrl": ".",
+    "noErrorTruncation": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["src/components/*"],
+      "@/components/*": ["src/components/*"],
+      "@/components/ui/*": ["src/components/ui/*"],
+      "@/hooks/*": ["src/components/hooks/*"],
+      "@context/*": ["src/context/*"],
+      "@/context/*": ["src/context/*"],
+      "@assets/*": ["src/assets/*"],
+      "@/assets/*": ["src/assets/*"],
+      "@/db/*": ["src/db/*"],
+      "@db/*": ["src/db/*"],
+      "@/utils/*": ["./utils/*"],
+      "@utils/*": ["./utils/*"]
+    },
     "jsx": "preserve",
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "tailwind.config.js",
+    "postcss.config.cjs",
+    "next.config.js"
+  ]
 }
