@@ -264,7 +264,7 @@ export default function AdminDashboardPage() {
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {workshops.reduce(
-                        (total, w) => total + (w.current_registrations || 0),
+                        (total, w) => total + (w.currentRegistrations || 0),
                         0,
                       )}
                     </div>
@@ -284,9 +284,9 @@ export default function AdminDashboardPage() {
                         ? Math.round(
                             workshops.reduce((total, w) => {
                               const percentage =
-                                w.max_capacity > 0
-                                  ? ((w.current_registrations || 0) /
-                                      w.max_capacity) *
+                                w.maxCapacity > 0
+                                  ? ((w.currentRegistrations || 0) /
+                                      w.maxCapacity) *
                                     100
                                   : 0;
                               return total + percentage;
