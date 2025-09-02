@@ -62,13 +62,14 @@ const FALLBACK_MARKETING = [
 
 export default function Step2Page() {
   const router = useRouter();
-  const { data, setValues } = useRegisterForm();
+  const { data, setValues, goBack } = useRegisterForm();
   const supabase = createClient();
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FinalForm>({
     defaultValues: { interests: [], dietaryRestrictions: [], marketing: "" },
@@ -93,6 +94,27 @@ export default function Step2Page() {
   useEffect(() => {
     setValue("dietaryRestrictions", selectedDietaryRestrictions);
   }, [selectedDietaryRestrictions, setValue]);
+
+  // Load saved form data from context
+  useEffect(() => {
+    if (data) {
+      setValue("experience", data.experience || "Beginner");
+      setValue("accommodations", data.accommodations || "");
+      setValue("parking", data.parking || "Yes");
+      setValue("marketing", data.marketing || "");
+      setValue("resume", data.resume || "");
+
+      if (data.interests) {
+        setSelectedInterests(data.interests);
+        setValue("interests", data.interests);
+      }
+
+      if (data.dietaryRestrictions) {
+        setSelectedDietaryRestrictions(data.dietaryRestrictions);
+        setValue("dietaryRestrictions", data.dietaryRestrictions);
+      }
+    }
+  }, [data, setValue]);
 
   useEffect(() => {
     const loadStaticOptions = async () => {
@@ -198,6 +220,24 @@ export default function Step2Page() {
     }
   };
 
+  // Save current form data to context
+  const saveCurrentFormData = () => {
+    const formData = watch();
+    const updatedData = {
+      ...formData,
+      interests: selectedInterests,
+      dietaryRestrictions: selectedDietaryRestrictions,
+      resume: resume ? "file_selected" : formData.resume, // Preserve existing resume or mark file selection
+    };
+    setValues(updatedData);
+  };
+
+  // Handle back navigation with data saving
+  const handleBack = () => {
+    saveCurrentFormData();
+    goBack();
+  };
+
   const onSubmit: SubmitHandler<FinalForm> = async (partial) => {
     try {
       setIsUploading(true);
@@ -217,6 +257,8 @@ export default function Step2Page() {
       // Update the partial data with the resume URL instead of the File object
       const updatedPartial = {
         ...partial,
+        interests: selectedInterests,
+        dietaryRestrictions: selectedDietaryRestrictions,
         resume: resumeUrl,
       };
 
@@ -583,23 +625,35 @@ export default function Step2Page() {
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={
-          !allAcknowledgmentsChecked ||
-          selectedInterests.length === 0 ||
-          isUploading
-        }
-        className="w-full"
-      >
-        {isUploading
-          ? "Uploading resume..."
-          : allAcknowledgmentsChecked && selectedInterests.length > 0
-            ? "Complete Registration"
-            : selectedInterests.length === 0
-              ? "Please select at least one interest"
-              : "Please accept all acknowledgments"}
-      </Button>
+      {/* Navigation Buttons */}
+      <div className="flex gap-4">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleBack}
+          className="flex-1"
+          disabled={isUploading}
+        >
+          Back
+        </Button>
+        <Button
+          type="submit"
+          disabled={
+            !allAcknowledgmentsChecked ||
+            selectedInterests.length === 0 ||
+            isUploading
+          }
+          className="flex-1"
+        >
+          {isUploading
+            ? "Uploading resume..."
+            : allAcknowledgmentsChecked && selectedInterests.length > 0
+              ? "Complete Registration"
+              : selectedInterests.length === 0
+                ? "Please select at least one interest"
+                : "Please accept all acknowledgments"}
+        </Button>
+      </div>
     </form>
   );
 }

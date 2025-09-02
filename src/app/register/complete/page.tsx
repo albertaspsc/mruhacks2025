@@ -44,7 +44,7 @@ const fireConfetti = (canvas: HTMLCanvasElement) => {
 
 export default function CompletePage() {
   const router = useRouter();
-  const { data } = useRegisterForm();
+  const { data, clearFormData } = useRegisterForm();
   const hasProcessed = useRef(false);
   const confettiRef = useRef<HTMLCanvasElement>(null);
 
@@ -85,6 +85,8 @@ export default function CompletePage() {
             error:
               "Missing required registration information. Please go back and complete all fields.",
           });
+          // Reset hasProcessed to allow retry
+          hasProcessed.current = false;
           return;
         }
 
@@ -115,12 +117,17 @@ export default function CompletePage() {
             success: false,
             error: result.error,
           });
+          // Reset hasProcessed to allow retry
+          hasProcessed.current = false;
         } else {
           setStatus({
             loading: false,
             success: true,
             error: null,
           });
+
+          // Clear form data from local storage since registration is complete
+          clearFormData();
 
           // Fire confetti
           if (confettiRef.current) {
@@ -133,11 +140,13 @@ export default function CompletePage() {
           success: false,
           error: "Registration failed. Please try again.",
         });
+        // Reset hasProcessed to allow retry
+        hasProcessed.current = false;
       }
     };
 
     processRegistration();
-  }, [data]);
+  }, [data, clearFormData]);
 
   // Loading state
   if (status.loading) {

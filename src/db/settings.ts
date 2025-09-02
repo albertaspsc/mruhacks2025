@@ -336,11 +336,9 @@ export async function syncUserToProfile(
     // Prepare profile data using current data + any updates
     const profileData = {
       id: userId,
-      first_name: userData.firstName || currentUserData.f_name,
-      last_name: userData.lastName || currentUserData.l_name,
+      f_name: userData.firstName || currentUserData.f_name,
+      l_name: userData.lastName || currentUserData.l_name,
       email: userData.email || currentUserData.email,
-      parking: userData.parking || currentUserData.parking,
-      updated_at: currentTime,
     };
 
     console.log("Profile data to upsert:", profileData);
@@ -401,9 +399,8 @@ export async function updateUserNameOnly(
       supabase
         .from("profile")
         .update({
-          first_name: user.firstName,
-          last_name: user.lastName,
-          updated_at: currentTime,
+          f_name: user.firstName,
+          l_name: user.lastName,
         })
         .eq("id", userId),
     ]);
@@ -465,25 +462,23 @@ export async function updateUserNameAndEmail(
 
     // Prepare update objects
     const usersUpdate: any = { updated_at: currentTime };
-    const profileUpdate: any = { updated_at: currentTime };
+    const profileUpdate: any = {};
 
     if (user.firstName !== undefined) {
       usersUpdate.f_name = user.firstName;
-      profileUpdate.first_name = user.firstName;
+      profileUpdate.f_name = user.firstName;
     }
 
     if (user.lastName !== undefined) {
       usersUpdate.l_name = user.lastName;
-      profileUpdate.last_name = user.lastName;
+      profileUpdate.l_name = user.lastName;
     }
 
     // For email: store as pending in public tables
     if (user.email !== undefined) {
       usersUpdate.pending_email = user.email;
       usersUpdate.email_change_requested_at = currentTime;
-
-      profileUpdate.pending_email = user.email;
-      profileUpdate.email_change_requested_at = currentTime;
+      // Note: Profile table doesn't have pending_email or email_change_requested_at columns
     }
 
     const updatePromises = [

@@ -1,6 +1,7 @@
 "use client";
 import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 import { parkingSituation, yearOfStudy } from "./../db/schema";
 import { z } from "zod";
 
@@ -45,23 +46,38 @@ export type RegistrationInput = z.infer<typeof RegistrationSchema>;
 type ContextType = {
   data: Partial<RegistrationInput>;
   setValues: (vals: Partial<RegistrationInput>) => void;
+  goBack: () => void;
+  clearFormData: () => void;
 };
 
 const RegisterFormContext = createContext<ContextType>({
   data: {},
   // no-op
   setValues() {},
+  goBack() {},
+  clearFormData() {},
 });
 
 export function RegisterFormProvider({ children }: React.PropsWithChildren) {
   const [data, setData] = useState<Partial<RegistrationInput>>({});
+  const router = useRouter();
 
   const setValues = (vals: Partial<RegistrationInput>) => {
     setData((prev) => ({ ...prev, ...vals }));
   };
 
+  const goBack = () => {
+    router.back();
+  };
+
+  const clearFormData = () => {
+    setData({});
+  };
+
   return (
-    <RegisterFormContext.Provider value={{ data, setValues }}>
+    <RegisterFormContext.Provider
+      value={{ data, setValues, goBack, clearFormData }}
+    >
       {children}
     </RegisterFormContext.Provider>
   );

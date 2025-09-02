@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ParticipantManagement } from "@/components/admin/ParticipantManagement";
+import { ParticipantManagement } from "@/components/Admin/ParticipantManagement";
 import { createClient } from "@/utils/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,12 +33,12 @@ interface Workshop {
   title: string;
   description: string;
   date: string;
-  start_time: string;
-  end_time: string;
+  startTime: string;
+  endTime: string;
   location: string;
-  max_capacity: number;
-  is_active: boolean;
-  current_registrations?: number;
+  maxCapacity: number;
+  isActive: boolean;
+  currentRegistrations?: number;
 }
 
 export default function AdminDashboardPage() {
@@ -159,32 +159,7 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                MRUHacks Admin Portal
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, Admin</span>
-              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                Admin
-              </span>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-50 pt-[70px]">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
@@ -244,7 +219,7 @@ export default function AdminDashboardPage() {
               {/* Workshop Management Header */}
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     Workshop Management
                   </h3>
                   <p className="text-gray-600">
@@ -289,7 +264,7 @@ export default function AdminDashboardPage() {
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {workshops.reduce(
-                        (total, w) => total + (w.current_registrations || 0),
+                        (total, w) => total + (w.currentRegistrations || 0),
                         0,
                       )}
                     </div>
@@ -309,9 +284,9 @@ export default function AdminDashboardPage() {
                         ? Math.round(
                             workshops.reduce((total, w) => {
                               const percentage =
-                                w.max_capacity > 0
-                                  ? ((w.current_registrations || 0) /
-                                      w.max_capacity) *
+                                w.maxCapacity > 0
+                                  ? ((w.currentRegistrations || 0) /
+                                      w.maxCapacity) *
                                     100
                                   : 0;
                               return total + percentage;
@@ -373,7 +348,7 @@ export default function AdminDashboardPage() {
                               <div className="flex items-center space-x-1 text-sm text-gray-500">
                                 <Clock className="w-4 h-4" />
                                 <span>
-                                  {workshop.start_time} - {workshop.end_time}
+                                  {workshop.startTime} - {workshop.endTime}
                                 </span>
                               </div>
                             </TableCell>
@@ -388,14 +363,14 @@ export default function AdminDashboardPage() {
                             <TableCell>
                               <div className="text-sm">
                                 <div className="font-medium">
-                                  {workshop.current_registrations || 0}/
-                                  {workshop.max_capacity}
+                                  {workshop.currentRegistrations || 0}/
+                                  {workshop.maxCapacity}
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                   <div
                                     className="bg-blue-600 h-2 rounded-full"
                                     style={{
-                                      width: `${Math.min(100, workshop.max_capacity > 0 ? ((workshop.current_registrations || 0) / workshop.max_capacity) * 100 : 0)}%`,
+                                      width: `${Math.min(100, workshop.maxCapacity > 0 ? ((workshop.currentRegistrations || 0) / workshop.maxCapacity) * 100 : 0)}%`,
                                     }}
                                   />
                                 </div>
@@ -405,10 +380,10 @@ export default function AdminDashboardPage() {
                             <TableCell>
                               <Badge
                                 variant={
-                                  workshop.is_active ? "default" : "secondary"
+                                  workshop.isActive ? "default" : "secondary"
                                 }
                               >
-                                {workshop.is_active ? "Inactive" : "Active"}
+                                {workshop.isActive ? "Inactive" : "Active"}
                               </Badge>
                             </TableCell>
 
