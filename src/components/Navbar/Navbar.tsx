@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 import logo from "@/assets/logos/color-logo.svg";
 import NavbarItem from "./NavbarItem";
+import { createClient } from "@/utils/supabase/client";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = createClient();
 
   useEffect(() => {
     if (isOpen) {
@@ -88,8 +90,21 @@ const Navbar = () => {
   // Determines if a section is active
   const isActive = (sectionId: string) => activeSection === sectionId;
 
+  // Admin logout function
+  const handleAdminLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push("/admin-login-portal");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   // Build items based on current route
   const isLanding = pathname === "/" || pathname.startsWith("/landing");
+  const isAdmin =
+    pathname.startsWith("/admin") &&
+    !pathname.startsWith("/admin-login-portal");
 
   const navItems = isLanding
     ? [
@@ -187,26 +202,68 @@ const Navbar = () => {
             },
           },
         ]
-      : [
-          {
-            key: "home",
-            label: "Home",
-            href: "/",
-            isActive: pathname === "/",
-            variant: "link" as const,
-            onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              setIsOpen(false);
-              router.push("/");
+      : isAdmin
+        ? [
+            {
+              key: "admin-participants",
+              label: "Participants",
+              href: "/admin/dashboard?tab=participants",
+              isActive:
+                pathname.startsWith("/admin/dashboard") &&
+                (pathname.includes("participants") ||
+                  !pathname.includes("tab=")),
+              variant: "link" as const,
+              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                e.preventDefault();
+                setIsOpen(false);
+                router.push("/admin/dashboard?tab=participants");
+              },
             },
-          },
-        ];
+            {
+              key: "admin-workshops",
+              label: "Workshops",
+              href: "/admin/dashboard?tab=workshops",
+              isActive:
+                pathname.includes("workshop") ||
+                (pathname.startsWith("/admin/dashboard") &&
+                  pathname.includes("workshops")),
+              variant: "link" as const,
+              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                e.preventDefault();
+                setIsOpen(false);
+                router.push("/admin/dashboard?tab=workshops");
+              },
+            },
+            {
+              key: "admin-logout",
+              label: "Logout",
+              variant: "button" as const,
+              onClick: () => {
+                setIsOpen(false);
+                handleAdminLogout();
+              },
+            },
+          ]
+        : [
+            {
+              key: "home",
+              label: "Home",
+              href: "/",
+              isActive: pathname === "/",
+              variant: "link" as const,
+              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                e.preventDefault();
+                setIsOpen(false);
+                router.push("/");
+              },
+            },
+          ];
 
   return (
     <nav className={styles.navbarCustom}>
       <div className={styles.navbarContainer}>
         <a
-          href={isLanding ? "#register" : "/"}
+          href={isLanding ? "#register" : isAdmin ? "/admin/dashboard" : "/"}
           className={styles.navbarBrand}
           onClick={(e) => {
             if (isLanding) {
@@ -214,7 +271,11 @@ const Navbar = () => {
             } else {
               e.preventDefault();
               setIsOpen(false);
-              router.push("/");
+              if (isAdmin) {
+                router.push("/admin/dashboard");
+              } else {
+                router.push("/");
+              }
             }
           }}
         >
