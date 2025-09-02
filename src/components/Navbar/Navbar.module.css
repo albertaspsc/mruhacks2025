@@ -21,6 +21,21 @@
   transition: all 0.3s ease;
 }
 
+.loginButton {
+  background-color: black;
+  color: white;
+  border-radius: 60px;
+  padding: 10px 20px;
+  margin-left: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loginButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
+}
+
 .mainContent {
   padding-top: 70px;
 }
