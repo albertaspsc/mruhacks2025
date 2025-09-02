@@ -66,8 +66,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/aos": "^3.0.7",
     "@types/bcryptjs": "^2.4.6",
+    "@types/aos": "^3.0.7",
     "@types/node": "22.13.10",
     "@types/react-dom": "^19.1.5",
     "autoprefixer": "^10.4.21",
