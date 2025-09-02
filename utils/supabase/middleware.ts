@@ -158,13 +158,13 @@ export async function updateSession(request: NextRequest) {
       if (adminData && adminData.status === "active") {
         url.pathname = "/admin/dashboard";
       } else {
-        url.pathname = "/dashboard";
+        url.pathname = "/user/dashboard";
       }
 
       return createRedirectWithCookies(url);
     } catch (error) {
       // If admin check fails, redirect to regular dashboard
-      url.pathname = "/dashboard";
+      url.pathname = "/user/dashboard";
       return createRedirectWithCookies(url);
     }
   }
