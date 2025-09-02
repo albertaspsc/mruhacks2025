@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1749213559109,
-      "tag": "0000_youthful_firedrake",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1751448718440,
-      "tag": "0001_good_tombstone",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1751479354125,
-      "tag": "0002_unknown_shiver_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1752278949575,
-      "tag": "0003_aromatic_random",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1753137079255,
-      "tag": "0004_groovy_skrulls",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1753380932663,
-      "tag": "0005_ancient_thor_girl",
+      "when": 1756664823852,
+      "tag": "0000_slow_night_nurse",
       "breakpoints": true
     }
   ]

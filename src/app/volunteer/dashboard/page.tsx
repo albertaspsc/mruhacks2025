@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ParticipantManagement } from "@/components/Admin/ParticipantManagement";
+import { ParticipantManagement } from "@/components/admin/ParticipantManagement";
 import { UserCheck, Eye, Clock, Users } from "lucide-react";
 
 export default function VolunteerDashboard() {

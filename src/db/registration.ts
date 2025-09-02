@@ -150,6 +150,7 @@ export async function register(user: RegistrationInput) {
 
     if (errors.length > 0) {
       const errorMessage = "Database lookup failed: " + errors.join(", ");
+      console.error(errorMessage);
       return { error: errorMessage };
     }
 
@@ -223,7 +224,7 @@ export async function register(user: RegistrationInput) {
       marketing: marketingResult.data!.id,
       prev_attendance: user.previousAttendance,
       parking: user.parking,
-      yearOfStudy: user.yearOfStudy,
+      year_of_study: user.yearOfStudy,
       accommodations: user.accommodations || "",
       resume_url: user.resume || null,
       timestamp: new Date().toISOString(),
@@ -232,6 +233,7 @@ export async function register(user: RegistrationInput) {
     });
 
     if (insertError) {
+      console.error("Users insert failed:", insertError);
       return { error: "Registration failed - please try again" };
     }
 
@@ -264,6 +266,7 @@ export async function register(user: RegistrationInput) {
 
     return { success: true };
   } catch (error) {
+    console.error("Registration exception:", error);
     return { error: "Registration failed - please try again" };
   }
 }
@@ -331,7 +334,7 @@ async function handleUserSelections(
           });
 
         if (insertError) {
-          // Log error but continue processing
+          console.warn("Failed to insert user diet restriction:", insertError);
         }
       }
     }
@@ -359,12 +362,12 @@ async function handleUserSelections(
           });
 
         if (insertError) {
-          // Log error but continue processing
+          console.warn("Failed to insert user interest:", insertError);
         }
       }
     }
   } catch (error) {
-    // Don't throw error
+    console.warn("handleUserSelections encountered an error:", error);
   }
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ParticipantManagement } from "@/components/Admin/ParticipantManagement";
+import { ParticipantManagement } from "@/components/admin/ParticipantManagement";
 import { createClient } from "@/utils/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
