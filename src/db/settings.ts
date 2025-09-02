@@ -319,7 +319,8 @@ export async function syncUserToProfile(
     const userId = auth.user.id;
     const currentTime = new Date().toISOString();
 
-    // Get current user data from users table using actual database column names
+
+    // Get current user data from users table
     const { data: currentUserData, error: getUserError } = await supabase
       .from("users")
       .select("f_name, l_name, email, parking")
@@ -328,13 +329,13 @@ export async function syncUserToProfile(
 
     if (getUserError) {
       console.error("Error getting user data:", getUserError);
+
       console.error("getUserError details:", {
         code: getUserError.code,
         message: getUserError.message,
         details: getUserError.details,
         hint: getUserError.hint,
       });
-      return { error: getUserError };
     }
 
     console.log("Current user data:", currentUserData);
@@ -364,6 +365,7 @@ export async function syncUserToProfile(
       };
     }
 
+
     // Upsert the profile record
     const { error: profileError } = await supabase
       .from("profile")
@@ -371,12 +373,14 @@ export async function syncUserToProfile(
 
     if (profileError) {
       console.error("Profile upsert error:", profileError);
+
       console.error("profileError details:", {
         code: profileError.code,
         message: profileError.message,
         details: profileError.details,
         hint: profileError.hint,
       });
+
       return { error: profileError };
     }
 
