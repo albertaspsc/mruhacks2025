@@ -8,12 +8,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // For all other routes, run existing Supabase session logic
-  // Allows admin login page to bypass all auth checks
-  if (request.nextUrl.pathname === "/admin/login") {
-    return NextResponse.next();
-  }
-
-  // For all other routes, run existing Supabase session logic
   return await updateSession(request);
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ParticipantManagement } from "@/components/admin/ParticipantManagement";
+import { ParticipantManagement } from "@/components/Admin/ParticipantManagement";
 import { createClient } from "@/utils/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -238,6 +238,65 @@ export default function AdminDashboardPage() {
                     </Button>
                   </Link>
                 </div>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Workshops
+                    </CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{workshops.length}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Registrations
+                    </CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {workshops.reduce(
+                        (total, w) => total + (w.current_registrations || 0),
+                        0,
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Average Capacity
+                    </CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {workshops.length > 0
+                        ? Math.round(
+                            workshops.reduce((total, w) => {
+                              const percentage =
+                                w.max_capacity > 0
+                                  ? ((w.current_registrations || 0) /
+                                      w.max_capacity) *
+                                    100
+                                  : 0;
+                              return total + percentage;
+                            }, 0) / workshops.length,
+                          )
+                        : 0}
+                      %
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Workshops Table */}
