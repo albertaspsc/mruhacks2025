@@ -5,9 +5,30 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1756664823852,
-      "tag": "0000_slow_night_nurse",
+      "when": 1756919991183,
+      "tag": "0000_thin_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756921000000,
+      "tag": "0001_schema_alignment",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756921001000,
+      "tag": "0002_public_security_and_functions",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756921002000,
+      "tag": "0003_fix_users_auth_fk",
+      "breakpoints": false
     }
   ]
 }

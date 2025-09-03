@@ -1,5 +1,5 @@
 {
-  "id": "da21d55b-ba1b-4b41-b7ab-5a40b54769ed",
+  "id": "3a7f4d05-0658-4ba9-b12c-0515635f943d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -265,42 +265,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.mktg_preferences": {
-      "name": "mktg_preferences",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "send_emails": {
-          "name": "send_emails",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "mktg_preferences_id_users_id_fk": {
-          "name": "mktg_preferences_id_users_id_fk",
-          "tableFrom": "mktg_preferences",
-          "tableTo": "users",
-          "columnsFrom": ["id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.marketing_types": {
       "name": "marketing_types",
       "schema": "",
@@ -339,6 +303,42 @@
           "columns": ["marketing"]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mktg_preferences": {
+      "name": "mktg_preferences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "send_emails": {
+          "name": "send_emails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mktg_preferences_id_users_id_fk": {
+          "name": "mktg_preferences_id_users_id_fk",
+          "tableFrom": "mktg_preferences",
+          "tableTo": "users",
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -457,55 +457,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.user_interests": {
-      "name": "user_interests",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "interest": {
-          "name": "interest",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "user_interests_id_users_id_fk": {
-          "name": "user_interests_id_users_id_fk",
-          "tableFrom": "user_interests",
-          "tableTo": "users",
-          "columnsFrom": ["id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_interests_interest_interests_id_fk": {
-          "name": "user_interests_interest_interests_id_fk",
-          "tableFrom": "user_interests",
-          "tableTo": "interests",
-          "columnsFrom": ["interest"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "user_interests_id_interest_pk": {
-          "name": "user_interests_id_interest_pk",
-          "columns": ["id", "interest"]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.user_diet_restrictions": {
       "name": "user_diet_restrictions",
       "schema": "",
@@ -548,6 +499,55 @@
         "user_diet_restrictions_id_restriction_pk": {
           "name": "user_diet_restrictions_id_restriction_pk",
           "columns": ["id", "restriction"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_interests": {
+      "name": "user_interests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interest": {
+          "name": "interest",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_interests_id_users_id_fk": {
+          "name": "user_interests_id_users_id_fk",
+          "tableFrom": "user_interests",
+          "tableTo": "users",
+          "columnsFrom": ["id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_interests_interest_interests_id_fk": {
+          "name": "user_interests_interest_interests_id_fk",
+          "tableFrom": "user_interests",
+          "tableTo": "interests",
+          "columnsFrom": ["interest"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "user_interests_id_interest_pk": {
+          "name": "user_interests_id_interest_pk",
+          "columns": ["id", "interest"]
         }
       },
       "uniqueConstraints": {},
@@ -680,7 +680,6 @@
           "name": "users_id_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "schemaTo": "auth",
           "columnsFrom": ["id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
