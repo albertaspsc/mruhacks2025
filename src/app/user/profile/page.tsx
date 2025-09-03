@@ -372,128 +372,131 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container max-w-2xl py-10">
-      <ToastBanner toast={toast} onClose={() => setToast(null)} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container max-w-2xl py-10">
+        <ToastBanner toast={toast} onClose={() => setToast(null)} />
 
-      <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
-      <p className="text-gray-500 mb-6">Manage your personal information</p>
+        <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
+        <p className="text-gray-500 mb-6">Manage your personal information</p>
 
-      {emailVerificationSent && (
-        <Alert className="mb-6 bg-blue-50 border-blue-200">
-          <Mail className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">
-            Email verification sent
-          </AlertTitle>
-          <AlertDescription className="text-blue-700">
-            We&apos;ve sent a verification email to your new address. Please
-            check your inbox and click the verification link to confirm the
-            change.
+        {emailVerificationSent && (
+          <Alert className="mb-6 bg-blue-50 border-blue-200">
+            <Mail className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-800">
+              Email verification sent
+            </AlertTitle>
+            <AlertDescription className="text-blue-700">
+              We&apos;ve sent a verification email to your new address. Please
+              check your inbox and click the verification link to confirm the
+              change.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+            <CardDescription>
+              Update your name and email address. Email changes require
+              verification.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...profileForm}>
+              <form
+                onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <FormField
+                    control={profileForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your first name"
+                            {...field}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={profileForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your last name"
+                            {...field}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={profileForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your email address"
+                          type="email"
+                          {...field}
+                          disabled={isSaving}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        This email is used for login and all communications.
+                        Changing it will require email verification.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-4 pt-4">
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>Save Changes</>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        {/* Additional Info Alert */}
+        <Alert className="mt-6 rounded-xl">
+          <Mail className="h-4 w-4" />
+          <AlertTitle>Email Change Security</AlertTitle>
+          <AlertDescription>
+            For security reasons, email changes require verification.
+            You&apos;ll receive an email at your new address with a verification
+            link. Your login email won&apos;t change until you verify the new
+            address.
           </AlertDescription>
         </Alert>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>
-            Update your name and email address. Email changes require
-            verification.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...profileForm}>
-            <form
-              onSubmit={profileForm.handleSubmit(onProfileSubmit)}
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <FormField
-                  control={profileForm.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your first name"
-                          {...field}
-                          disabled={isSaving}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={profileForm.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your last name"
-                          {...field}
-                          disabled={isSaving}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={profileForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your email address"
-                        type="email"
-                        {...field}
-                        disabled={isSaving}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      This email is used for login and all communications.
-                      Changing it will require email verification.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>Save Changes</>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {/* Additional Info Alert */}
-      <Alert className="mt-6 rounded-xl">
-        <Mail className="h-4 w-4" />
-        <AlertTitle>Email Change Security</AlertTitle>
-        <AlertDescription>
-          For security reasons, email changes require verification. You&apos;ll
-          receive an email at your new address with a verification link. Your
-          login email won&apos;t change until you verify the new address.
-        </AlertDescription>
-      </Alert>
+      </div>
     </div>
   );
 }
