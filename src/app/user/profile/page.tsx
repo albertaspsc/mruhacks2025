@@ -485,7 +485,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Additional Info Alert */}
-      <Alert className="mt-6">
+      <Alert className="mt-6 rounded-xl">
         <Mail className="h-4 w-4" />
         <AlertTitle>Email Change Security</AlertTitle>
         <AlertDescription>
