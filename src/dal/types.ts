@@ -266,3 +266,4 @@ export interface AdminRepository {
    */
   revokeAdmin(userId: string): Promise<void>;
 }
+export { ParkingPreferencesDTO, MarketingPreferencesDTO };

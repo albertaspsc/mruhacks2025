@@ -3,22 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
 import { users, gender, universities, majors } from "@/db/schema";
 import { eq } from "drizzle-orm";
-
-// Helper to compute current registration count efficiently
-async function getRegistrationCount(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  workshopId: string,
-) {
-  const { count, error } = await supabase
-    .from("workshop_registrations")
-    .select("user_id", { count: "exact", head: true })
-    .eq("workshop_id", workshopId);
-
-  if (error) {
-    return { error } as const;
-  }
-  return { count: count ?? 0 } as const;
-}
+import { workshopRepository } from "@/dal/workshopRepository";
+import { workshopRegistrationRepository } from "@/dal/workshopRegistrationRepository";
+import { DatabaseError, ConflictError } from "@/errors";
 
 export async function POST(
   _request: NextRequest,
@@ -82,22 +69,13 @@ export async function POST(
       );
     }
 
-    // Capacity check
-    const { count, error: countError } = await getRegistrationCount(
-      supabase,
-      workshopId,
-    );
-    if (countError) {
-      return NextResponse.json(
-        { error: "Failed to check capacity" },
-        { status: 500 },
-      );
-    }
-
+    // Capacity check using WorkshopRepository
+    const registrationCount =
+      await workshopRepository.getRegistrationCount(workshopId);
     const maxCapacity: number | null =
       typeof workshop.max_capacity === "number" ? workshop.max_capacity : null;
     const isFull =
-      maxCapacity && maxCapacity > 0 ? (count ?? 0) >= maxCapacity : false;
+      maxCapacity && maxCapacity > 0 ? registrationCount >= maxCapacity : false;
     if (isFull) {
       return NextResponse.json({ error: "Workshop full" }, { status: 409 });
     }
@@ -129,47 +107,45 @@ export async function POST(
 
     const userInfo = userData[0];
 
-    // Insert registration with text
-    const { error: insertError } = await supabase
-      .from("workshop_registrations")
-      .insert({
-        workshop_id: workshopId,
-        user_id: user.id,
-        registered_at: new Date().toISOString(),
-        f_name: userInfo.f_name,
-        l_name: userInfo.l_name,
-        yearOfStudy: userInfo.yearOfStudy,
-        gender: userInfo.gender || "Not specified",
-        major: userInfo.major || "N/A",
-      });
+    // Insert registration via repository (includes error wrapping)
+    try {
+      await workshopRegistrationRepository.register(user.id, workshopId);
+    } catch (err: any) {
+      // If unique constraint -> already registered
+      if (
+        err.message?.includes("duplicate") ||
+        err.message?.includes("Already registered")
+      ) {
+        return NextResponse.json(
+          { error: "Already registered" },
+          { status: 409 },
+        );
+      }
 
-    if (insertError) {
-      // Unique violation -> already registered
-      const message =
-        (insertError as any)?.code === "23505"
-          ? "Already registered"
-          : "Registration failed";
-      return NextResponse.json({ error: message }, { status: 409 });
-    }
+      if (err instanceof DatabaseError) {
+        console.error("Registration DB error:", err);
+        return NextResponse.json(
+          { error: "Registration failed" },
+          { status: 500 },
+        );
+      }
 
-    // Recompute count to return fresh numbers
-    const { count: newCount, error: recountError } = await getRegistrationCount(
-      supabase,
-      workshopId,
-    );
-    if (recountError) {
+      // unexpected
+      console.error("Registration unexpected error:", err);
       return NextResponse.json(
-        { error: "Registration succeeded but failed to fetch count" },
-        { status: 200 },
+        { error: "Registration failed" },
+        { status: 500 },
       );
     }
 
+    // Recompute count to return fresh numbers using WorkshopRepository
+    const newCount = await workshopRepository.getRegistrationCount(workshopId);
     const nowFull =
-      maxCapacity && maxCapacity > 0 ? (newCount ?? 0) >= maxCapacity : false;
+      maxCapacity && maxCapacity > 0 ? newCount >= maxCapacity : false;
 
     return NextResponse.json({
       isRegistered: true,
-      currentRegistrations: newCount ?? 0,
+      currentRegistrations: newCount,
       isFull: nowFull,
     });
   } catch (error) {
@@ -201,46 +177,36 @@ export async function DELETE(
       );
     }
 
-    // Delete registration (RLS should ensure only own row is deletable)
-    const { error: deleteError } = await supabase
-      .from("workshop_registrations")
-      .delete()
-      .eq("workshop_id", workshopId)
-      .eq("user_id", user.id);
-
-    if (deleteError) {
-      return NextResponse.json({ error: "Unregister failed" }, { status: 400 });
-    }
-
-    // Recompute counts
-    const { count: newCount, error: recountError } = await getRegistrationCount(
-      supabase,
-      workshopId,
-    );
-    if (recountError) {
-      return NextResponse.json(
-        { error: "Unregistered but failed to fetch count" },
-        { status: 200 },
+    // Delete registration via repository (RLS should still apply for DB user)
+    try {
+      const success = await workshopRegistrationRepository.unregister(
+        user.id,
+        workshopId,
       );
+      if (!success) {
+        return NextResponse.json(
+          { error: "Unregister failed" },
+          { status: 400 },
+        );
+      }
+    } catch (err: any) {
+      console.error("Unregister DB error:", err);
+      return NextResponse.json({ error: "Unregister failed" }, { status: 500 });
     }
 
-    // We need max capacity to compute isFull; if not available just compute false
-    let maxCapacity: number | null = null;
-    const { data: workshop } = await supabase
-      .from("workshops")
-      .select("max_capacity")
-      .eq("id", workshopId)
-      .single();
-    if (workshop && typeof workshop.max_capacity === "number") {
-      maxCapacity = workshop.max_capacity;
-    }
+    // Recompute counts using WorkshopRepository
+    const newCount = await workshopRepository.getRegistrationCount(workshopId);
+
+    // Get workshop details for max capacity using repository
+    const workshopDetails = await workshopRepository.getById(workshopId);
+    const maxCapacity = workshopDetails?.maxCapacity || null;
 
     const nowFull =
-      maxCapacity && maxCapacity > 0 ? (newCount ?? 0) >= maxCapacity : false;
+      maxCapacity && maxCapacity > 0 ? newCount >= maxCapacity : false;
 
     return NextResponse.json({
       isRegistered: false,
-      currentRegistrations: newCount ?? 0,
+      currentRegistrations: newCount,
       isFull: nowFull,
     });
   } catch (error) {

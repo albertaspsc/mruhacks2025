@@ -2,6 +2,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
+import { settingsRepository } from "@/dal/settingsRepository";
 import { z } from "zod";
 
 // Simple schemas for validation
@@ -36,16 +37,7 @@ export async function updateParkingPreferences(
   console.log("=== updateParkingPreferences called ===");
   console.log("Input data:", data);
 
-  if (!supabase) {
-    supabase = await createClient();
-  }
-
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    console.error("Auth error:", authError);
-    return { error: authError };
-  }
-
+  // Validate input
   const validation = parkingPreferencesSchema.safeParse(data);
   if (!validation.success) {
     console.error("Validation error:", validation.error);
@@ -53,73 +45,33 @@ export async function updateParkingPreferences(
   }
 
   try {
-    const userId = auth.user.id;
-    const currentTime = new Date().toISOString();
-
-    // Update users table with parking preference
-    const { error: usersError } = await supabase
-      .from("users")
-      .update({
-        parking: data.parkingPreference,
-        updated_at: currentTime,
-      })
-      .eq("id", userId);
-
-    if (usersError) {
-      console.error("Users table update failed:", usersError);
-      return { error: usersError };
+    if (!supabase) {
+      supabase = await createClient();
     }
 
-    console.log("Users table updated successfully");
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error("Auth error:", authError);
+      return { error: authError };
+    }
 
-    // Sync to profile table using the helper function
+    const userId = auth.user.id;
+
+    // Delegate DB work to repository (keeps public API same)
+    await settingsRepository.updateParkingPreferences(userId, {
+      parkingPreference: data.parkingPreference,
+      licensePlate: data.licensePlate,
+    } as any);
+
+    // Sync profile (still uses supabase client)
     const syncResult = await syncUserToProfile(
       { parking: data.parkingPreference },
       supabase,
     );
-
     if (syncResult.error) {
-      console.error("Profile sync failed:", syncResult.error);
       console.warn(
         "Parking preference updated in users table but failed to sync to profile",
       );
-    } else {
-      console.log("Parking preference synced to profile table successfully");
-    }
-
-    // Handle license plate in parking_info table
-    if (data.parkingPreference === "Yes" && data.licensePlate) {
-      console.log(
-        "Updating license plate in parking_info table:",
-        data.licensePlate,
-      );
-
-      const { error: licenseError } = await supabase
-        .from("parking_info")
-        .upsert({
-          id: userId,
-          license_plate: data.licensePlate,
-        });
-
-      if (licenseError) {
-        console.error("License plate update failed:", licenseError);
-        return { error: licenseError };
-      } else {
-        console.log("License plate updated successfully in parking_info table");
-      }
-    } else if (data.parkingPreference !== "Yes") {
-      // Delete the parking_info record if parking is not "Yes"
-      const { error: deleteParkingError } = await supabase
-        .from("parking_info")
-        .delete()
-        .eq("id", userId);
-
-      if (deleteParkingError) {
-        console.error("Failed to delete parking info:", deleteParkingError);
-        // Don't return error here as this might be expected if no record exists
-      } else {
-        console.log("Parking info record deleted successfully");
-      }
     }
 
     return { success: true };
@@ -132,58 +84,27 @@ export async function updateParkingPreferences(
 export async function getParkingPreference(supabase?: SupabaseClient) {
   console.log("=== getParkingPreference called ===");
 
-  if (!supabase) {
-    supabase = await createClient();
-  }
-
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    console.error("Auth error:", authError);
-    return { error: authError };
-  }
-
   try {
+    if (!supabase) {
+      supabase = await createClient();
+    }
+
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error("Auth error:", authError);
+      return { error: authError };
+    }
+
     const userId = auth.user.id;
-    console.log("Getting parking preferences for user:", userId);
 
-    // Get parking preference from users table
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("parking")
-      .eq("id", userId)
-      .single();
-
-    if (userError) {
-      console.error("Error fetching parking preference from users:", userError);
-      return { error: userError };
-    }
-
-    // Get license plate from parking_info table
-    let licensePlate = "";
-    try {
-      const { data: parkingData, error: parkingError } = await supabase
-        .from("parking_info")
-        .select("license_plate")
-        .eq("id", userId)
-        .single();
-
-      if (parkingError && parkingError.code !== "PGRST116") {
-        // PGRST116 is "not found" error, which is expected for users without parking info
-        console.error("Error fetching license plate:", parkingError);
-      } else if (parkingData) {
-        licensePlate = parkingData.license_plate || "";
-      }
-    } catch (error) {
-      console.log("No license plate found in parking_info table");
-    }
-
-    console.log("Retrieved parking preference:", userData.parking);
-    console.log("Retrieved license plate:", licensePlate);
+    const prefs = await settingsRepository.getParkingPreferences(
+      userId as string,
+    );
 
     return {
       data: {
-        parking: userData.parking || "Not sure",
-        licensePlate: licensePlate,
+        parking: (prefs as any).parkingPreference || "Not sure",
+        licensePlate: (prefs as any).licensePlate || "",
       },
     };
   } catch (error) {
@@ -200,31 +121,23 @@ export async function updateMarketingPreferences(
   console.log("=== updateMarketingPreferences called ===");
   console.log("sendEmails:", sendEmails);
 
-  if (!supabase) {
-    supabase = await createClient();
-  }
-
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    console.error("Auth error:", authError);
-    return { error: authError };
-  }
-
   try {
-    const userId = auth.user.id;
-    console.log("Updating marketing preferences for user:", userId);
-
-    const { error } = await supabase.from("mktg_preferences").upsert({
-      id: userId,
-      send_emails: sendEmails,
-    });
-
-    if (error) {
-      console.error("Marketing preferences update error:", error);
-      return { error };
+    if (!supabase) {
+      supabase = await createClient();
     }
 
-    console.log("Marketing preferences updated successfully");
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error("Auth error:", authError);
+      return { error: authError };
+    }
+
+    const userId = auth.user.id;
+
+    await settingsRepository.updateMarketingPreferences(userId, {
+      sendEmails,
+    } as any);
+
     return { success: true };
   } catch (error) {
     console.error("updateMarketingPreferences exception:", error);
@@ -235,57 +148,24 @@ export async function updateMarketingPreferences(
 export async function getMarketingPreference(supabase?: SupabaseClient) {
   console.log("=== getMarketingPreference called ===");
 
-  if (!supabase) {
-    supabase = await createClient();
-  }
-
-  const { data: auth, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    console.error("Auth error:", authError);
-    return { error: authError };
-  }
-
   try {
+    if (!supabase) {
+      supabase = await createClient();
+    }
+
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error("Auth error:", authError);
+      return { error: authError };
+    }
+
     const userId = auth.user.id;
-    console.log("Getting marketing preferences for user:", userId);
 
-    const { data, error } = await supabase
-      .from("mktg_preferences")
-      .select("send_emails")
-      .eq("id", userId)
-      .single();
+    const prefs = await settingsRepository.getMarketingPreferences(
+      userId as string,
+    );
 
-    if (error && error.code !== "PGRST116") {
-      console.error("Marketing preferences fetch error:", error);
-      return { error };
-    }
-
-    // If no record exists (PGRST116 error), create one with default true
-    if (error && error.code === "PGRST116") {
-      console.log(
-        "No marketing preference record found, creating default (true)",
-      );
-
-      const { error: createError } = await supabase
-        .from("mktg_preferences")
-        .insert({
-          id: userId,
-          send_emails: true, // Default to true
-        });
-
-      if (createError) {
-        console.error(
-          "Failed to create default marketing preference:",
-          createError,
-        );
-        return { error: createError };
-      }
-
-      return { data: { sendEmails: true } };
-    }
-
-    console.log("Marketing preferences retrieved:", data);
-    return { data: { sendEmails: data?.send_emails ?? true } };
+    return { data: { sendEmails: (prefs as any).sendEmails } };
   } catch (error) {
     console.error("getMarketingPreference exception:", error);
     return { error: "Failed to get marketing preference" };

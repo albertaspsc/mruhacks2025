@@ -1,7 +1,5 @@
 "use server";
-import { eq, sql } from "drizzle-orm";
-import { db } from "./drizzle";
-import { admins, profiles as profilesTable, users } from "./schema";
+import { adminRepository } from "@/dal/adminRepository";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 
@@ -15,29 +13,18 @@ export async function isAdmin(supabase?: SupabaseClient) {
     return { error: authError };
   }
 
-  const validAdminsWithId = await db
-    .select()
-    .from(admins)
-    .where(eq(admins.id, auth.user.id));
-  return { data: validAdminsWithId.length > 0 };
+  try {
+    const isAdmin = await adminRepository.isAdmin(auth.user.id);
+    return { data: isAdmin };
+  } catch (err: any) {
+    return { error: err };
+  }
 }
 
 export async function listUsers() {
-  return await db
-    .select()
-    .from(profilesTable)
-    .innerJoin(users, eq(users.id, profilesTable.id));
+  return await adminRepository.listUsers();
 }
 
 export async function grantAdmin(email: string) {
-  db.insert(admins).select(
-    db
-      .select({
-        id: profilesTable.id,
-        email: profilesTable.email,
-        status: sql<string>`pending`.as("status"),
-      })
-      .from(profilesTable)
-      .where(eq(profilesTable.email, email)),
-  );
+  return await adminRepository.grantAdmin(email);
 }

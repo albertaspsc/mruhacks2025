@@ -13,6 +13,8 @@ export * from "./experienceTypes";
 export * from "./marketingTypes";
 export * from "./userInterests";
 export * from "./userDietRestrictions";
+export * from "./workshops";
+export * from "./workshopRegistrations";
 
 // Compatibility aliases for existing imports elsewhere in the codebase
 export { profile as profiles } from "./profile";

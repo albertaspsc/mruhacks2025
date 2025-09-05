@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
 import { users, universities } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
+import { userRepository } from "@/dal/userRepository";
 
 interface BulkUpdateRequest {
   participantIds: string[];
@@ -53,11 +54,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Find participants to update
-    const participantsToUpdate = await db
-      .select()
-      .from(users)
-      .where(inArray(users.id, participantIds));
+    // Find participants to update via repository
+    const participantsToUpdate = await userRepository.getByIds(participantIds);
 
     if (participantsToUpdate.length === 0) {
       return NextResponse.json(
@@ -66,55 +64,28 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Check if some IDs were not found
     const foundIds = participantsToUpdate.map((p) => p.id);
     const notFoundIds = participantIds.filter((id) => !foundIds.includes(id));
 
-    // Prepare update data - use any to avoid type conflicts
     const updateData: any = {};
     if (status !== undefined) updateData.status = status;
     if (checkedIn !== undefined) updateData.checkedIn = checkedIn;
 
-    // Perform bulk update using transaction for consistency
-    const updatedParticipants = await db.transaction(async (tx) => {
-      // Updates all participants
-      const updated = await tx
-        .update(users)
-        .set(updateData)
-        .where(inArray(users.id, foundIds))
-        .returning();
+    // Use repository to perform bulk update
+    const updatedParticipants = await userRepository.updateMany(
+      foundIds,
+      updateData,
+    );
 
-      return updated;
-    });
-
-    // Get updated participants with university names for response
-    const participantsWithUni = await db
-      .select({
-        id: users.id,
-        firstName: users.fName,
-        lastName: users.lName,
-        email: users.email,
-        university: universities.uni,
-        status: users.status,
-        checkedIn: users.checkedIn,
-        registrationDate: users.timestamp,
-      })
-      .from(users)
-      .leftJoin(universities, eq(users.university, universities.id))
-      .where(inArray(users.id, foundIds));
-
-    // Transform for response
-    const transformedParticipants = participantsWithUni.map((p) => ({
+    const transformedParticipants = participantsToUpdate.map((p) => ({
       id: p.id,
-      firstName: p.firstName,
-      lastName: p.lastName,
-      email: p.email,
-      university: p.university,
-      status: p.status,
-      checkedIn: p.checkedIn,
-      registrationDate: p.registrationDate
-        ? new Date(p.registrationDate).toISOString()
-        : new Date().toISOString(),
+      firstName: p.fName,
+      lastName: p.lName,
+      email: (p as any).email,
+      university: (p as any).university || "N/A",
+      status: (p as any).status,
+      checkedIn: (p as any).checkedIn || false,
+      registrationDate: (p as any).timestamp || new Date().toISOString(),
     }));
 
     const response = {
