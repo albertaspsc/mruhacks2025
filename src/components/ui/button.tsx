@@ -12,7 +12,7 @@ export function Button({
   asChild = false,
   ...restProps
 }: ButtonProps) {
-  const base = "px-4 py-2 rounded-md font-medium transition-opacity";
+  const base = "px-4 py-2 rounded-xl font-medium transition-opacity";
 
   let styles = "";
 
