@@ -92,20 +92,22 @@ export default function CompletePage() {
 
         // Create validated registration data
         const registrationData = {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          gender: data.gender,
-          university: data.university,
-          major: data.major,
-          experience: data.experience,
-          marketing: data.marketing,
-          previousAttendance: data.previousAttendance,
-          parking: data.parking,
-          yearOfStudy: data.yearOfStudy,
-          accommodations: data.accommodations || "",
-          dietaryRestrictions: data.dietaryRestrictions || [],
-          interests: data.interests,
+          firstName: String(data.firstName),
+          lastName: String(data.lastName),
+          email: String(data.email),
+          gender: String(data.gender),
+          university: String(data.university),
+          major: String(data.major),
+          experience: String(data.experience),
+          marketing: String(data.marketing),
+          previousAttendance: Boolean(data.previousAttendance),
+          parking: String(data.parking),
+          yearOfStudy: String(data.yearOfStudy),
+          accommodations: String(data.accommodations || ""),
+          dietaryRestrictions: Array.isArray(data.dietaryRestrictions)
+            ? data.dietaryRestrictions
+            : [],
+          interests: Array.isArray(data.interests) ? data.interests : [],
           resume: data.resume,
         };
 

@@ -1,21 +1,45 @@
 import { pgEnum } from "drizzle-orm/pg-core";
+import {
+  INTEREST_OPTIONS,
+  DIETARY_RESTRICTION_OPTIONS,
+  MARKETING_OPTIONS,
+  YEAR_OF_STUDY_OPTIONS,
+  PARKING_OPTIONS,
+} from "@/data/registrationOptions";
 
-export const adminRole = pgEnum("admin_role", [
-  "volunteer",
-  "admin",
-  "super_admin",
+// Create enums from TypeScript constants
+export const interestEnum = pgEnum("interest", INTEREST_OPTIONS);
+export const dietaryRestrictionEnum = pgEnum(
+  "dietary_restriction",
+  DIETARY_RESTRICTION_OPTIONS,
+);
+export const marketingEnum = pgEnum("marketing_type", MARKETING_OPTIONS);
+export const yearOfStudyEnum = pgEnum("year_of_study", YEAR_OF_STUDY_OPTIONS);
+export const parkingEnum = pgEnum("parking_option", PARKING_OPTIONS);
+
+// Gender enum (using numeric values for backward compatibility)
+export const genderEnum = pgEnum("gender", ["1", "2", "3", "4"]);
+
+// Experience enum (using numeric values for backward compatibility)
+export const experienceEnum = pgEnum("experience_type", ["1", "2", "3", "4"]);
+
+// Status enum for users
+export const status = pgEnum("status", [
+  "pending",
+  "confirmed",
+  "waitlisted",
+  "rejected",
 ]);
 
-export const adminStatus = pgEnum("admin_status", ["active", "inactive"]);
-
-export const parkingState = pgEnum("parking_state", ["Yes", "No", "Not sure"]);
-
-export const status = pgEnum("status", ["confirmed", "pending", "waitlisted"]);
-
-export const yearOfStudy = pgEnum("year_of_study", [
-  "1st",
-  "2nd",
-  "3rd",
-  "4th+",
-  "Recent Grad",
+// Admin role and status enums
+export const adminRole = pgEnum("admin_role", [
+  "super_admin",
+  "admin",
+  "moderator",
+  "volunteer",
+]);
+export const adminStatus = pgEnum("admin_status", [
+  "active",
+  "inactive",
+  "suspended",
 ]);

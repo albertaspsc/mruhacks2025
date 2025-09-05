@@ -2,7 +2,7 @@
 import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import { parkingSituation, yearOfStudy } from "./../db/schema";
+import { parkingEnum, yearOfStudyEnum } from "./../db/schema";
 import { z } from "zod";
 
 // export type RegistrationData = {
@@ -30,9 +30,9 @@ export const RegistrationSchema = z.object({
   university: z.string(),
   previousAttendance: z.coerce.boolean(),
   major: z.string(),
-  parking: createSelectSchema(parkingSituation),
+  parking: createSelectSchema(parkingEnum),
   email: z.string().email(),
-  yearOfStudy: createSelectSchema(yearOfStudy),
+  yearOfStudy: createSelectSchema(yearOfStudyEnum),
   experience: z.string(),
   accommodations: z.string(),
   dietaryRestrictions: z.array(z.string()),

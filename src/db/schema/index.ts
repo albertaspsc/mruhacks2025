@@ -16,4 +16,4 @@ export * from "./userDietRestrictions";
 
 // Compatibility aliases for existing imports elsewhere in the codebase
 export { profile as profiles } from "./profile";
-export { parkingState as parkingSituation } from "./enums";
+export { parkingEnum as parkingSituation } from "./enums";

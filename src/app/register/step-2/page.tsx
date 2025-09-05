@@ -8,7 +8,13 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getStaticOptions } from "@/db/registration";
+import {
+  INTEREST_OPTIONS,
+  DIETARY_RESTRICTION_OPTIONS,
+  MARKETING_OPTIONS,
+  EXPERIENCE_OPTIONS,
+  PARKING_OPTIONS,
+} from "@/data/registrationOptions";
 import {
   FileUpload,
   FileUploadDropzone,
@@ -35,31 +41,6 @@ type FinalForm = Pick<
   | "resume"
 >;
 
-const FALLBACK_INTERESTS = [
-  "Mobile App Development",
-  "Web Development",
-  "Data Science and ML",
-  "Design and User Experience (UX/UI)",
-  "Game Development",
-];
-
-const FALLBACK_DIETARY = [
-  "Kosher",
-  "Vegetarian",
-  "Vegan",
-  "Halal",
-  "Gluten-free",
-  "Peanuts & Treenuts allergy",
-];
-
-const FALLBACK_MARKETING = [
-  "Poster",
-  "Social Media",
-  "Word of Mouth",
-  "Website/Googling it",
-  "Attended the event before",
-];
-
 export default function Step2Page() {
   const router = useRouter();
   const { data, setValues, goBack } = useRegisterForm();
@@ -76,9 +57,6 @@ export default function Step2Page() {
   });
 
   // States
-  const [dietaryOptions, setDietaryOptions] = useState<string[]>([]);
-  const [interestOptions, setInterestOptions] = useState<string[]>([]);
-  const [marketingOptions, setMarketingOptions] = useState<string[]>([]);
   const [resume, setResume] = useState<File>();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
@@ -115,35 +93,6 @@ export default function Step2Page() {
       }
     }
   }, [data, setValue]);
-
-  useEffect(() => {
-    const loadStaticOptions = async () => {
-      try {
-        const { dietaryRestrictions, interests, marketingTypes } =
-          await getStaticOptions();
-
-        // Use loaded data or fallback to hardcoded options
-        setDietaryOptions(
-          dietaryRestrictions.length > 0
-            ? dietaryRestrictions
-            : FALLBACK_DIETARY,
-        );
-        setInterestOptions(
-          interests.length > 0 ? interests : FALLBACK_INTERESTS,
-        );
-        setMarketingOptions(
-          marketingTypes.length > 0 ? marketingTypes : FALLBACK_MARKETING,
-        );
-      } catch (error) {
-        // Use fallbacks on error
-        setDietaryOptions(FALLBACK_DIETARY);
-        setInterestOptions(FALLBACK_INTERESTS);
-        setMarketingOptions(FALLBACK_MARKETING);
-      }
-    };
-
-    loadStaticOptions();
-  }, []);
 
   // Function to upload resume to Supabase Storage
   const uploadResumeToSupabase = async (file: File): Promise<string | null> => {
@@ -320,14 +269,12 @@ export default function Step2Page() {
           {...register("experience", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option value="Beginner">Beginner – What is a computer?</option>
-          <option value="Intermediate">
-            Intermediate – My spaghetti code is made out of tagliatelle.
-          </option>
-          <option value="Advanced">
-            Advanced – Firewalls disabled, mainframes bypassed.
-          </option>
-          <option value="Expert">Expert – I know what a computer is.</option>
+          <option value="">Select experience level</option>
+          {EXPERIENCE_OPTIONS.map((option, i) => (
+            <option key={i} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
         {errors.experience && (
           <p className="mt-1 text-sm text-red-600">
@@ -342,7 +289,7 @@ export default function Step2Page() {
           Interests (max 3) <span className="text-red-500">*</span>
         </Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-          {interestOptions.map((interest) => (
+          {INTEREST_OPTIONS.map((interest) => (
             <div key={interest} className="flex items-start space-x-3">
               <Checkbox
                 id={`interest-${interest}`}
@@ -380,7 +327,7 @@ export default function Step2Page() {
       <div>
         <Label>Dietary Restrictions</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-          {dietaryOptions.map((restriction) => (
+          {DIETARY_RESTRICTION_OPTIONS.map((restriction) => (
             <div key={restriction} className="flex items-start space-x-3">
               <Checkbox
                 id={`dietary-${restriction}`}
@@ -426,9 +373,12 @@ export default function Step2Page() {
           {...register("parking", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
-          <option>Yes</option>
-          <option>No</option>
-          <option>Not sure</option>
+          <option value="">Select parking option</option>
+          {PARKING_OPTIONS.map((option, i) => (
+            <option key={i} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
         {errors.parking && (
           <p className="mt-1 text-sm text-red-600">{errors.parking.message}</p>
@@ -445,8 +395,11 @@ export default function Step2Page() {
           {...register("marketing", { required: "Required" })}
           className="w-full border rounded px-3 py-2"
         >
-          {marketingOptions.map((x, i) => (
-            <option key={`marketingOption-${i}`}>{x}</option>
+          <option value="">Select how you heard about us</option>
+          {MARKETING_OPTIONS.map((option, i) => (
+            <option key={i} value={option}>
+              {option}
+            </option>
           ))}
         </select>
         {errors.marketing && (

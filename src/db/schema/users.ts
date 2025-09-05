@@ -8,7 +8,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { parkingState, status, yearOfStudy } from "./enums";
+import { parkingEnum, status, yearOfStudyEnum } from "./enums";
 import { gender } from "./gender";
 import { universities } from "./universities";
 import { majors } from "./majors";
@@ -26,8 +26,8 @@ export const users = pgTable(
     university: integer().notNull(),
     prevAttendance: boolean("prev_attendance").notNull(),
     major: integer().notNull(),
-    parking: parkingState().notNull(),
-    yearOfStudy: yearOfStudy().notNull(),
+    parking: parkingEnum().notNull(),
+    yearOfStudy: yearOfStudyEnum().notNull(),
     experience: integer().notNull(),
     accommodations: text().notNull(),
     marketing: integer().notNull(),

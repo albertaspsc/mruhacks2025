@@ -4,6 +4,15 @@ import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { syncUserToProfile } from "@/db/settings";
 import { z } from "zod";
+import {
+  getExperienceMapping,
+  getMarketingMapping,
+  isValidInterest,
+  isValidDietaryRestriction,
+  isValidMarketingOption,
+  isValidYearOfStudy,
+  isValidParkingOption,
+} from "@/data/registrationOptions";
 
 export interface Registration {
   // Basic user info
@@ -73,6 +82,35 @@ export async function register(user: RegistrationInput) {
     return { error: "Invalid registration data" };
   }
 
+  // Additional validation using TypeScript constants
+  if (
+    user.interests &&
+    user.interests.some((interest) => !isValidInterest(interest))
+  ) {
+    return { error: "Invalid interest selection" };
+  }
+
+  if (
+    user.dietaryRestrictions &&
+    user.dietaryRestrictions.some(
+      (restriction) => !isValidDietaryRestriction(restriction),
+    )
+  ) {
+    return { error: "Invalid dietary restriction selection" };
+  }
+
+  if (user.marketing && !isValidMarketingOption(user.marketing)) {
+    return { error: "Invalid marketing option" };
+  }
+
+  if (user.yearOfStudy && !isValidYearOfStudy(user.yearOfStudy)) {
+    return { error: "Invalid year of study" };
+  }
+
+  if (user.parking && !isValidParkingOption(user.parking)) {
+    return { error: "Invalid parking option" };
+  }
+
   try {
     // Check if already registered
     const { data: existing } = await supabase
@@ -93,27 +131,9 @@ export async function register(user: RegistrationInput) {
       return { error: "Gender must be a valid ID" };
     }
 
-    // Experience mapping
-    const experienceMap: { [key: string]: number } = {
-      "Beginner – What is a computer?": 1,
-      "Intermediate – My spaghetti code is made out of tagliatelle.": 2,
-      "Advanced – Firewalls disabled, mainframes bypassed.": 3,
-      "Expert – I know what a computer is.": 4,
-      Beginner: 1,
-      Intermediate: 2,
-      Advanced: 3,
-      Expert: 4,
-    };
-
-    // Marketing mapping
-    const marketingMap: { [key: string]: number } = {
-      Poster: 1,
-      "Social Media": 2,
-      "Word of Mouth": 3,
-      "Website/Googling it": 4,
-      "Attended the event before": 5,
-      Other: 6,
-    };
+    // Use TypeScript constants for mapping
+    const experienceMap = getExperienceMapping();
+    const marketingMap = getMarketingMapping();
 
     const experienceId = experienceMap[user.experience];
     const marketingId = marketingMap[user.marketing];
@@ -371,8 +391,13 @@ async function handleUserSelections(
   }
 }
 
-// Get static options for forms
+// DEPRECATED: Use TypeScript constants from @/data/registrationOptions instead
+// This function is kept for backward compatibility but should not be used in new code
 export async function getStaticOptions() {
+  console.warn(
+    "getStaticOptions() is deprecated. Use TypeScript constants from @/data/registrationOptions instead.",
+  );
+
   try {
     const supabase = await createClient();
 
@@ -435,8 +460,13 @@ export async function getRegistration() {
   }
 }
 
-// Get majors and universities for forms
+// DEPRECATED: Use TypeScript constants from @/data/registrationOptions instead
+// This function is kept for backward compatibility but should not be used in new code
 export async function getMajorsAndUniversities() {
+  console.warn(
+    "getMajorsAndUniversities() is deprecated. Use TypeScript constants from @/data/registrationOptions instead.",
+  );
+
   try {
     const supabase = await createClient();
 

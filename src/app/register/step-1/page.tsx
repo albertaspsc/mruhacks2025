@@ -12,8 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useRef } from "react";
-import { getMajorsAndUniversities } from "@/db/registration";
 import { createClient } from "@/utils/supabase/client";
+import {
+  GENDER_OPTIONS,
+  COMMON_UNIVERSITIES,
+  COMMON_MAJORS,
+  YEAR_OF_STUDY_OPTIONS,
+} from "@/data/registrationOptions";
 
 type PersonalForm = {
   previousAttendance: string;
@@ -40,19 +45,10 @@ export default function Step1Page() {
     defaultValues: {},
   });
 
-  const [institutions, setInstitutions] = useState<string[]>([]);
-  const [majors, setMajors] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
   const hasSetInitialValues = useRef(false); // Prevent multiple calls
-
-  const GENDER_OPTIONS = [
-    { value: "1", label: "Male" },
-    { value: "2", label: "Female" },
-    { value: "3", label: "Other" },
-    { value: "4", label: "Prefer not to say" },
-  ];
 
   // Handle authentication and session verification
   useEffect(() => {
@@ -123,15 +119,6 @@ export default function Step1Page() {
     return () => subscription.unsubscribe();
   }, [router, supabase.auth]);
 
-  useEffect(() => {
-    const loadLists = async () => {
-      const { majors, universities } = await getMajorsAndUniversities();
-      setMajors(majors);
-      setInstitutions(universities);
-    };
-    loadLists();
-  }, []);
-
   // Load saved form data from context and set initial values
   useEffect(() => {
     const getUserProfile = async () => {
@@ -144,7 +131,7 @@ export default function Step1Page() {
         console.log("Setting initial values for user:", user.email);
 
         // Load saved data from context first
-        const savedData = data;
+        const savedData: Partial<RegistrationInput> = data;
 
         // If user came from Google OAuth and no saved data, pre-fill form
         const isGoogleUser = user.app_metadata?.provider === "google";
@@ -177,18 +164,26 @@ export default function Step1Page() {
           });
         } else {
           // Load saved data into form fields
-          setValue("firstName", savedData.firstName || "");
-          setValue("lastName", savedData.lastName || "");
-          setValue("email", savedData.email || user.email || "");
+          setValue("firstName", String(savedData.firstName || ""));
+          setValue("lastName", String(savedData.lastName || ""));
+          setValue("email", String(savedData.email || user.email || ""));
           setValue(
             "previousAttendance",
             savedData.previousAttendance ? "true" : "false",
           );
-          setValue("gender", savedData.gender || "");
-          setValue("university", savedData.university || "");
-          setValue("major", savedData.major || "");
+          setValue("gender", String(savedData.gender || ""));
+          setValue("university", String(savedData.university || ""));
+          setValue("major", String(savedData.major || ""));
           if (savedData.yearOfStudy) {
-            setValue("yearOfStudy", savedData.yearOfStudy);
+            setValue(
+              "yearOfStudy",
+              savedData.yearOfStudy as
+                | "1st"
+                | "2nd"
+                | "3rd"
+                | "4th+"
+                | "Recent Grad",
+            );
           }
 
           // Ensure email is in context
@@ -202,7 +197,7 @@ export default function Step1Page() {
     };
 
     getUserProfile();
-  }, [user, data]); // Include data to react to context changes
+  }, [user, data, setValue, setValues]);
 
   // Save current form data to context
   const saveCurrentFormData = () => {
@@ -403,7 +398,7 @@ export default function Step1Page() {
             {...register("university", { required: "Institution is required" })}
           />
           <datalist id="university-list">
-            {institutions.map((i) => (
+            {COMMON_UNIVERSITIES.map((i) => (
               <option key={i} value={i} />
             ))}
           </datalist>
@@ -430,7 +425,7 @@ export default function Step1Page() {
             {...register("major", { required: "Major is required" })}
           />
           <datalist id="major-list">
-            {majors.map((m) => (
+            {COMMON_MAJORS.map((m) => (
               <option key={m} value={m} />
             ))}
           </datalist>
@@ -454,13 +449,11 @@ export default function Step1Page() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select year</option>
-            {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
-              (x, i) => (
-                <option key={i} value={x}>
-                  {x}
-                </option>
-              ),
-            )}
+            {YEAR_OF_STUDY_OPTIONS.map((year, i) => (
+              <option key={i} value={year}>
+                {year}
+              </option>
+            ))}
           </select>
           {errors.yearOfStudy && (
             <p className="mt-1 text-sm text-red-600">

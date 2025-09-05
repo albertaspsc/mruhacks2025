@@ -15,12 +15,12 @@ This folder contains the application database layer built with Drizzle ORM (Post
 - `index.ts`: Barrel that re-exports all schema modules. Also includes compatibility aliases:
 
   - `profiles` → `profile`
-  - `parkingSituation` → `parkingState`
+  - `parkingSituation` → `parkingEnum`
     Import from here everywhere: `import { users, universities } from "@/db/schema"`.
 
 - `enums.ts`: All Postgres enums used in the schema:
 
-  - `adminRole`, `adminStatus`, `parkingState`, `status`, `yearOfStudy`
+  - `adminRole`, `adminStatus`, `parkingEnum`, `status`, `yearOfStudyEnum`
 
 - Core tables (entities):
 
@@ -91,6 +91,6 @@ Notes:
 To avoid broad code changes while modularizing the schema, these aliases are exported from the barrel:
 
 - `profiles` (alias for `profile`)
-- `parkingSituation` (alias for `parkingState`)
+- `parkingSituation` (alias for `parkingEnum`)
 
 If you create new aliases for backwards compatibility, document them here.
