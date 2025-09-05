@@ -1,13 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient(true);
-    const { id: workshopId } = await params;
+    const { searchParams } = new URL(request.url);
+    const workshopId = searchParams.get("id");
 
     // Get current user for permission check
     const regularSupabase = await createClient();
