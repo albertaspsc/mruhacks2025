@@ -11,7 +11,6 @@ import {
 } from "../src/db/schema";
 
 async function main() {
-  // Idempotent seed helpers
   await db
     .insert(marketingTypes)
     .values([
@@ -27,26 +26,12 @@ async function main() {
   await db
     .insert(universities)
     .values([
-      { university: "MRU" },
-      { university: "U of C" },
-      { university: "SAIT" },
-      { university: "Athabasca" },
-      { university: "UBC" },
-      { university: "Why" },
-      { university: "Mount Royal University" },
-    ])
-    .onConflictDoNothing();
-
-  await db
-    .insert(majors)
-    .values([
-      { major: "BCIS" },
-      { major: "Data Science" },
-      { major: "Computer Science" },
-      { major: "Mathematics" },
-      { major: "Accounting" },
-      { major: "Data Analytics" },
-      { major: "No" },
+      { uni: "MRU" },
+      { uni: "U of C" },
+      { uni: "SAIT" },
+      { uni: "Athabasca" },
+      { uni: "UBC" },
+      { uni: "Mount Royal University" },
     ])
     .onConflictDoNothing();
 
