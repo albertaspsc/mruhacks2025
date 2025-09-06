@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { db } from "../src/db/drizzle";
+import { db } from "./drizzle";
 import {
   marketingTypes,
   universities,
@@ -8,7 +8,7 @@ import {
   dietaryRestrictions,
   gender,
   experienceTypes,
-} from "../src/db/schema";
+} from "./schema";
 
 async function main() {
   await db
