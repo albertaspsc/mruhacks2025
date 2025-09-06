@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Registration } from "@/db/registration";
+import { Registration } from "@/services/RegistrationService";
 
 type DashboardView = "dashboard" | "settings" | "profile";
 

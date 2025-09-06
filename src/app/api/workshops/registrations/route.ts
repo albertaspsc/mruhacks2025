@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WorkshopService } from "@/services/WorkshopService";
-import { workshopRegistrationRepository } from "@/dal/workshopRegistrationRepository";
+import { getWorkshopRegistrations } from "@/services/WorkshopService";
 
 // Add lightweight logging/metrics for this route
 const routeLog = (msg: string, meta?: any) =>
@@ -23,10 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     routeLog("Fetching registrations", { workshopId });
-    const response = await WorkshopService.getWorkshopRegistrations(
-      request,
-      workshopId,
-    );
+    const response = await getWorkshopRegistrations(request, workshopId);
     return NextResponse.json(response);
   } catch (error: any) {
     console.error("Workshop registrations fetch error:", error);

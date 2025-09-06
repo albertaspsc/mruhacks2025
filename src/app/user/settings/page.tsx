@@ -43,12 +43,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  updateParkingPreferences,
-  updateMarketingPreferences,
   getParkingPreference,
   getMarketingPreference,
-} from "@/db/settings";
-import { getRegistration, Registration } from "@/db/registration";
+  updateMarketingPreferences,
+  updateParkingPreferences,
+} from "@/services/SettingsService";
+import { getRegistration, Registration } from "@/services/RegistrationService";
 import { createClient } from "@/utils/supabase/client";
 
 // Password validation function

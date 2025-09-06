@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { syncUserToProfile } from "@/db/settings";
+import { createClient } from "@/utils/supabase/server";
+import { syncUserToProfile } from "@/services/SettingsService";
 import { z } from "zod";
 import {
   getExperienceMapping,
@@ -13,6 +13,26 @@ import {
   isValidYearOfStudy,
   isValidParkingOption,
 } from "@/data/registrationOptions";
+
+// Validation schema (copied from legacy db layer)
+const RegistrationSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  gender: z.string().min(1, "Gender is required"),
+  university: z.string().min(1, "University is required"),
+  major: z.string().min(1, "Major is required"),
+  experience: z.string().min(1, "Experience level is required"),
+  marketing: z.string().min(1, "Please tell us how you heard about us"),
+  previousAttendance: z.boolean(),
+  parking: z.string().min(1, "Parking preference is required"),
+  yearOfStudy: z.string().min(1, "Year of study is required"),
+  accommodations: z.string().optional(),
+  dietaryRestrictions: z.array(z.string()),
+  interests: z.array(z.string()).min(1, "At least one interest is required"),
+  resume: z.string().optional(),
+});
+
+export type RegistrationInput = z.infer<typeof RegistrationSchema>;
 
 export interface Registration {
   // Basic user info
@@ -46,43 +66,19 @@ export interface Registration {
   dietaryRestrictions?: string[];
 }
 
-// Simple validation schema
-const RegistrationSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  gender: z.string().min(1, "Gender is required"),
-  university: z.string().min(1, "University is required"),
-  major: z.string().min(1, "Major is required"),
-  experience: z.string().min(1, "Experience level is required"),
-  marketing: z.string().min(1, "Please tell us how you heard about us"),
-  previousAttendance: z.boolean(),
-  parking: z.string().min(1, "Parking preference is required"),
-  yearOfStudy: z.string().min(1, "Year of study is required"),
-  accommodations: z.string().optional(),
-  dietaryRestrictions: z.array(z.string()),
-  interests: z.array(z.string()).min(1, "At least one interest is required"),
-  resume: z.string().optional(),
-});
-
-export type RegistrationInput = z.infer<typeof RegistrationSchema>;
-
-// Simple registration function
 export async function register(user: RegistrationInput) {
   const supabase = await createClient();
 
-  // Get current user
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) {
     return { error: "Authentication required" };
   }
 
-  // Validate input
   const validation = RegistrationSchema.safeParse(user);
   if (!validation.success) {
     return { error: "Invalid registration data" };
   }
 
-  // Additional validation using TypeScript constants
   if (
     user.interests &&
     user.interests.some((interest) => !isValidInterest(interest))
@@ -131,7 +127,6 @@ export async function register(user: RegistrationInput) {
       return { error: "Gender must be a valid ID" };
     }
 
-    // Use TypeScript constants for mapping
     const experienceMap = getExperienceMapping();
     const marketingMap = getMarketingMapping();
 
@@ -140,24 +135,13 @@ export async function register(user: RegistrationInput) {
 
     const experienceResult = experienceId
       ? { data: { id: experienceId }, error: null }
-      : {
-          data: null,
-          error: {
-            message: `Experience "${user.experience}" not found in mapping. Available: ${Object.keys(experienceMap).join(", ")}`,
-          },
-        };
+      : { data: null, error: { message: "Experience not found" } };
 
     const marketingResult = marketingId
       ? { data: { id: marketingId }, error: null }
-      : {
-          data: null,
-          error: {
-            message: `Marketing "${user.marketing}" not found in mapping. Available: ${Object.keys(marketingMap).join(", ")}`,
-          },
-        };
+      : { data: null, error: { message: "Marketing not found" } };
 
-    // Check which lookups failed and provide specific error messages
-    const errors = [];
+    const errors: string[] = [];
     if (genderResult.error || !genderResult.data) {
       errors.push(`Gender "${user.gender}" not found in database`);
     }
@@ -175,63 +159,17 @@ export async function register(user: RegistrationInput) {
     }
 
     // Get or create university and major
-    let universityId, majorId;
+    const universityId =
+      (await getOrCreateRecord(
+        supabase,
+        "universities",
+        "uni",
+        user.university,
+      )) || 1;
 
-    try {
-      // Try to get or create university
-      const { data: existingUni } = await supabase
-        .from("universities")
-        .select("id")
-        .eq("uni", user.university)
-        .single();
+    const majorId =
+      (await getOrCreateRecord(supabase, "majors", "major", user.major)) || 1;
 
-      if (existingUni) {
-        universityId = existingUni.id;
-      } else {
-        const { data: newUni, error: uniError } = await supabase
-          .from("universities")
-          .insert({ uni: user.university })
-          .select("id")
-          .single();
-
-        if (uniError) {
-          universityId = 1;
-        } else {
-          universityId = newUni.id;
-        }
-      }
-    } catch (error) {
-      universityId = 1; // Fallback
-    }
-
-    try {
-      // Try to get or create major
-      const { data: existingMajor } = await supabase
-        .from("majors")
-        .select("id")
-        .eq("major", user.major)
-        .single();
-
-      if (existingMajor) {
-        majorId = existingMajor.id;
-      } else {
-        const { data: newMajor, error: majorError } = await supabase
-          .from("majors")
-          .insert({ major: user.major })
-          .select("id")
-          .single();
-
-        if (majorError) {
-          majorId = 1;
-        } else {
-          majorId = newMajor.id;
-        }
-      }
-    } catch (error) {
-      majorId = 1; // Fallback
-    }
-
-    // Insert user
     const { error: insertError } = await supabase.from("users").insert({
       id: auth.user.id,
       email: auth.user.email,
@@ -257,11 +195,7 @@ export async function register(user: RegistrationInput) {
       return { error: "Registration failed - please try again" };
     }
 
-    // Handle interests and dietary restrictions
     await handleUserSelections(supabase, auth.user.id, user);
-
-    // Syncs information to public.profile table
-    console.log("User registered successfully, syncing to profile table...");
 
     const profileSyncResult = await syncUserToProfile(
       {
@@ -274,14 +208,7 @@ export async function register(user: RegistrationInput) {
     );
 
     if (profileSyncResult.error) {
-      console.error(
-        "Profile sync failed during registration:",
-        profileSyncResult.error,
-      );
-      // Don't fail the entire registration, but log the error
       console.warn("User registered successfully but profile sync failed");
-    } else {
-      console.log("User registered and profile synced successfully");
     }
 
     return { success: true };
@@ -291,27 +218,22 @@ export async function register(user: RegistrationInput) {
   }
 }
 
-// Helper function to get or create records
-async function getOrCreateRecord(
+export async function getOrCreateRecord(
   supabase: SupabaseClient,
   table: string,
   column: string,
   value: string,
 ): Promise<number | null> {
   try {
-    // Try to find existing
     const { data: existing } = await supabase
       .from(table)
       .select("id")
       .eq(column, value)
       .single();
 
-    if (existing) {
-      return existing.id;
-    }
+    if (existing) return existing.id;
 
-    // Create new
-    const { data: newRecord, error } = await supabase
+    const { data: newRecord } = await supabase
       .from(table)
       .insert({ [column]: value })
       .select("id")
@@ -323,29 +245,22 @@ async function getOrCreateRecord(
   }
 }
 
-// Handle user interests and dietary restrictions
-async function handleUserSelections(
+export async function handleUserSelections(
   supabase: SupabaseClient,
   userId: string,
   user: RegistrationInput,
 ) {
   try {
-    // Handle dietary restrictions
     if (user.dietaryRestrictions && user.dietaryRestrictions.length > 0) {
       for (const restriction of user.dietaryRestrictions) {
-        // Find the restriction ID
-        const { data: restrictionData, error: restrictionError } =
-          await supabase
-            .from("dietary_restrictions")
-            .select("id")
-            .eq("restriction", restriction)
-            .single();
+        const { data: restrictionData } = await supabase
+          .from("dietary_restrictions")
+          .select("id")
+          .eq("restriction", restriction)
+          .single();
 
-        if (restrictionError || !restrictionData) {
-          continue;
-        }
+        if (!restrictionData) continue;
 
-        // Insert into junction table
         const { error: insertError } = await supabase
           .from("user_diet_restrictions")
           .insert({
@@ -353,27 +268,21 @@ async function handleUserSelections(
             restriction: restrictionData.id,
           });
 
-        if (insertError) {
+        if (insertError)
           console.warn("Failed to insert user diet restriction:", insertError);
-        }
       }
     }
 
-    // Handle interests
     if (user.interests && user.interests.length > 0) {
       for (const interest of user.interests) {
-        // Find the interest ID
-        const { data: interestData, error: interestError } = await supabase
+        const { data: interestData } = await supabase
           .from("interests")
           .select("id")
           .eq("interest", interest)
           .single();
 
-        if (interestError || !interestData) {
-          continue;
-        }
+        if (!interestData) continue;
 
-        // Insert into junction table
         const { error: insertError } = await supabase
           .from("user_interests")
           .insert({
@@ -381,9 +290,8 @@ async function handleUserSelections(
             interest: interestData.id,
           });
 
-        if (insertError) {
+        if (insertError)
           console.warn("Failed to insert user interest:", insertError);
-        }
       }
     }
   } catch (error) {
@@ -391,8 +299,6 @@ async function handleUserSelections(
   }
 }
 
-// DEPRECATED: Use TypeScript constants from @/data/registrationOptions instead
-// This function is kept for backward compatibility but should not be used in new code
 export async function getStaticOptions() {
   console.warn(
     "getStaticOptions() is deprecated. Use TypeScript constants from @/data/registrationOptions instead.",
@@ -424,15 +330,12 @@ export async function getStaticOptions() {
   }
 }
 
-// Get user registration data
 export async function getRegistration() {
   try {
     const supabase = await createClient();
 
     const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError || !auth.user) {
-      return { error: "Not authenticated" };
-    }
+    if (authError || !auth.user) return { error: "Not authenticated" };
 
     const { data, error } = await supabase
       .from("users")
@@ -440,12 +343,9 @@ export async function getRegistration() {
       .eq("id", auth.user.id)
       .single();
 
-    if (error && error.code !== "PGRST116") {
-      return { error: error.message };
-    }
+    if (error && error.code !== "PGRST116") return { error: error.message };
 
-    // Map database fields to component-friendly names
-    const mappedData: Registration | null = data
+    const mappedData = data
       ? {
           ...data,
           firstName: data.f_name,
@@ -460,8 +360,6 @@ export async function getRegistration() {
   }
 }
 
-// DEPRECATED: Use TypeScript constants from @/data/registrationOptions instead
-// This function is kept for backward compatibility but should not be used in new code
 export async function getMajorsAndUniversities() {
   console.warn(
     "getMajorsAndUniversities() is deprecated. Use TypeScript constants from @/data/registrationOptions instead.",
@@ -475,22 +373,16 @@ export async function getMajorsAndUniversities() {
       supabase.from("universities").select("uni").order("uni"),
     ]);
 
-    if (majorsResult.error) {
-      throw majorsResult.error;
-    }
-
-    if (universitiesResult.error) {
-      throw universitiesResult.error;
-    }
+    if (majorsResult.error) throw majorsResult.error;
+    if (universitiesResult.error) throw universitiesResult.error;
 
     return {
       majors: majorsResult.data?.map((row) => row.major) || [],
       universities: universitiesResult.data?.map((row) => row.uni) || [],
     };
   } catch (error) {
-    return {
-      majors: [],
-      universities: [],
-    };
+    return { majors: [], universities: [] };
   }
 }
+
+// Remove default export - consumers should import named functions/types

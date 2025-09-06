@@ -31,10 +31,13 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { getRegistration, Registration } from "@/db/registration";
+import { getRegistration, Registration } from "@/services/RegistrationService";
 import { createClient } from "@/utils/supabase/client";
 import { z } from "zod";
-import { updateUserNameAndEmail, updateUserNameOnly } from "@/db/settings";
+import {
+  updateUserNameOnly,
+  updateUserNameAndEmail,
+} from "@/services/SettingsService";
 
 // Validation schema
 const profileSchema = z.object({

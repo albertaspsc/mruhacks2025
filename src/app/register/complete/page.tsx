@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRegisterForm } from "@/context/RegisterFormContext";
 import { Button } from "@/components/ui/button";
 import MascotUrl from "@/assets/mascots/crt.svg";
-import { register } from "@/db/registration";
+import { register as registerUser } from "@/services/RegistrationService";
 
 // Simple confetti function
 const fireConfetti = (canvas: HTMLCanvasElement) => {
@@ -111,7 +111,7 @@ export default function CompletePage() {
           resume: data.resume,
         };
 
-        const result = await register(registrationData);
+        const result = await registerUser(registrationData as any);
 
         if (result.error) {
           setStatus({

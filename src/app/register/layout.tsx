@@ -9,7 +9,7 @@ import {
   useRegisterForm,
 } from "@/context/RegisterFormContext";
 import { createClient } from "@/utils/supabase/client";
-import { getRegistration } from "@/db/registration";
+import { getRegistration } from "@/services/RegistrationService";
 
 type Props = {
   children: ReactNode;

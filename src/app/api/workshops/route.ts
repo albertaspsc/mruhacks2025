@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WorkshopService } from "@/services/WorkshopService";
+import {
+  getWorkshopsForUser,
+  createWorkshop,
+} from "@/services/WorkshopService";
 
 /**
  * GET /api/workshops
@@ -8,7 +11,7 @@ import { WorkshopService } from "@/services/WorkshopService";
  */
 export async function GET(request: NextRequest) {
   try {
-    const workshops = await WorkshopService.getWorkshopsForUser(request);
+    const workshops = await getWorkshopsForUser(request);
     return NextResponse.json(workshops);
   } catch (error: any) {
     console.error("Workshops fetch error:", error);
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const workshop = await WorkshopService.createWorkshop(request, body);
+    const workshop = await createWorkshop(request, body);
     return NextResponse.json(workshop, { status: 201 });
   } catch (error: any) {
     console.error("Workshop creation error:", error);

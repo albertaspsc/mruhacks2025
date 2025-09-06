@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Registration, getRegistration } from "@/db/registration";
+import { getRegistration, Registration } from "@/services/RegistrationService";
 import StatusBanner from "@/components/dashboards/common/StatusBanner";
 import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
 import DashboardItem from "@/components/dashboards/common/DashboardItem";

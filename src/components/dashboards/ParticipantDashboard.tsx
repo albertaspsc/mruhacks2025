@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ProgressBar from "@/components/Register/ProgressBar";
 import { ExternalLink, FileText, MessageSquare, Trophy } from "lucide-react";
-import { Registration } from "@/db/registration";
+import { Registration } from "@/services/RegistrationService";
 
 interface ParticipantDashboardProps {
   user?: Registration;
