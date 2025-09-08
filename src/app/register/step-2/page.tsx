@@ -8,7 +8,6 @@ import {
 } from "@/context/RegisterFormContext";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getStaticOptions } from "@/db/registration";
 import {
   FileUpload,
   FileUploadDropzone,
@@ -24,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useAuthRegistration } from "@/context/AuthRegistrationContext";
+import { useRegisterOptions } from "@/context/RegisterOptionsContext";
 
 type FinalForm = Pick<
   RegistrationInput,
@@ -53,9 +53,11 @@ export default function Step2Page() {
   });
 
   // States
-  const [dietaryOptions, setDietaryOptions] = useState<string[]>([]);
-  const [interestOptions, setInterestOptions] = useState<string[]>([]);
-  const [marketingOptions, setMarketingOptions] = useState<string[]>([]);
+  const {
+    interests: interestOptions,
+    dietaryRestrictions: dietaryOptions,
+    marketingTypes: marketingOptions,
+  } = useRegisterOptions();
   const [resume, setResume] = useState<File>();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedDietaryRestrictions, setSelectedDietaryRestrictions] =
@@ -93,21 +95,7 @@ export default function Step2Page() {
     }
   }, [data, setValue]);
 
-  useEffect(() => {
-    const loadStaticOptions = async () => {
-      try {
-        const { dietaryRestrictions, interests, marketingTypes } =
-          await getStaticOptions();
-        setDietaryOptions(dietaryRestrictions || []);
-        setInterestOptions(interests || []);
-        setMarketingOptions(marketingTypes || []);
-      } catch (error) {
-        console.error("Failed to load static options", error);
-      }
-    };
-
-    loadStaticOptions();
-  }, []);
+  // Removed network fetch; values come from context via layout
 
   // Function to upload resume to Supabase Storage
   const uploadResumeToSupabase = async (

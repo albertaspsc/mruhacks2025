@@ -9,16 +9,24 @@ import { createClient } from "@/utils/supabase/client";
 import { getRegisterRedirect } from "@/utils/auth/guards";
 import { getRegistration } from "@/db/registration";
 import { AuthRegistrationProvider } from "@/context/AuthRegistrationContext";
+import { RegisterOptionsProvider } from "@/context/RegisterOptionsContext";
 
 type Props = { children: ReactNode };
 
 // Inner component that has access to the RegisterFormContext
 function RegisterLayoutInner({ children }: Props) {
   const path = usePathname() ?? "";
-  let step = 1;
-  if (path.includes("step-1")) step = 3;
-  else if (path.includes("step-2")) step = 4;
-  else if (path.includes("complete")) step = 5;
+  // Deterministic route → step mapping for the registration flow
+  // Account = 1, Personal = 2, Final = 3, Complete = 4
+  const ROUTE_STEP: Array<[RegExp, number]> = [
+    [/^\/register\/?$/, 1],
+    [/^\/register\/verify-2fa\/?$/, 1],
+    [/^\/register\/step-1\/?$/, 2],
+    [/^\/register\/step-2\/?$/, 3],
+    [/^\/register\/complete\/?$/, 4],
+  ];
+
+  const step = ROUTE_STEP.find(([re]) => re.test(path))?.[1] ?? 1;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black pt-[70px]">
@@ -33,7 +41,7 @@ function RegisterLayoutInner({ children }: Props) {
             priority
           />
         </div>
-        <ProgressBar step={step} totalSteps={5} />
+        <ProgressBar step={step} totalSteps={4} />
         {children}
       </div>
     </div>
@@ -94,9 +102,11 @@ export default function RegisterLayout({ children }: Props) {
 
   return (
     <AuthRegistrationProvider initial={{ user, registrationExists }}>
-      <RegisterFormProvider>
-        <RegisterLayoutInner>{children}</RegisterLayoutInner>
-      </RegisterFormProvider>
+      <RegisterOptionsProvider>
+        <RegisterFormProvider>
+          <RegisterLayoutInner>{children}</RegisterLayoutInner>
+        </RegisterFormProvider>
+      </RegisterOptionsProvider>
     </AuthRegistrationProvider>
   );
 }

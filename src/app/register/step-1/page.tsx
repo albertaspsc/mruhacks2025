@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useRef } from "react";
-import { getMajorsAndUniversities } from "@/db/registration";
+import { useRegisterOptions } from "@/context/RegisterOptionsContext";
 import { useAuthRegistration } from "@/context/AuthRegistrationContext";
 
 type PersonalForm = {
@@ -38,24 +38,14 @@ export default function Step1Page() {
     defaultValues: {},
   });
 
-  const [institutions, setInstitutions] = useState<string[]>([]);
-  const [majors, setMajors] = useState<string[]>([]);
+  const {
+    majors,
+    universities: institutions,
+    loading: optionsLoading,
+  } = useRegisterOptions();
   const [genders, setGenders] = useState<{ id: number; gender: string }[]>([]);
   const { user, loading } = useAuthRegistration();
   const hasSetInitialValues = useRef(false); // Prevent multiple calls
-
-  // Gender options loaded dynamically (no hardcoded fallback)
-
-  // All auth + redirect logic handled in layout + shared context now.
-
-  useEffect(() => {
-    const loadLists = async () => {
-      const { majors, universities } = await getMajorsAndUniversities();
-      setMajors(majors);
-      setInstitutions(universities);
-    };
-    loadLists();
-  }, []);
 
   useEffect(() => {
     // Load gender options from DB

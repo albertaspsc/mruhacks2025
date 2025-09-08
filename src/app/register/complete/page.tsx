@@ -95,7 +95,7 @@ export default function CompletePage() {
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
-          gender: data.gender,
+          gender: String(data.gender),
           university: data.university,
           major: data.major,
           experience: data.experience,
