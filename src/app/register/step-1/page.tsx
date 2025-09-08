@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useRef } from "react";
 import { getMajorsAndUniversities } from "@/db/registration";
 import { createClient } from "@/utils/supabase/client";
+import { getRegisterRedirect } from "@/utils/auth/guards";
 
 type PersonalForm = {
   previousAttendance: string;
@@ -54,53 +55,42 @@ export default function Step1Page() {
     { value: "4", label: "Prefer not to say" },
   ];
 
-  // Handle authentication and session verification
+  // Centralized auth + redirect logic now delegated to layout guards.
+  // We still fetch the user for form pre-fill and perform a safety redirect
+  // using getRegisterRedirect in case this page is rendered outside layout.
   useEffect(() => {
-    const checkAuthentication = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        // Get current user session
         const {
           data: { user },
           error,
         } = await supabase.auth.getUser();
 
+        if (cancelled) return;
+
         if (error) {
           console.error("Auth error:", error);
           setAuthError("Authentication error. Please sign in again.");
-          setTimeout(() => router.push("/register"), 2000);
           return;
         }
 
-        if (!user) {
-          console.log("No user found, redirecting to registration");
-          setAuthError("Please complete email verification first.");
-          setTimeout(() => router.push("/register"), 2000);
-          return;
+        if (user) {
+          setUser(user);
+          setLoading(false);
+        } else {
+          setAuthError("Please sign in to continue.");
         }
-
-        // Check if email is verified
-        if (!user.email_confirmed_at) {
-          console.log("Email not confirmed, redirecting to verification");
-          setAuthError("Please verify your email first.");
-          setTimeout(
-            () => router.push(`/register/verify-2fa?email=${user.email}`),
-            2000,
-          );
-          return;
-        }
-
-        // User is properly authenticated and verified
-        console.log("User authenticated successfully:", user.email);
-        setUser(user);
-        setLoading(false);
       } catch (err) {
-        console.error("Unexpected error during auth check:", err);
-        setAuthError("An unexpected error occurred. Please try again.");
-        setTimeout(() => router.push("/register"), 2000);
+        if (!cancelled) {
+          console.error("Unexpected error during auth check:", err);
+          setAuthError("Unexpected error. Please try again.");
+        }
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    checkAuthentication();
   }, [router, supabase.auth]);
 
   // Handle auth state changes
@@ -111,10 +101,22 @@ export default function Step1Page() {
       console.log("Auth state changed:", event, session?.user?.email);
 
       if (event === "SIGNED_OUT") {
-        router.push("/register");
+        const redirectTo =
+          getRegisterRedirect({ user: null }, "/register/step-1", false) ||
+          "/register";
+        router.replace(redirectTo);
       }
 
       if (event === "SIGNED_IN" && session?.user) {
+        const redirectTo = getRegisterRedirect(
+          { user: session.user },
+          "/register/step-1",
+          false,
+        );
+        if (redirectTo) {
+          router.replace(redirectTo);
+          return;
+        }
         setUser(session.user);
         setLoading(false);
       }
@@ -280,31 +282,6 @@ export default function Step1Page() {
   // Show the actual step-1 form content once authenticated
   return (
     <div className="space-y-6">
-      {/* Success message showing verified email */}
-      <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-green-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-green-800">
-              Email verified successfully:{" "}
-              <span className="font-semibold">{user?.email}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <h1 className="text-2xl font-semibold">Personal Details</h1>
 

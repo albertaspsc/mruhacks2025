@@ -9,6 +9,7 @@ import {
   useRegisterForm,
 } from "@/context/RegisterFormContext";
 import { createClient } from "@/utils/supabase/client";
+import { getRegisterRedirect } from "@/utils/auth/guards";
 import { getRegistration } from "@/db/registration";
 
 type Props = {
@@ -22,8 +23,7 @@ function RegisterLayoutInner({ children }: Props) {
   const [isLoading, setIsLoading] = useState(true);
 
   let step = 1;
-  if (path.includes("verify-2fa")) step = 2;
-  else if (path.includes("step-1")) step = 3;
+  if (path.includes("step-1")) step = 3;
   else if (path.includes("step-2")) step = 4;
   else if (path.includes("complete")) step = 5;
 
@@ -42,47 +42,17 @@ function RegisterLayoutInner({ children }: Props) {
           data: { user },
           error,
         } = await supabase.auth.getUser();
+        console.log("Current user:", user, "Error:", error);
 
-        // Handle different page access permissions
-        if (path === "/register") {
-          // On main registration page
-          if (user && user.email_confirmed_at) {
-            // User is authenticated and verified, go to step-1
-            redirect("/register/step-1");
-            return;
-          }
-          // Allow access to registration page
-        } else if (path.includes("verify-2fa")) {
-          // On email verification page - allow access
-          // (Users can be here whether authenticated or not)
-        } else if (path.includes("step-1")) {
-          // On step-1 page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
-          if (!user.email_confirmed_at) {
-            redirect(`/register/verify-2fa?email=${user.email}`);
-            return;
-          }
-          // User is properly authenticated and verified - allow access
-        } else if (path.includes("step-2")) {
-          // On step-2 page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
-          if (!user.email_confirmed_at) {
-            redirect(`/register/verify-2fa?email=${user.email}`);
-            return;
-          }
-          // User is properly authenticated and verified - allow access
-        } else if (path.includes("complete")) {
-          // On completion page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
+        // Centralized decision: compute a single canonical redirect (if any)
+        const redirectTo = getRegisterRedirect(
+          { user },
+          path,
+          Boolean(isUserRegistered),
+        );
+        if (redirectTo) {
+          redirect(redirectTo);
+          return;
         }
 
         setIsLoading(false);

@@ -1,13 +1,32 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// This route seems to handle fetching registrations for a specific workshop, with admin permission checks.
+// But there is a dynamic route already defined at src/app/api/workshops/[id]/registrations/route.ts
+// that seems to do the same thing.
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  context: { params: Promise<{}> },
 ) {
+  const { params } = context;
   try {
     const supabase = await createClient(true);
-    const { id: workshopId } = await params;
+    // Try to get workshop id from query string first (e.g. /api/workshops/registrations?workshop=ID)
+    const url = new URL(request.url);
+    let workshopId = url.searchParams.get("workshop") ?? null;
+
+    // Fallback: if invoked via a dynamic route, read id from params
+    if (!workshopId) {
+      const maybeParams = (await params) as Record<string, string> | undefined;
+      workshopId = maybeParams?.id ?? null;
+    }
+
+    if (!workshopId) {
+      return NextResponse.json(
+        { error: "Missing workshop id" },
+        { status: 400 },
+      );
+    }
 
     // Get current user for permission check
     const regularSupabase = await createClient();
