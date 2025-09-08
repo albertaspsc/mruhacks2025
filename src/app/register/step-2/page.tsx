@@ -23,6 +23,7 @@ import { Upload, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useAuthRegistration } from "@/context/AuthRegistrationContext";
 
 type FinalForm = Pick<
   RegistrationInput,
@@ -35,35 +36,11 @@ type FinalForm = Pick<
   | "resume"
 >;
 
-const FALLBACK_INTERESTS = [
-  "Mobile App Development",
-  "Web Development",
-  "Data Science and ML",
-  "Design and User Experience (UX/UI)",
-  "Game Development",
-];
-
-const FALLBACK_DIETARY = [
-  "Kosher",
-  "Vegetarian",
-  "Vegan",
-  "Halal",
-  "Gluten-free",
-  "Peanuts & Treenuts allergy",
-];
-
-const FALLBACK_MARKETING = [
-  "Poster",
-  "Social Media",
-  "Word of Mouth",
-  "Website/Googling it",
-  "Attended the event before",
-];
-
 export default function Step2Page() {
   const router = useRouter();
   const { data, setValues, goBack } = useRegisterForm();
   const supabase = createClient();
+  const { user } = useAuthRegistration();
 
   const {
     register,
@@ -121,24 +98,11 @@ export default function Step2Page() {
       try {
         const { dietaryRestrictions, interests, marketingTypes } =
           await getStaticOptions();
-
-        // Use loaded data or fallback to hardcoded options
-        setDietaryOptions(
-          dietaryRestrictions.length > 0
-            ? dietaryRestrictions
-            : FALLBACK_DIETARY,
-        );
-        setInterestOptions(
-          interests.length > 0 ? interests : FALLBACK_INTERESTS,
-        );
-        setMarketingOptions(
-          marketingTypes.length > 0 ? marketingTypes : FALLBACK_MARKETING,
-        );
+        setDietaryOptions(dietaryRestrictions || []);
+        setInterestOptions(interests || []);
+        setMarketingOptions(marketingTypes || []);
       } catch (error) {
-        // Use fallbacks on error
-        setDietaryOptions(FALLBACK_DIETARY);
-        setInterestOptions(FALLBACK_INTERESTS);
-        setMarketingOptions(FALLBACK_MARKETING);
+        console.error("Failed to load static options", error);
       }
     };
 
@@ -146,24 +110,28 @@ export default function Step2Page() {
   }, []);
 
   // Function to upload resume to Supabase Storage
-  const uploadResumeToSupabase = async (file: File): Promise<string | null> => {
+  const uploadResumeToSupabase = async (
+    file: File,
+    userId?: string,
+  ): Promise<string | null> => {
     try {
       setIsUploading(true);
       setUploadError("");
-
-      // Check authentication
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError || !user) {
+      let effectiveUserId = userId;
+      if (!effectiveUserId) {
+        const {
+          data: { user: fallbackUser },
+        } = await supabase.auth.getUser();
+        effectiveUserId = fallbackUser?.id;
+      }
+      if (!effectiveUserId) {
         setUploadError("Authentication required");
         return null;
       }
 
       // Generate filename using original name - prefixed with user ID
       const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-      const userPrefixedFilename = `${user.id}_${originalName}`;
+      const userPrefixedFilename = `${effectiveUserId}_${originalName}`;
 
       // Upload with user-ID-prefixed filename
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -246,7 +214,7 @@ export default function Step2Page() {
 
       // Upload resume if one was selected
       if (resume) {
-        const uploadResult = await uploadResumeToSupabase(resume);
+        const uploadResult = await uploadResumeToSupabase(resume, user?.id);
         if (!uploadResult) {
           // Upload failed, don't proceed
           return;

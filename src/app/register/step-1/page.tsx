@@ -7,14 +7,12 @@ import {
   RegistrationInput,
   RegistrationSchema,
 } from "@/context/RegisterFormContext";
-import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useRef } from "react";
 import { getMajorsAndUniversities } from "@/db/registration";
-import { createClient } from "@/utils/supabase/client";
-import { getRegisterRedirect } from "@/utils/auth/guards";
+import { useAuthRegistration } from "@/context/AuthRegistrationContext";
 
 type PersonalForm = {
   previousAttendance: string;
@@ -28,7 +26,6 @@ type PersonalForm = {
 };
 
 export default function Step1Page() {
-  const supabase = createClient();
   const router = useRouter();
   const { setValues, data, goBack } = useRegisterForm();
   const {
@@ -43,87 +40,13 @@ export default function Step1Page() {
 
   const [institutions, setInstitutions] = useState<string[]>([]);
   const [majors, setMajors] = useState<string[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState("");
+  const [genders, setGenders] = useState<{ id: number; gender: string }[]>([]);
+  const { user, loading } = useAuthRegistration();
   const hasSetInitialValues = useRef(false); // Prevent multiple calls
 
-  const GENDER_OPTIONS = [
-    { value: "1", label: "Male" },
-    { value: "2", label: "Female" },
-    { value: "3", label: "Other" },
-    { value: "4", label: "Prefer not to say" },
-  ];
+  // Gender options loaded dynamically (no hardcoded fallback)
 
-  // Centralized auth + redirect logic now delegated to layout guards.
-  // We still fetch the user for form pre-fill and perform a safety redirect
-  // using getRegisterRedirect in case this page is rendered outside layout.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (cancelled) return;
-
-        if (error) {
-          console.error("Auth error:", error);
-          setAuthError("Authentication error. Please sign in again.");
-          return;
-        }
-
-        if (user) {
-          setUser(user);
-          setLoading(false);
-        } else {
-          setAuthError("Please sign in to continue.");
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error("Unexpected error during auth check:", err);
-          setAuthError("Unexpected error. Please try again.");
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [router, supabase.auth]);
-
-  // Handle auth state changes
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-
-      if (event === "SIGNED_OUT") {
-        const redirectTo =
-          getRegisterRedirect({ user: null }, "/register/step-1", false) ||
-          "/register";
-        router.replace(redirectTo);
-      }
-
-      if (event === "SIGNED_IN" && session?.user) {
-        const redirectTo = getRegisterRedirect(
-          { user: session.user },
-          "/register/step-1",
-          false,
-        );
-        if (redirectTo) {
-          router.replace(redirectTo);
-          return;
-        }
-        setUser(session.user);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router, supabase.auth]);
+  // All auth + redirect logic handled in layout + shared context now.
 
   useEffect(() => {
     const loadLists = async () => {
@@ -132,6 +55,28 @@ export default function Step1Page() {
       setInstitutions(universities);
     };
     loadLists();
+  }, []);
+
+  useEffect(() => {
+    // Load gender options from DB
+    const loadGenders = async () => {
+      try {
+        const { createClient } = await import("@/utils/supabase/client");
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("gender")
+          .select("id, gender")
+          .order("id");
+        if (!error && data) {
+          setGenders(data);
+        } else {
+          setGenders([]); // remain empty on error (no fallback)
+        }
+      } catch (e) {
+        setGenders([]);
+      }
+    };
+    loadGenders();
   }, []);
 
   // Load saved form data from context and set initial values
@@ -204,7 +149,7 @@ export default function Step1Page() {
     };
 
     getUserProfile();
-  }, [user, data]); // Include data to react to context changes
+  }, [user, data, setValue, setValues]); // Include dependencies for hook consistency
 
   // Save current form data to context
   const saveCurrentFormData = () => {
@@ -248,32 +193,14 @@ export default function Step1Page() {
       </div>
     );
   }
-
-  // Show error state if authentication failed
-  if (authError) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center space-y-4 max-w-md mx-auto px-6">
-          <div className="w-12 h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold text-red-600">
-            Authentication Required
+          <h1 className="text-xl font-semibold text-gray-900">
+            Please sign in to continue
           </h1>
-          <p className="text-gray-600">{authError}</p>
-          <p className="text-sm text-gray-500">Redirecting...</p>
+          <p className="text-gray-600">Your session was not found.</p>
         </div>
       </div>
     );
@@ -357,9 +284,9 @@ export default function Step1Page() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select gender</option>
-            {GENDER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {genders.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.gender}
               </option>
             ))}
           </select>
@@ -448,14 +375,6 @@ export default function Step1Page() {
 
         {/* Navigation Buttons */}
         <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleBack}
-            className="flex-1"
-          >
-            Back
-          </Button>
           <Button type="submit" className="flex-1">
             Next: Final Questions
           </Button>
