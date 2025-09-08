@@ -8,7 +8,7 @@ import { z } from "zod";
 export const RegistrationSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
-  gender: z.number(),
+  gender: z.string(),
   university: z.string(),
   previousAttendance: z.coerce.boolean(),
   major: z.string(),

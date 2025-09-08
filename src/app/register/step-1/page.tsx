@@ -155,9 +155,7 @@ export default function Step1Page() {
       ...formData,
       previousAttendance: formData.previousAttendance === "true",
       gender:
-        formData.gender && formData.gender !== ""
-          ? Number(formData.gender)
-          : undefined,
+        formData.gender && formData.gender !== "" ? formData.gender : undefined,
     };
     setValues(formattedData);
   };
@@ -169,7 +167,7 @@ export default function Step1Page() {
     const formattedData = {
       ...data,
       previousAttendance: data.previousAttendance === "true", // Now correctly typed
-      gender: data.gender ? Number(data.gender) : undefined,
+      gender: data.gender ? data.gender : undefined,
     };
 
     console.log("Formatted data:", formattedData);
@@ -287,7 +285,7 @@ export default function Step1Page() {
           >
             <option value="">Select gender</option>
             {genders.map((g) => (
-              <option key={g.id} value={g.id}>
+              <option key={g.id} value={g.gender}>
                 {g.gender}
               </option>
             ))}
