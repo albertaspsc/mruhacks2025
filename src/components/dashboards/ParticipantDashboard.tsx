@@ -20,7 +20,6 @@ interface ParticipantDashboardProps {
 
 interface ChecklistState {
   discordJoined: boolean;
-  devpostSignup: boolean;
 }
 
 interface ChecklistItem {
@@ -37,7 +36,6 @@ interface ChecklistItem {
 const Checklist = ({ user }: { user?: Registration }) => {
   const [checklist, setChecklist] = useState<ChecklistState>({
     discordJoined: false,
-    devpostSignup: false,
   });
 
   const handleChecklistChange = (item: keyof ChecklistState) => {
@@ -57,19 +55,6 @@ const Checklist = ({ user }: { user?: Registration }) => {
       linkText: "Join Discord",
       required: true,
       note: null,
-    },
-    {
-      id: "devpostSignup",
-      title: "Sign up through DevPost",
-      description: "Required for project submission and judging",
-      icon: <Trophy className="w-5 h-5" />,
-      link: "https://devpost.com/mruhacks", // Replace with actual DevPost link
-      linkText: "Go to DevPost",
-      required: false,
-      note:
-        user?.status === "confirmed"
-          ? "Your registration is confirmed - you can now register on DevPost!"
-          : "Only register on DevPost if your registration has been accepted",
     },
   ];
 

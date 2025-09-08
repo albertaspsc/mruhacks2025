@@ -15,7 +15,6 @@ interface ChecklistProps {
 const Checklist: React.FC<ChecklistProps> = ({ user }) => {
   const [checklist, setChecklist] = useState<ChecklistState>({
     discordJoined: false,
-    devpostSignup: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +26,6 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
         setLoading(true);
         setError(null);
 
-        // In a real app, we would load actual data from an API here
-        // For now, we'll just use the initial state
-
-        // Set loading to false immediately since we're not actually loading data
         setLoading(false);
       } catch (err) {
         setError("Failed to load checklist data");
@@ -49,11 +44,6 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
         ...prev,
         [item]: !prev[item],
       }));
-
-      // In a real app, we would make an API call here to persist the change
-      // await saveChecklistStatus(item, !checklist[item]);
-
-      // If there was an error with the API call, we could revert the UI change
     } catch (err) {
       // Revert the optimistic update if the API call fails
       setChecklist((prev) => ({
@@ -76,19 +66,6 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
       linkText: "Join Discord",
       required: true,
       note: null,
-    },
-    {
-      id: "devpostSignup",
-      title: "Sign up through DevPost",
-      description: "Required for project submission and judging",
-      icon: <Trophy className="w-4 h-4" />,
-      link: "https://devpost.com/mruhacks", // Replace with actual DevPost link
-      linkText: "Go to DevPost",
-      required: false,
-      note:
-        user?.status === "confirmed"
-          ? "Your registration is confirmed - you can now register on DevPost!"
-          : "Only register on DevPost if your registration has been accepted",
     },
   ];
 

@@ -83,7 +83,7 @@ export default function DashboardPage() {
                     </DashboardItem>
                   </div>
 
-                  {/* Right Column - Checklist and Hackerpack */}
+                  {/* Right Column - Checklist & Support */}
                   <div className="lg:col-span-5 xl:col-span-4 h-auto flex flex-col gap-2 overflow-auto pb-1">
                     {/* Compact Checklist */}
                     <div className="flex-shrink-0">
@@ -94,16 +94,6 @@ export default function DashboardPage() {
                         <Checklist user={user} />
                       </DashboardItem>
                     </div>
-
-                    {/* Hackerpack Card */}
-                    <DashboardItem title="Hackerpack">
-                      <InfoCard
-                        description="The Hackerpack contains all the important information about MRUHacks, including rules, resources, and tips."
-                        linkUrl="/hackerpack"
-                        linkText="View Hackerpack"
-                        icon={<FileText className="h-5 w-5" />}
-                      />
-                    </DashboardItem>
 
                     {/* Support Card */}
                     <DashboardItem title="Need Help?">
