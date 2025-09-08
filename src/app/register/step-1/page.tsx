@@ -79,6 +79,13 @@ export default function Step1Page() {
     loadGenders();
   }, []);
 
+  // Re-apply saved gender once options are available
+  useEffect(() => {
+    if (data.gender !== undefined && data.gender !== null) {
+      setValue("gender", String(data.gender));
+    }
+  }, [data.gender, genders, setValue]);
+
   // Load saved form data from context and set initial values
   useEffect(() => {
     const getUserProfile = async () => {
@@ -131,7 +138,7 @@ export default function Step1Page() {
             "previousAttendance",
             savedData.previousAttendance ? "true" : "false",
           );
-          setValue("gender", savedData.gender || "");
+          setValue("gender", savedData.gender ? String(savedData.gender) : "");
           setValue("university", savedData.university || "");
           setValue("major", savedData.major || "");
           if (savedData.yearOfStudy) {
@@ -157,6 +164,10 @@ export default function Step1Page() {
     const formattedData = {
       ...formData,
       previousAttendance: formData.previousAttendance === "true",
+      gender:
+        formData.gender && formData.gender !== ""
+          ? Number(formData.gender)
+          : undefined,
     };
     setValues(formattedData);
   };
@@ -168,6 +179,7 @@ export default function Step1Page() {
     const formattedData = {
       ...data,
       previousAttendance: data.previousAttendance === "true", // Now correctly typed
+      gender: data.gender ? Number(data.gender) : undefined,
     };
 
     console.log("Formatted data:", formattedData);

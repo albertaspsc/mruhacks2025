@@ -5,28 +5,10 @@ import { useRouter } from "next/navigation";
 import { parkingSituation, yearOfStudy } from "./../db/schema";
 import { z } from "zod";
 
-// export type RegistrationData = {
-//   firstName?: string;
-//   lastName?: string;
-//   email?: string;
-//   password?: string;
-//   attendedBefore?: string;
-//   gender?: string;
-//   institution?: string;
-//   major?: string;
-//   year?: string;
-//   programmingExperience?: string;
-//   interests?: string[];
-//   dietary?: string[];
-//   accommodations?: string;
-//   parking?: string;
-//   heardFrom?: string;
-// };
-
 export const RegistrationSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
-  gender: z.string(),
+  gender: z.number(),
   university: z.string(),
   previousAttendance: z.coerce.boolean(),
   major: z.string(),
