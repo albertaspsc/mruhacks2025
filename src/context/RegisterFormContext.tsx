@@ -2,7 +2,7 @@
 import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import { parkingSituation, yearOfStudy } from "./../db/schema";
+import { parkingState, yearOfStudy } from "./../db/schema";
 import { z } from "zod";
 
 export const RegistrationSchema = z.object({
@@ -12,7 +12,7 @@ export const RegistrationSchema = z.object({
   university: z.string(),
   previousAttendance: z.coerce.boolean(),
   major: z.string(),
-  parking: createSelectSchema(parkingSituation),
+  parking: createSelectSchema(parkingState),
   email: z.string().email(),
   yearOfStudy: createSelectSchema(yearOfStudy),
   experience: z.string(),

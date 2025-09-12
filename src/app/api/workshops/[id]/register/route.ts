@@ -105,12 +105,12 @@ export async function POST(
     // Get user details with joins
     const userData = await db
       .select({
-        f_name: users.firstName,
-        l_name: users.lastName,
+        f_name: users.fName,
+        l_name: users.lName,
         yearOfStudy: users.yearOfStudy,
         gender: gender.gender,
         major: majors.major,
-        university: universities.university,
+        university: universities.uni,
       })
       .from(users)
       .leftJoin(gender, eq(users.gender, gender.id))

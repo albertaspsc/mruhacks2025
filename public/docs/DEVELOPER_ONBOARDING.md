@@ -27,37 +27,15 @@ supabase start
 
 This command will output the anon and service_role keys you will need in the next section.
 
+This command also runs migrations and seeds the lookup tables.
+
 ### 3) Environment variables
 
 Create `.env.local` at the project root using values from `supabase start`. See `.example.env.local` for a template.
 
 - Drizzle config prefers `.env.local` and falls back to `.env`.
 
-### 4) Initialize database (Drizzle)
-
-Run migrations, then seed lookup data:
-
-```bash
-npm run db:mig
-npm run db:seed
-```
-
-Common commands:
-
-```bash
-npm run db:gen      # generate migrations from schema changes
-npm run db:mig      # apply migrations to the database in DATABASE_URL
-npm run db:studio   # open Drizzle Studio
-npm run db:seed     # run idempotent seeds for lookup tables
-```
-
-Notes:
-
-- Ensure `.env.local` exists (see step 3) so Drizzle can read `DATABASE_URL`.
-- Do not duplicate app table DDL in `supabase/migrations/`. Keep those for system objects only.
-- If you need to inspect the database locally, `npm run db:studio` opens Drizzle Studio.
-
-### 5) Run the app
+### 4) Run the app
 
 ```bash
 npm run dev
