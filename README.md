@@ -19,24 +19,23 @@ npm run build    # build
 npm run start    # start production build
 npm run lint     # lint
 
-# Database (Drizzle)
-npm run db:gen   # generate migrations
-npm run db:mig   # run migrations
-npm run db:studio# open Drizzle Studio
-npm run db:seed  # run idempotent seeds
+# Database
+supabase start
+supabase stop
+supabase db reset
 ```
 
 ### Tech
 
 - **Next.js 15**, **React 19**, **TypeScript**
-- **Supabase** (auth + DB), **Drizzle ORM**
+- **Supabase**, **Drizzle ORM**
 - **Tailwind** + shadcn/ui
 
 ### Database
 
 - Migrations live in `utils/migrations/`
 - Supabase and Drizzle config in `supabase/` and `src/db/`
-- Drizzle is the source of truth for app tables; Supabase migrations are for system objects (auth, extensions)
+- Supabase is the source of truth for db schema. Drizzle-kit pull is used to generate Drizzle schema and relations files.
 
 ### Docs
 

@@ -7,12 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky install",
-    "db:gen": "drizzle-kit generate",
-    "db:mig": "drizzle-kit migrate",
-    "db": "drizzle-kit",
-    "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

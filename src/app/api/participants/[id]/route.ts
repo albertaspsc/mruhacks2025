@@ -105,8 +105,8 @@ export async function PATCH(
       // Limited access for volunteers
       const response = {
         id: updatedParticipant.id,
-        f_name: updatedParticipant.firstName,
-        l_name: updatedParticipant.lastName,
+        f_name: updatedParticipant.fName,
+        l_name: updatedParticipant.lName,
         status: updatedParticipant.status,
         checked_in: updatedParticipant.checkedIn,
       };
@@ -115,14 +115,12 @@ export async function PATCH(
       // Full access for admins
       const response = {
         id: updatedParticipant.id,
-        f_name: updatedParticipant.firstName,
-        l_name: updatedParticipant.lastName,
+        f_name: updatedParticipant.fName,
+        l_name: updatedParticipant.lName,
         email: updatedParticipant.email,
         status: updatedParticipant.status,
         checked_in: updatedParticipant.checkedIn,
-        timestamp:
-          updatedParticipant.timestamp?.toISOString() ||
-          new Date().toISOString(),
+        timestamp: updatedParticipant.timestamp || new Date().toISOString(),
       };
       return NextResponse.json(response, { status: 200 });
     }
@@ -167,9 +165,9 @@ export async function GET(
       const [participant] = await db
         .select({
           id: users.id,
-          f_name: users.firstName,
-          l_name: users.lastName,
-          university: universities.university,
+          f_name: users.fName,
+          l_name: users.lName,
+          university: universities.uni,
           status: users.status,
           checked_in: users.checkedIn,
           gender: gender.gender,
@@ -203,10 +201,10 @@ export async function GET(
       const [participant] = await db
         .select({
           id: users.id,
-          f_name: users.firstName,
-          l_name: users.lastName,
+          f_name: users.fName,
+          l_name: users.lName,
           email: users.email,
-          university: universities.university,
+          university: universities.uni,
           status: users.status,
           checked_in: users.checkedIn,
           timestamp: users.timestamp,
@@ -231,8 +229,7 @@ export async function GET(
         university: participant.university,
         status: participant.status,
         checked_in: participant.checked_in,
-        timestamp:
-          participant.timestamp?.toISOString() || new Date().toISOString(),
+        timestamp: participant.timestamp || new Date().toISOString(),
       };
 
       return NextResponse.json(response, { status: 200 });
