@@ -18,9 +18,9 @@ export const GET = withApiAuth(
         const participants = await db
           .select({
             id: users.id,
-            f_name: users.firstName,
-            l_name: users.lastName,
-            university: universities.university,
+            f_name: users.fName,
+            l_name: users.lName,
+            university: universities.uni,
             status: users.status,
             checked_in: users.checkedIn,
             gender: gender.gender,
@@ -48,15 +48,15 @@ export const GET = withApiAuth(
       const participants = await db
         .select({
           id: users.id,
-          f_name: users.firstName,
-          l_name: users.lastName,
+          f_name: users.fName,
+          l_name: users.lName,
           email: users.email,
-          university: universities.university,
+          university: universities.uni,
           status: users.status,
           checked_in: users.checkedIn,
           timestamp: users.timestamp,
           gender: gender.gender,
-          prev_attendance: users.previousAttendance,
+          prev_attendance: users.prevAttendance,
           major: majors.major,
           parking: users.parking,
           yearOfStudy: users.yearOfStudy,
@@ -80,8 +80,7 @@ export const GET = withApiAuth(
         university: participant.university || "N/A",
         status: participant.status,
         checked_in: participant.checked_in || false,
-        timestamp:
-          participant.timestamp?.toISOString() || new Date().toISOString(),
+        timestamp: participant.timestamp || new Date().toISOString(),
         gender: participant.gender || "Not specified",
         prev_attendance: participant.prev_attendance,
         major: participant.major || "N/A",

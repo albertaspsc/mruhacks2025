@@ -42,7 +42,6 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-gray-50 relative">
       {/* Main Content */}
       <div className="flex-1 overflow-auto min-w-0 flex flex-col">
-        {/* Dashboard Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}

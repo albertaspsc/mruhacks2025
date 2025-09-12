@@ -455,399 +455,402 @@ export default function SettingsPage() {
   const parkingPreference = parkingPreferencesForm.watch("parkingPreference");
 
   return (
-    <div className="container max-w-4xl py-6 px-2 sm:px-4 relative">
-      {/* Toast notifications */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="container max-w-4xl py-6 px-2 sm:px-4 relative">
+        {/* Toast notifications */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
 
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">
-        Account Settings
-      </h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">
+          Account Settings
+        </h1>
 
-      <Tabs defaultValue="email" className="w-full">
-        {/* Responsive tabs */}
-        <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
-          <TabsTrigger
-            value="email"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <Mail className="h-4 w-4 shrink-0" />
-            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
-              Email
-            </span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="parking"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <Car className="h-4 w-4 shrink-0" />
-            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
-              Parking
-            </span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="password"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <Lock className="h-4 w-4 shrink-0" />
-            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
-              Password
-            </span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="account"
-            className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            <User className="h-4 w-4 shrink-0" />
-            <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
-              Account
-            </span>
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="email" className="w-full">
+          {/* Responsive tabs */}
+          <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
+            <TabsTrigger
+              value="email"
+              className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Mail className="h-4 w-4 shrink-0" />
+              <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
+                Email
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="parking"
+              className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Car className="h-4 w-4 shrink-0" />
+              <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
+                Parking
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="password"
+              className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Lock className="h-4 w-4 shrink-0" />
+              <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
+                Password
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="account"
+              className="flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-1 py-2 text-xs min-w-0 h-auto data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <User className="h-4 w-4 shrink-0" />
+              <span className="hidden min-[375px]:block leading-tight text-[10px] sm:text-xs">
+                Account
+              </span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Email Preferences Tab */}
-        <TabsContent value="email">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Email Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Mandatory Email Notice */}
-              <Alert className="mb-6">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Notice</AlertTitle>
-                <AlertDescription>
-                  All confirmed participants will receive mandatory logistics
-                  emails with essential event information and updates. These
-                  emails cannot be opted out of to ensure you don&apos;t miss
-                  critical details for your MRUHacks experience.
-                </AlertDescription>
-              </Alert>
+          {/* Email Preferences Tab */}
+          <TabsContent value="email">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Email Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Mandatory Email Notice */}
+                <Alert className="mb-6">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Notice</AlertTitle>
+                  <AlertDescription>
+                    All confirmed participants will receive mandatory logistics
+                    emails with essential event information and updates. These
+                    emails cannot be opted out of to ensure you don&apos;t miss
+                    critical details for your MRUHacks experience.
+                  </AlertDescription>
+                </Alert>
 
-              <Form {...emailPreferencesForm}>
-                <form
-                  onSubmit={emailPreferencesForm.handleSubmit(
-                    onEmailPreferencesSubmit,
-                  )}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={emailPreferencesForm.control}
-                    name="marketingEmails"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Marketing Emails</FormLabel>
-                          <FormDescription>
-                            Receive emails about our services, partners, and
-                            other opportunities.
-                          </FormDescription>
-                        </div>
-                      </FormItem>
+                <Form {...emailPreferencesForm}>
+                  <form
+                    onSubmit={emailPreferencesForm.handleSubmit(
+                      onEmailPreferencesSubmit,
                     )}
-                  />
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting.email}
-                    className="w-full sm:w-auto"
+                    className="space-y-6"
                   >
-                    {isSubmitting.email && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Save Preferences
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Parking Preferences Tab */}
-        <TabsContent value="parking">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Car className="h-5 w-5" />
-                Parking Preferences
-              </CardTitle>
-              <CardDescription>
-                Update your parking needs and license plate information for the
-                event.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...parkingPreferencesForm}>
-                <form
-                  onSubmit={parkingPreferencesForm.handleSubmit(
-                    onParkingPreferencesSubmit,
-                  )}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={parkingPreferencesForm.control}
-                    name="parkingPreference"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Will you require parking?</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your parking preference" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white dark:bg-gray-800">
-                            <SelectItem value="Yes">Yes</SelectItem>
-                            <SelectItem value="No">No</SelectItem>
-                            <SelectItem value="Not sure">Not sure</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          This helps us plan parking capacity for the event.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* License Plate Field */}
-                  {parkingPreference === "Yes" && (
                     <FormField
-                      control={parkingPreferencesForm.control}
-                      name="licensePlate"
+                      control={emailPreferencesForm.control}
+                      name="marketingEmails"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>License Plate Number *</FormLabel>
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4">
                           <FormControl>
-                            <Input
-                              placeholder="e.g. ABC-123"
-                              {...field}
-                              className="uppercase"
-                              onChange={(e) => {
-                                field.onChange(e.target.value.toUpperCase());
-                              }}
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
                             />
                           </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Marketing Emails</FormLabel>
+                            <FormDescription>
+                              Receive emails about our services, partners, and
+                              other opportunities.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting.email}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmitting.email && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Save Preferences
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Parking Preferences Tab */}
+          <TabsContent value="parking">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Parking Preferences
+                </CardTitle>
+                <CardDescription>
+                  Update your parking needs and license plate information for
+                  the event.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...parkingPreferencesForm}>
+                  <form
+                    onSubmit={parkingPreferencesForm.handleSubmit(
+                      onParkingPreferencesSubmit,
+                    )}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={parkingPreferencesForm.control}
+                      name="parkingPreference"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Will you require parking?</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your parking preference" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white dark:bg-gray-800">
+                              <SelectItem value="Yes">Yes</SelectItem>
+                              <SelectItem value="No">No</SelectItem>
+                              <SelectItem value="Not sure">Not sure</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormDescription>
-                            Enter your vehicle&apos;s license plate number. This
-                            will help with parking coordination and security.
+                            This helps us plan parking capacity for the event.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
 
-                  {/* Info Alert */}
-                  <Alert>
-                    <Car className="h-4 w-4" />
-                    <AlertTitle>Parking Information</AlertTitle>
-                    <AlertDescription>
-                      {parkingPreference === "Yes" &&
-                        "Parking will be available at Mount Royal University. Please arrive early as spaces are limited."}
-                      {parkingPreference === "No" &&
-                        "Consider carpooling or using public transportation. The event location is accessible via Calgary Transit."}
-                      {parkingPreference === "Not sure" &&
-                        "You can update this preference closer to the event date. We recommend deciding at least 1 week before the event."}
-                    </AlertDescription>
-                  </Alert>
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting.parking}
-                    className="w-full sm:w-auto"
-                  >
-                    {isSubmitting.parking && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {/* License Plate Field */}
+                    {parkingPreference === "Yes" && (
+                      <FormField
+                        control={parkingPreferencesForm.control}
+                        name="licensePlate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>License Plate Number *</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="e.g. ABC-123"
+                                {...field}
+                                className="uppercase"
+                                onChange={(e) => {
+                                  field.onChange(e.target.value.toUpperCase());
+                                }}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter your vehicle&apos;s license plate number.
+                              This will help with parking coordination and
+                              security.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
-                    Save Parking Preferences
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Password Tab */}
-        <TabsContent value="password">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>
-                Update your password for enhanced security.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...passwordForm}>
-                <form
-                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={passwordForm.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your current password"
-                            type="password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter your current password to verify your identity.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    {/* Info Alert */}
+                    <Alert>
+                      <Car className="h-4 w-4" />
+                      <AlertTitle>Parking Information</AlertTitle>
+                      <AlertDescription>
+                        {parkingPreference === "Yes" &&
+                          "Parking will be available at Mount Royal University. Please arrive early as spaces are limited."}
+                        {parkingPreference === "No" &&
+                          "Consider carpooling or using public transportation. The event location is accessible via Calgary Transit."}
+                        {parkingPreference === "Not sure" &&
+                          "You can update this preference closer to the event date. We recommend deciding at least 1 week before the event."}
+                      </AlertDescription>
+                    </Alert>
 
-                  <FormField
-                    control={passwordForm.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your new password"
-                            type="password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Must be at least 8 characters with uppercase,
-                          lowercase, number, and special character.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={passwordForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Confirm your new password"
-                            type="password"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting.password}
-                    className="w-full sm:w-auto"
-                  >
-                    {isSubmitting.password && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Change Password
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Account Tab */}
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Delete Account
-              </CardTitle>
-              <CardDescription>
-                Permanently delete your account and all associated data.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Alert variant="destructive" className="mb-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Warning: This action cannot be undone</AlertTitle>
-                <AlertDescription>
-                  Deleting your account will permanently remove all your data,
-                  including your profile, registration information, and
-                  hackathon history.
-                </AlertDescription>
-              </Alert>
-
-              {showDeleteConfirm ? (
-                <div className="border border-red-200 rounded-md p-6 bg-red-50">
-                  <h3 className="text-lg font-medium text-red-800 mb-4">
-                    Are you absolutely sure?
-                  </h3>
-                  <p className="text-red-700 mb-6">
-                    This action cannot be undone. This will permanently delete
-                    your account and remove your data from our servers.
-                  </p>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                     <Button
-                      onClick={() => setShowDeleteConfirm(false)}
-                      disabled={isDeleting}
+                      type="submit"
+                      disabled={isSubmitting.parking}
                       className="w-full sm:w-auto"
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleDeleteProfile}
-                      disabled={isDeleting}
-                      className="w-full sm:w-auto"
-                    >
-                      {isDeleting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Deleting...
-                        </>
-                      ) : (
-                        "Yes, Delete My Account"
+                      {isSubmitting.parking && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
+                      Save Parking Preferences
                     </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full sm:w-auto"
-                >
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Password Tab */}
+          <TabsContent value="password">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Change Password
+                </CardTitle>
+                <CardDescription>
+                  Update your password for enhanced security.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...passwordForm}>
+                  <form
+                    onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={passwordForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your current password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Enter your current password to verify your identity.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your new password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Must be at least 8 characters with uppercase,
+                            lowercase, number, and special character.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm New Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Confirm your new password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting.password}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmitting.password && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Change Password
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Account Tab */}
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
                   Delete Account
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                </CardTitle>
+                <CardDescription>
+                  Permanently delete your account and all associated data.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Alert variant="destructive" className="mb-6">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Warning: This action cannot be undone</AlertTitle>
+                  <AlertDescription>
+                    Deleting your account will permanently remove all your data,
+                    including your profile, registration information, and
+                    hackathon history.
+                  </AlertDescription>
+                </Alert>
+
+                {showDeleteConfirm ? (
+                  <div className="border border-red-200 rounded-md p-6 bg-red-50">
+                    <h3 className="text-lg font-medium text-red-800 mb-4">
+                      Are you absolutely sure?
+                    </h3>
+                    <p className="text-red-700 mb-6">
+                      This action cannot be undone. This will permanently delete
+                      your account and remove your data from our servers.
+                    </p>
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                      <Button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isDeleting}
+                        className="w-full sm:w-auto"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleDeleteProfile}
+                        disabled={isDeleting}
+                        className="w-full sm:w-auto"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          "Yes, Delete My Account"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full sm:w-auto"
+                  >
+                    Delete Account
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

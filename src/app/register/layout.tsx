@@ -108,7 +108,7 @@ function RegisterLayoutInner({ children }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-black">
+    <div className="min-h-screen flex items-center justify-center bg-white text-black pt-[70px]">
       <div className="w-full max-w-md p-8 bg-white border rounded-lg space-y-6">
         <div className="flex justify-center">
           <Image

@@ -45,7 +45,7 @@ const StatusBanner: React.FC<StatusBannerProps> = ({ status }) => {
 
   return (
     <div
-      className={`mb-4 md:mb-6 rounded-md border ${borderColor} ${bgColor} p-3 md:p-4`}
+      className={`mb-4 md:mb-6 rounded-xl border ${borderColor} ${bgColor} p-3 md:p-4`}
     >
       <div className="flex items-center">
         {icon}

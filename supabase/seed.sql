@@ -1,0 +1,7 @@
+INSERT INTO "public"."dietary_restrictions" ("restriction") VALUES ('Kosher'), ('Vegetarian'), ('Vegan'), ('Halal'), ('Gluten-free'), ('Peanuts and Treenuts allergy');
+INSERT INTO "public"."experience_types" ("experience") VALUES ('Beginner'), ('Intermediate'), ('Advanced'), ('Expert');
+INSERT INTO "public"."gender" ("gender") VALUES ('Male'), ('Female'), ('Non-binary'), ('Prefer not to say');
+INSERT INTO "public"."interests" ("interest") VALUES ('Mobile App Development'), ('Web Development'), ('Data Science and ML'), ('Design and User Experience (UX/UI)'), ('Game Development');
+INSERT INTO "public"."majors" ("major") VALUES ('Computer Information Systems'), ('Data Science'), ('Computer Science'), ('Mathematics'), ('Accounting'), ('Data Analytics'), ('Software development'), ('Software Development'), ('Software Engineering'), ('Computer Information systems'), ('BCIS'), ('Computer science '), ('Geology'), ('Comp Sci');
+INSERT INTO "public"."marketing_types" ("marketing") VALUES ('Poster'), ('Social Media'), ('Word of Mouth'), ('Website/Googling it'), ('Attended the event before'), ('Other');
+INSERT INTO "public"."universities" ("uni") VALUES ('MRU'), ('U of C'), ('SAIT'), ('Athabasca'), ('UBC'), ('Mount Royal University'), ('Mount Royal University '), ('University of Calgary'), ('University of Waterloo'), ('Bowvalley college '), ('University of Toronto'), ('University of Calgary '), ('University of Saskatchewan');

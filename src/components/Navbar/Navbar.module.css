@@ -21,6 +21,12 @@
   transition: all 0.3s ease;
 }
 
+.navbarUser {
+  background-color: #f9fafb !important; /* bg-gray-50 equivalent */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .loginButton {
   background-color: black;
   color: white;
@@ -146,6 +152,15 @@
     align-items: center;
     overflow: hidden; /* Prevents scrolling */
     background-color: #fcfbf4;
+  }
+
+  /* User route mobile navbar styling */
+  .navbarUser .navbarCollapse {
+    background-color: #f9fafb; /* bg-gray-50 equivalent */
+  }
+
+  .navbarUser .navbarCollapse.show {
+    background-color: #f9fafb; /* bg-gray-50 equivalent */
   }
 
   .navContainer {
