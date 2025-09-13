@@ -10,6 +10,7 @@ import { getRegisterRedirect } from "@/utils/auth/guards";
 import { getRegistration } from "@/db/registration";
 import { AuthRegistrationProvider } from "@/context/AuthRegistrationContext";
 import { RegisterOptionsProvider } from "@/context/RegisterOptionsContext";
+import colorLogo from "@/assets/logos/color-logo.svg";
 
 type Props = { children: ReactNode };
 
@@ -33,7 +34,7 @@ function RegisterLayoutInner({ children }: Props) {
       <div className="w-full max-w-md p-8 bg-white border rounded-lg space-y-6">
         <div className="flex justify-center">
           <Image
-            src="/color-logo.svg"
+            src={colorLogo}
             alt="MRUHacks Logo"
             width={200}
             height={60}

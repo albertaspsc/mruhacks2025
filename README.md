@@ -1,4 +1,4 @@
-![MRU Hacks](public/color-logo.svg)
+![MRU Hacks](src/assets/logos/color-logo.svg)
 
 ## MRU Hacks 2025
 
