@@ -1,192 +1,73 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
+import { jwtVerify } from "jose";
+// Supabase uses a symmetric JWT, so the same key is used to sign and verify the token.
+// Supabase is planning to support asymmetric JWT in the future.
+// When that happens, we should switch to using asymmetric JWT.
+// See:
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-          });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value),
+          );
           supabaseResponse = NextResponse.next({
             request,
           });
-          supabaseResponse.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: "",
-          });
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          supabaseResponse.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
         },
       },
     },
   );
+  // Try to get JWT first, If the JWT is invalid or expired,
+  // fall back to `supabase.auth.getUser()`.
+  const user = await (async function () {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // If JWT is missing `supabase.auth.getUser()` would error.
+    // This mean the user is not authenticated, so user = null.
+    if (!session?.access_token) return null;
 
-  const url = request.nextUrl.clone();
-
-  // Helper function to copy cookies properly
-  const createRedirectWithCookies = (redirectUrl: URL) => {
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-
-    // Copy all cookies from supabaseResponse to redirectResponse
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, {
-        domain: cookie.domain,
-        path: cookie.path,
-        expires: cookie.expires,
-        httpOnly: cookie.httpOnly,
-        secure: cookie.secure,
-        sameSite: cookie.sameSite,
-      });
-    });
-
-    return redirectResponse;
-  };
-
-  if (url.pathname === "/admin-login-portal") {
-    return supabaseResponse; // Let users access the login page
-  }
-
-  // Define protected routes
-  const adminRoutes = ["/admin"];
-  const isAdminRoute = adminRoutes.some((route) =>
-    url.pathname.startsWith(route),
-  );
-
-  // Handle admin route protection
-  if (isAdminRoute) {
-    // Check if user is authenticated
-    if (!user) {
-      console.log(
-        "Unauthenticated user attempting to access admin route:",
-        url.pathname,
+    try {
+      // Use `jwtVerify` to validate the JWT within the session,
+      // so that a user cannot forge a session by manipulating cookies.
+      await jwtVerify(
+        session.access_token,
+        new TextEncoder().encode(process.env.SUPABASE_JWT),
       );
-      url.pathname = "/admin-login-portal";
-      url.searchParams.set("next", request.nextUrl.pathname);
-      return createRedirectWithCookies(url);
+      return session.user;
+    } catch (err) {
+      console.error(err);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      return user;
     }
-
-    try {
-      // Verify admin privileges server-side
-      const { data: adminData, error: adminError } = await supabase
-        .from("admins")
-        .select("id, role, status")
-        .eq("id", user.id)
-        .in("role", ["volunteer", "admin", "super_admin"])
-        .single();
-
-      if (adminError) {
-        console.error("Error fetching admin data:", adminError);
-        url.pathname = "/unauthorized";
-        return createRedirectWithCookies(url);
-      }
-
-      if (!adminData) {
-        console.log("User is not an admin:", user.id);
-        url.pathname = "/unauthorized";
-        return createRedirectWithCookies(url);
-      }
-
-      if (adminData.status !== "active") {
-        console.log(
-          "Admin account is not active:",
-          user.id,
-          "Status:",
-          adminData.status,
-        );
-        url.pathname = "/unauthorized";
-        url.searchParams.set("reason", "account_inactive");
-        return createRedirectWithCookies(url);
-      }
-
-      // Add admin context headers to the supabaseResponse
-      supabaseResponse.headers.set("x-admin-role", adminData.role);
-      supabaseResponse.headers.set("x-admin-status", adminData.status);
-
-      console.log("Admin access granted:", user.id, "Role:", adminData.role);
-
-      // IMPORTANT: Return the original supabaseResponse with cookies intact
-      return supabaseResponse;
-    } catch (error) {
-      console.error("Unexpected error in admin verification:", error);
-      url.pathname = "/error";
-      url.searchParams.set("message", "authentication_error");
-      return createRedirectWithCookies(url);
-    }
+  })();
+  // If no user and requesting a protected route, redirect to login.
+  if (
+    !user &&
+    (request.nextUrl.pathname.startsWith("/user") ||
+      request.nextUrl.pathname.startsWith("/admin"))
+  ) {
+    // Redirect the user to the login page
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
-
-  // Handle authenticated users trying to access login/signup pages
-  if (user && (url.pathname === "/login" || url.pathname === "/signup")) {
-    console.log("Authenticated user redirected from auth page");
-
-    try {
-      const { data: adminData } = await supabase
-        .from("admins")
-        .select("id, role, status")
-        .eq("id", user.id)
-        .single();
-
-      if (adminData && adminData.status === "active") {
-        url.pathname = "/admin/dashboard";
-      } else {
-        url.pathname = "/user/dashboard";
-      }
-
-      return createRedirectWithCookies(url);
-    } catch (error) {
-      // If admin check fails, redirect to regular dashboard
-      url.pathname = "/user/dashboard";
-      return createRedirectWithCookies(url);
-    }
-  }
-
-  // Handle root path redirect for authenticated users
-  if (user && url.pathname === "/") {
-    try {
-      const { data: adminData } = await supabase
-        .from("admins")
-        .select("id, role, status")
-        .eq("id", user.id)
-        .single();
-
-      if (adminData && adminData.status === "active") {
-        url.pathname = "/admin/dashboard";
-        return createRedirectWithCookies(url);
-      }
-    } catch (error) {
-      // Continue to normal flow if admin check fails
-    }
-  }
-
-  // IMPORTANT: Return the supabaseResponse object as it is
   return supabaseResponse;
 }

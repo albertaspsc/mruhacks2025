@@ -43,7 +43,7 @@
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^12.4.10",
     "gsap": "^3.12.7",
-    "jose": "^6.0.11",
+    "jose": "^6.1.0",
     "lucide-react": "^0.479.0",
     "next": "^15.2.3",
     "postgres": "^3.4.5",
@@ -61,8 +61,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/bcryptjs": "^2.4.6",
     "@types/aos": "^3.0.7",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "22.13.10",
     "@types/react-dom": "^19.1.5",
     "autoprefixer": "^10.4.21",
