@@ -7,13 +7,12 @@ import {
   RegistrationInput,
   RegistrationSchema,
 } from "@/context/RegisterFormContext";
-import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useRef } from "react";
-import { getMajorsAndUniversities } from "@/db/registration";
-import { createClient } from "@/utils/supabase/client";
+import { useRegisterOptions } from "@/context/RegisterOptionsContext";
+import { useAuthRegistration } from "@/context/AuthRegistrationContext";
 
 type PersonalForm = {
   previousAttendance: string;
@@ -27,7 +26,6 @@ type PersonalForm = {
 };
 
 export default function Step1Page() {
-  const supabase = createClient();
   const router = useRouter();
   const { setValues, data, goBack } = useRegisterForm();
   const {
@@ -40,97 +38,43 @@ export default function Step1Page() {
     defaultValues: {},
   });
 
-  const [institutions, setInstitutions] = useState<string[]>([]);
-  const [majors, setMajors] = useState<string[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState("");
+  const {
+    majors,
+    universities: institutions,
+    loading: optionsLoading,
+  } = useRegisterOptions();
+  const [genders, setGenders] = useState<{ id: number; gender: string }[]>([]);
+  const { user, loading } = useAuthRegistration();
   const hasSetInitialValues = useRef(false); // Prevent multiple calls
 
-  const GENDER_OPTIONS = [
-    { value: "1", label: "Male" },
-    { value: "2", label: "Female" },
-    { value: "3", label: "Other" },
-    { value: "4", label: "Prefer not to say" },
-  ];
-
-  // Handle authentication and session verification
   useEffect(() => {
-    const checkAuthentication = async () => {
+    // Load gender options from DB
+    const loadGenders = async () => {
       try {
-        // Get current user session
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (error) {
-          console.error("Auth error:", error);
-          setAuthError("Authentication error. Please sign in again.");
-          setTimeout(() => router.push("/register"), 2000);
-          return;
+        const { createClient } = await import("@/utils/supabase/client");
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("gender")
+          .select("id, gender")
+          .order("id");
+        if (!error && data) {
+          setGenders(data);
+        } else {
+          setGenders([]); // remain empty on error (no fallback)
         }
-
-        if (!user) {
-          console.log("No user found, redirecting to registration");
-          setAuthError("Please complete email verification first.");
-          setTimeout(() => router.push("/register"), 2000);
-          return;
-        }
-
-        // Check if email is verified
-        if (!user.email_confirmed_at) {
-          console.log("Email not confirmed, redirecting to verification");
-          setAuthError("Please verify your email first.");
-          setTimeout(
-            () => router.push(`/register/verify-2fa?email=${user.email}`),
-            2000,
-          );
-          return;
-        }
-
-        // User is properly authenticated and verified
-        console.log("User authenticated successfully:", user.email);
-        setUser(user);
-        setLoading(false);
-      } catch (err) {
-        console.error("Unexpected error during auth check:", err);
-        setAuthError("An unexpected error occurred. Please try again.");
-        setTimeout(() => router.push("/register"), 2000);
+      } catch (e) {
+        setGenders([]);
       }
     };
-
-    checkAuthentication();
-  }, [router, supabase.auth]);
-
-  // Handle auth state changes
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-
-      if (event === "SIGNED_OUT") {
-        router.push("/register");
-      }
-
-      if (event === "SIGNED_IN" && session?.user) {
-        setUser(session.user);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router, supabase.auth]);
-
-  useEffect(() => {
-    const loadLists = async () => {
-      const { majors, universities } = await getMajorsAndUniversities();
-      setMajors(majors);
-      setInstitutions(universities);
-    };
-    loadLists();
+    loadGenders();
   }, []);
+
+  // Re-apply saved gender once options are available
+  useEffect(() => {
+    if (data.gender !== undefined && data.gender !== null) {
+      setValue("gender", String(data.gender));
+    }
+  }, [data.gender, genders, setValue]);
 
   // Load saved form data from context and set initial values
   useEffect(() => {
@@ -184,7 +128,7 @@ export default function Step1Page() {
             "previousAttendance",
             savedData.previousAttendance ? "true" : "false",
           );
-          setValue("gender", savedData.gender || "");
+          setValue("gender", savedData.gender ? String(savedData.gender) : "");
           setValue("university", savedData.university || "");
           setValue("major", savedData.major || "");
           if (savedData.yearOfStudy) {
@@ -202,7 +146,7 @@ export default function Step1Page() {
     };
 
     getUserProfile();
-  }, [user, data]); // Include data to react to context changes
+  }, [user, data, setValue, setValues]); // Include dependencies for hook consistency
 
   // Save current form data to context
   const saveCurrentFormData = () => {
@@ -210,6 +154,8 @@ export default function Step1Page() {
     const formattedData = {
       ...formData,
       previousAttendance: formData.previousAttendance === "true",
+      gender:
+        formData.gender && formData.gender !== "" ? formData.gender : undefined,
     };
     setValues(formattedData);
   };
@@ -221,6 +167,7 @@ export default function Step1Page() {
     const formattedData = {
       ...data,
       previousAttendance: data.previousAttendance === "true", // Now correctly typed
+      gender: data.gender ? data.gender : undefined,
     };
 
     console.log("Formatted data:", formattedData);
@@ -246,32 +193,14 @@ export default function Step1Page() {
       </div>
     );
   }
-
-  // Show error state if authentication failed
-  if (authError) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center space-y-4 max-w-md mx-auto px-6">
-          <div className="w-12 h-12 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold text-red-600">
-            Authentication Required
+          <h1 className="text-xl font-semibold text-gray-900">
+            Please sign in to continue
           </h1>
-          <p className="text-gray-600">{authError}</p>
-          <p className="text-sm text-gray-500">Redirecting...</p>
+          <p className="text-gray-600">Your session was not found.</p>
         </div>
       </div>
     );
@@ -280,31 +209,6 @@ export default function Step1Page() {
   // Show the actual step-1 form content once authenticated
   return (
     <div className="space-y-6">
-      {/* Success message showing verified email */}
-      <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-green-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-green-800">
-              Email verified successfully:{" "}
-              <span className="font-semibold">{user?.email}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <h1 className="text-2xl font-semibold">Personal Details</h1>
 
@@ -380,9 +284,9 @@ export default function Step1Page() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select gender</option>
-            {GENDER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {genders.map((g) => (
+              <option key={g.id} value={g.gender}>
+                {g.gender}
               </option>
             ))}
           </select>
@@ -471,14 +375,6 @@ export default function Step1Page() {
 
         {/* Navigation Buttons */}
         <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleBack}
-            className="flex-1"
-          >
-            Back
-          </Button>
           <Button type="submit" className="flex-1">
             Next: Final Questions
           </Button>

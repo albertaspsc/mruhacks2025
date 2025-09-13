@@ -78,7 +78,7 @@ export default function AccountPage() {
       console.log(`Failed to sign up user, ${signUpError}`);
       return;
     } else {
-      router.push(`/register/verify-2fa?email=${data.email}`);
+      router.push(`/register/step-1`);
     }
   };
 
@@ -159,7 +159,7 @@ export default function AccountPage() {
                 message: "Enter a valid email",
               },
             })}
-            placeholder="you@student.mru.ca"
+            placeholder="you@mtroyal.ca"
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -288,7 +288,7 @@ export default function AccountPage() {
         </div>
 
         <Button type="submit" className="w-full">
-          Next: Verify Email
+          Next: Personal Info
         </Button>
       </form>
 

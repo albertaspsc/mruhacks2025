@@ -4,108 +4,29 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { redirect, usePathname } from "next/navigation";
 import ProgressBar from "@/components/Register/ProgressBar";
 import Image from "next/image";
-import {
-  RegisterFormProvider,
-  useRegisterForm,
-} from "@/context/RegisterFormContext";
+import { RegisterFormProvider } from "@/context/RegisterFormContext";
 import { createClient } from "@/utils/supabase/client";
+import { getRegisterRedirect } from "@/utils/auth/guards";
 import { getRegistration } from "@/db/registration";
+import { AuthRegistrationProvider } from "@/context/AuthRegistrationContext";
+import { RegisterOptionsProvider } from "@/context/RegisterOptionsContext";
 
-type Props = {
-  children: ReactNode;
-};
+type Props = { children: ReactNode };
 
 // Inner component that has access to the RegisterFormContext
 function RegisterLayoutInner({ children }: Props) {
-  const supabase = createClient();
   const path = usePathname() ?? "";
-  const [isLoading, setIsLoading] = useState(true);
+  // Deterministic route → step mapping for the registration flow
+  // Account = 1, Personal = 2, Final = 3, Complete = 4
+  const ROUTE_STEP: Array<[RegExp, number]> = [
+    [/^\/register\/?$/, 1],
+    [/^\/register\/verify-2fa\/?$/, 1],
+    [/^\/register\/step-1\/?$/, 2],
+    [/^\/register\/step-2\/?$/, 3],
+    [/^\/register\/complete\/?$/, 4],
+  ];
 
-  let step = 1;
-  if (path.includes("verify-2fa")) step = 2;
-  else if (path.includes("step-1")) step = 3;
-  else if (path.includes("step-2")) step = 4;
-  else if (path.includes("complete")) step = 5;
-
-  useEffect(() => {
-    const assertPermission = async () => {
-      try {
-        // Check if user is already fully registered
-        const { data: isUserRegistered } = await getRegistration();
-        if (isUserRegistered) {
-          redirect("/user/dashboard");
-          return;
-        }
-
-        // Get current user and auth status
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        // Handle different page access permissions
-        if (path === "/register") {
-          // On main registration page
-          if (user && user.email_confirmed_at) {
-            // User is authenticated and verified, go to step-1
-            redirect("/register/step-1");
-            return;
-          }
-          // Allow access to registration page
-        } else if (path.includes("verify-2fa")) {
-          // On email verification page - allow access
-          // (Users can be here whether authenticated or not)
-        } else if (path.includes("step-1")) {
-          // On step-1 page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
-          if (!user.email_confirmed_at) {
-            redirect(`/register/verify-2fa?email=${user.email}`);
-            return;
-          }
-          // User is properly authenticated and verified - allow access
-        } else if (path.includes("step-2")) {
-          // On step-2 page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
-          if (!user.email_confirmed_at) {
-            redirect(`/register/verify-2fa?email=${user.email}`);
-            return;
-          }
-          // User is properly authenticated and verified - allow access
-        } else if (path.includes("complete")) {
-          // On completion page - require authenticated user
-          if (error || !user) {
-            redirect("/register");
-            return;
-          }
-        }
-
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Permission check error:", err);
-        setIsLoading(false);
-      }
-    };
-
-    assertPermission();
-  }, [path, supabase.auth]);
-
-  // Show loading while checking permissions
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const step = ROUTE_STEP.find(([re]) => re.test(path))?.[1] ?? 1;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black pt-[70px]">
@@ -120,7 +41,7 @@ function RegisterLayoutInner({ children }: Props) {
             priority
           />
         </div>
-        <ProgressBar step={step} totalSteps={5} />
+        <ProgressBar step={step} totalSteps={4} />
         {children}
       </div>
     </div>
@@ -128,9 +49,64 @@ function RegisterLayoutInner({ children }: Props) {
 }
 
 export default function RegisterLayout({ children }: Props) {
+  const supabase = createClient();
+  const path = usePathname() ?? "";
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [registrationExists, setRegistrationExists] = useState(false);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const { data: registration } = await getRegistration();
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        setUser(currentUser ?? null);
+        const registrationFlag = Boolean(registration);
+        setRegistrationExists(registrationFlag);
+
+        if (registrationFlag) {
+          redirect("/user/dashboard");
+          return;
+        }
+
+        const redirectTo = getRegisterRedirect(
+          { user: currentUser },
+          path,
+          registrationFlag,
+        );
+        if (redirectTo) {
+          redirect(redirectTo);
+          return;
+        }
+      } catch (e) {
+        console.error("Register layout permission check failed", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [path, supabase.auth]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <RegisterFormProvider>
-      <RegisterLayoutInner>{children}</RegisterLayoutInner>
-    </RegisterFormProvider>
+    <AuthRegistrationProvider initial={{ user, registrationExists }}>
+      <RegisterOptionsProvider>
+        <RegisterFormProvider>
+          <RegisterLayoutInner>{children}</RegisterLayoutInner>
+        </RegisterFormProvider>
+      </RegisterOptionsProvider>
+    </AuthRegistrationProvider>
   );
 }
