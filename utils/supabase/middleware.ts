@@ -72,86 +72,58 @@ export async function updateSession(request: NextRequest) {
     return redirectResponse;
   };
 
-  if (url.pathname === "/admin-login-portal") {
-    return supabaseResponse; // Let users access the login page
-  }
-
-  // Define protected routes
-  const adminRoutes = ["/admin"];
-  const isAdminRoute = adminRoutes.some((route) =>
+  // Public routes that don't require authentication
+  const publicRoutes = ["/login", "/register", "/admin-login-portal"];
+  const isPublicRoute = publicRoutes.some((route) =>
     url.pathname.startsWith(route),
   );
 
-  // Handle admin route protection
-  if (isAdminRoute) {
-    // Check if user is authenticated
-    if (!user) {
-      console.log(
-        "Unauthenticated user attempting to access admin route:",
-        url.pathname,
-      );
-      url.pathname = "/admin-login-portal";
-      url.searchParams.set("next", request.nextUrl.pathname);
-      return createRedirectWithCookies(url);
-    }
+  // Protected routes
+  const adminRoutes = ["/admin"];
+  const userRoutes = ["/user"];
+  const isAdminRoute = adminRoutes.some((route) =>
+    url.pathname.startsWith(route),
+  );
+  const isUserRoute = userRoutes.some((route) =>
+    url.pathname.startsWith(route),
+  );
 
-    try {
-      // Verify admin privileges server-side
-      const { data: adminData, error: adminError } = await supabase
-        .from("admins")
-        .select("id, role, status")
-        .eq("id", user.id)
-        .in("role", ["volunteer", "admin", "super_admin"])
-        .single();
-
-      if (adminError) {
-        console.error("Error fetching admin data:", adminError);
-        url.pathname = "/unauthorized";
-        return createRedirectWithCookies(url);
-      }
-
-      if (!adminData) {
-        console.log("User is not an admin:", user.id);
-        url.pathname = "/unauthorized";
-        return createRedirectWithCookies(url);
-      }
-
-      if (adminData.status !== "active") {
-        console.log(
-          "Admin account is not active:",
-          user.id,
-          "Status:",
-          adminData.status,
-        );
-        url.pathname = "/unauthorized";
-        url.searchParams.set("reason", "account_inactive");
-        return createRedirectWithCookies(url);
-      }
-
-      // Add admin context headers to the supabaseResponse
-      supabaseResponse.headers.set("x-admin-role", adminData.role);
-      supabaseResponse.headers.set("x-admin-status", adminData.status);
-
-      console.log("Admin access granted:", user.id, "Role:", adminData.role);
-
-      // IMPORTANT: Return the original supabaseResponse with cookies intact
-      return supabaseResponse;
-    } catch (error) {
-      console.error("Unexpected error in admin verification:", error);
-      url.pathname = "/error";
-      url.searchParams.set("message", "authentication_error");
-      return createRedirectWithCookies(url);
-    }
+  // Redirect unauthenticated users
+  if (!user && !isPublicRoute) {
+    url.pathname = "/login";
+    url.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(url);
   }
 
-  // Handle authenticated users trying to access login/signup pages
-  if (user && (url.pathname === "/login" || url.pathname === "/signup")) {
-    console.log("Authenticated user redirected from auth page");
-
+  // Handle admin route protection
+  if (isAdminRoute && user) {
     try {
       const { data: adminData } = await supabase
         .from("admins")
-        .select("id, role, status")
+        .select("role, status")
+        .eq("id", user.id)
+        .single();
+
+      if (!adminData || adminData.status !== "active") {
+        url.pathname = "/unauthorized";
+        return NextResponse.redirect(url);
+      }
+
+      // Add admin context to headers
+      supabaseResponse.headers.set("x-admin-role", adminData.role);
+      supabaseResponse.headers.set("x-admin-status", adminData.status);
+    } catch (error) {
+      url.pathname = "/unauthorized";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (user && isPublicRoute) {
+    try {
+      const { data: adminData } = await supabase
+        .from("admins")
+        .select("role, status")
         .eq("id", user.id)
         .single();
 
@@ -160,30 +132,10 @@ export async function updateSession(request: NextRequest) {
       } else {
         url.pathname = "/user/dashboard";
       }
-
-      return createRedirectWithCookies(url);
-    } catch (error) {
-      // If admin check fails, redirect to regular dashboard
+      return NextResponse.redirect(url);
+    } catch {
       url.pathname = "/user/dashboard";
-      return createRedirectWithCookies(url);
-    }
-  }
-
-  // Handle root path redirect for authenticated users
-  if (user && url.pathname === "/") {
-    try {
-      const { data: adminData } = await supabase
-        .from("admins")
-        .select("id, role, status")
-        .eq("id", user.id)
-        .single();
-
-      if (adminData && adminData.status === "active") {
-        url.pathname = "/admin/dashboard";
-        return createRedirectWithCookies(url);
-      }
-    } catch (error) {
-      // Continue to normal flow if admin check fails
+      return NextResponse.redirect(url);
     }
   }
 
