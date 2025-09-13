@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/utils/supabase/client";
 import { redirect } from "next/dist/server/api-utils";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email").min(1, "Email is required"),
@@ -31,17 +32,28 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function AccountPage() {
+  const supabase = createClient();
+  const router = useRouter();
+  const path = usePathname();
+
+  useEffect(() => {
+    const run = async () => {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (data && !error) {
+        router.replace("/register/step-1");
+      }
+    };
+    run();
+  }, [path, supabase.auth, router]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
 
-  const router = useRouter();
-
   async function onSubmit(values: FormValues) {
-    const supabase = createClient();
-
     const { error } = await supabase.auth.signUp({
       password: values.password,
       email: values.email,
