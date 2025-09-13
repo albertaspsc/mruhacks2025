@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { differenceInSeconds, format } from "date-fns";
 import styles from "./MRUHacksCountdown.module.css";
 

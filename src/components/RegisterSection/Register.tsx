@@ -16,7 +16,7 @@ const RegisterSection = () => {
           <Image
             src={logo}
             alt="MRU Hackathon Logo"
-            priority
+            priority={true}
             className={styles.logo}
           />
         </div>

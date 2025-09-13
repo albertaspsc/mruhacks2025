@@ -98,7 +98,6 @@ const Welcome = () => {
                 maxWidth: "100%",
                 objectFit: "cover",
               }}
-              priority
             />
             <a href="/landing" className={styles.ctaButton}>
               <span className={styles.buttonText}>Apply Now</span>
@@ -126,7 +125,6 @@ const Welcome = () => {
                 maxWidth: "100%",
                 objectFit: "cover",
               }}
-              priority
             />
             <a href="/landing" className={styles.ctaButton}>
               <span className={styles.buttonText}>Apply Now</span>

@@ -53,7 +53,6 @@ const TeamMemberCard: FunctionComponent<
                 width={150}
                 height={150}
                 style={{ objectFit: "cover" }}
-                priority={true}
                 key={`${member.name}-${member.pic}`} // Include pic in key for better uniqueness
               />
             )}
