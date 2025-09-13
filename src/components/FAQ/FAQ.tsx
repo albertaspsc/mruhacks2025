@@ -1,24 +1,22 @@
-"use client";
-
-import React, { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import styles from "./FAQ.module.css";
-import faqBackground from "@/assets/backgrounds/faq-background.svg";
-
-gsap.registerPlugin(ScrollTrigger);
+import faqBackground from "@/assets/backgrounds/background.webp";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const faqs = [
   {
     question: "What is a Hackathon?",
     answer:
-      "A hackathon is best defined as a real-time science fair. Anyone with an interest in technology attends a hackathon to learn, build & share their creations over the course of a weekend, in a relaxed and welcoming atmosphere. You will bring your ideas to life through technology over the course of 24 hours before showcasing them to a team of judges.",
+      "You can think of a hackathon as a software science fair. Anyone with an interest in technology attends a hackathon to learn, build & share their creations over the course of a weekend, in a relaxed and welcoming atmosphere. You will bring your ideas to life through technology over the course of 24 hours before showcasing them to a team of judges.",
   },
   {
     question: "When is MRUHacks?",
     answer:
-      "MRUHacks will be held from <strong>October 4th - 5th 2025</strong> in the Riddell Library and Learning Centre. More details will be released closer to the event..",
+      "MRUHacks will be held from October 4th - 5th 2025 in the Riddell Library and Learning Centre. More details will be released closer to the event..",
   },
   {
     question: "Who can participate?",
@@ -53,68 +51,33 @@ const faqs = [
 ];
 
 const FAQ = () => {
-  const faqContainerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!faqContainerRef.current) return;
-
-    const faqItems = faqContainerRef.current.querySelectorAll(".faqItem");
-    if (faqItems.length > 0) {
-      gsap.fromTo(
-        faqItems,
-        { opacity: 0, y: 10 }, // Reduced y value for faster appearance
-        {
-          opacity: 1,
-          y: 0,
-          stagger: 0.05, // Reduced stagger time
-          duration: 0.4, // Reduced duration
-          scrollTrigger: {
-            trigger: faqContainerRef.current,
-            start: "top 90%", // Show sooner
-            toggleActions: "play none none none",
-            once: true,
-          },
-        },
-      );
-    }
-  }, []);
-
   return (
     <section
-      ref={faqContainerRef}
-      className={styles.faqSection}
-      style={{ backgroundImage: `url(${faqBackground.src})` }}
       id="faq"
+      className="relative py-16 bg-cover bg-center rounded-xl"
+      style={{ backgroundImage: `url(${faqBackground.src})` }}
     >
-      <div className={styles.container}>
-        <motion.h2
-          className={styles.heading}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }} // Faster animation
-        >
-          FAQ
-        </motion.h2>
-
-        <div className={styles.faqList}>
-          {faqs.map((faq, index) => (
-            <details key={index} className={`${styles.faqItem} faqItem`}>
-              <summary className={styles.question}>
-                <span
-                  className={styles.questionText}
-                  dangerouslySetInnerHTML={{ __html: faq.question }}
-                />
-              </summary>
-              <div
-                className={styles.answer}
-                dangerouslySetInnerHTML={{ __html: faq.answer }}
-              />
-            </details>
-          ))}
-        </div>
+      <div className="mx-auto max-w-4xl px-6">
+        <h2 className="text-4xl font-bold mb-8">FAQ</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Common Questions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="multiple" className="w-full">
+              {faqs.map((f, i) => (
+                <AccordionItem key={i} value={`item-${i}`}>
+                  <AccordionTrigger className="text-left">
+                    {f.question}
+                  </AccordionTrigger>
+                  <AccordionContent>{f.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );
 };
-
 export default FAQ;

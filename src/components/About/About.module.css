@@ -71,13 +71,13 @@
   top: 50%;
   left: 50%;
   width: 100%;
-  height: auto;
+  height: 50%;
   object-fit: cover;
   transform: translate(-50%, -50%);
   opacity: 0.7;
   pointer-events: none;
   z-index: 0;
-  border-radius: 200x; /* Rounded corners added for smoother visual integration */
+  border-radius: 50px; /* Rounded corners added for smoother visual integration */
 }
 
 @media (max-width: 1099px) {
@@ -152,7 +152,6 @@
     text-align: left;
   }
 
-  /* Completely hides decorative horizontal background image */
   .backgroundImage {
     display: none;
   }

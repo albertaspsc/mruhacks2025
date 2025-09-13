@@ -1,6 +1,3 @@
-"use client";
-
-import React, { useState } from "react";
 import Navbar from "@/components/Navbar/Navbar";
 import RegisterSection from "@/components/RegisterSection/Register";
 import Welcome from "@/components/Welcome/Welcome";
@@ -14,8 +11,6 @@ import TeamCarousel from "@/components/Carousel/TeamCarousel";
 import teamDataJson from "@/data/team.json";
 
 export default function Home() {
-  const [teamData] = useState(teamDataJson);
-
   return (
     <>
       <Navbar />
@@ -42,7 +37,7 @@ export default function Home() {
 
         <section id="team" className="py-16 px-4 md:px-8">
           <TeamCarousel
-            teamData={teamData}
+            teamData={teamDataJson}
             options={{
               loop: true,
               align: "start",

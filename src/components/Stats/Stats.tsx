@@ -1,6 +1,6 @@
-import React from "react";
 import styles from "./Stats.module.scss";
 import crt from "@/assets/mascots/crt.svg";
+import statBackground from "@/assets/backgrounds/background.webp";
 import Image from "next/image";
 
 export default function Stats() {
@@ -16,10 +16,17 @@ export default function Stats() {
       <div className={styles.stats}>
         {facts.map((fact, i) => (
           <div
-            className="stat"
+            className={styles.stat}
             key={`statistic-${i}`}
             style={{ "--x": i + 1 } as React.CSSProperties}
           >
+            <Image
+              src={statBackground}
+              alt=""
+              fill
+              className={styles.bgImage}
+              sizes="(max-width: 600px) 130px, 200px"
+            />
             <span className={styles.number}>{fact.number}</span>
             <span className={styles.text}>{fact.text}</span>
           </div>
