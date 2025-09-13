@@ -3,8 +3,6 @@
 import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 import { useEffect, useState, useRef, useCallback } from "react";
-// framer-motion will be dynamically imported client-side to trim initial bundle
-// import { motion, useReducedMotion } from "framer-motion";
 import styles from "./Welcome.module.css";
 import welcomeImage from "@/assets/graphics/welcome-component.webp";
 

@@ -1,57 +1,18 @@
 "use client";
-
-import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import styles from "./About.module.css";
 import aboutGraphic from "@/assets/graphics/about-component.webp";
 
 export default function AboutClient() {
-  useEffect(() => {
-    let ctx: gsap.Context | null = null;
-    let scrollTrigger: any;
-
-    (async () => {
-      // Dynamically import gsap & plugin so they are not in the main bundle
-      const gsapModule = await import("gsap");
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsapModule.default.registerPlugin(ScrollTrigger);
-      scrollTrigger = ScrollTrigger;
-      ctx = gsapModule.default.context(() => {
-        gsapModule.default.fromTo(
-          ".aboutGraphic",
-          { opacity: 0, scale: 0.9 },
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: ".aboutGraphic",
-              start: "top 85%",
-              once: true,
-            },
-          },
-        );
-      });
-    })();
-
-    return () => {
-      ctx?.revert();
-      // Kill ScrollTrigger instances if plugin was loaded
-      if (scrollTrigger) {
-        scrollTrigger.getAll().forEach((st: any) => st.kill());
-      }
-    };
-  }, []);
-
   return (
     <div className={styles.container}>
       <motion.div
         className={styles.imageWrapper}
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1 }}
+        initial={{ opacity: 0, x: -30, scale: 0.9 }}
+        whileInView={{ opacity: 1, x: 0, scale: 1 }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
+        viewport={{ once: true, amount: 0.15 }} // amount ~ top 85% analogue
       >
         <Image
           src={aboutGraphic}

@@ -1,15 +1,14 @@
 import { DM_Sans } from "next/font/google";
 import "@/assets/styles/globals.css";
-import React from "react";
 import Navbar from "@/components/Navbar/Navbar";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  style: ["normal", "italic"],
   variable: "--font-dm-sans",
+  display: "swap",
+  // preload defaults to true; with a single variable font that's fine.
 });
 
 export const metadata = {

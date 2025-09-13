@@ -30,6 +30,9 @@ const Sponsor = dynamic(() => import("@/components/Sponsor/Sponsor"), {
   loading: () => <div style={{ minHeight: 260 }} />,
 });
 
+// Revalidate the home page (and thus the countdown) every hour
+export const revalidate = 3600; // seconds
+
 export default function Home() {
   return (
     <>
