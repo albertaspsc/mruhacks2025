@@ -18,12 +18,20 @@ import styles from "./carousel.module.css";
 import { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 
 type Props = {
-  teamData: MemberData[];
-  options: EmblaOptionsType;
+  teamData?: MemberData[]; // Optional to allow lazy loading
+  options?: EmblaOptionsType;
+  onDataLoaded?: (count: number) => void; // optional callback for metrics
 };
 
 const TeamCarousel: FunctionComponent<Props> = (props) => {
-  const { teamData = [], options = { loop: true, align: "start" } } = props;
+  const {
+    teamData,
+    options = { loop: true, align: "start" },
+    onDataLoaded,
+  } = props;
+  const [data, setData] = useState<MemberData[]>(teamData || []);
+  const [loading, setLoading] = useState<boolean>(!teamData);
+  const [error, setError] = useState<string | null>(null);
   const [carouselRef, carouselApi] = useCarousel(options as EmblaOptionsType, [
     Autoplay(),
   ]);
@@ -98,7 +106,33 @@ const TeamCarousel: FunctionComponent<Props> = (props) => {
     }
   };
 
-  const teamGroups = createCustomGroups(teamData);
+  // Lazy load data on mount if not provided
+  useEffect(() => {
+    if (data.length === 0 && !teamData) {
+      let cancelled = false;
+      (async () => {
+        try {
+          setLoading(true);
+          // Dynamic import so JSON is split out of main bundle
+          const mod = await import("@/data/team.json");
+          if (!cancelled) {
+            const loaded: MemberData[] = mod.default as any;
+            setData(loaded);
+            onDataLoaded?.(loaded.length);
+          }
+        } catch (e: any) {
+          if (!cancelled) setError(e?.message || "Failed to load team data");
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [data.length, teamData, onDataLoaded]);
+
+  const teamGroups = createCustomGroups(data);
 
   useEffect(() => {
     if (carouselApi) {
@@ -124,17 +158,31 @@ const TeamCarousel: FunctionComponent<Props> = (props) => {
 
           <div className={styles.carousel__viewport} ref={carouselRef}>
             <div className={styles.carousel__container}>
-              {teamGroups.map((group, index) => (
-                <div className={styles.carousel__slide} key={index}>
-                  {group.map((member, memberIndex) => (
-                    <TeamMemberCard
-                      key={`${index}-${memberIndex}`}
-                      member={member}
-                      className="team-card-container"
-                    />
-                  ))}
+              {loading && (
+                <div className={styles.carousel__slide}>
+                  <div className="animate-pulse text-sm opacity-70 p-6">
+                    Loading team...
+                  </div>
                 </div>
-              ))}
+              )}
+              {error && !loading && (
+                <div className={styles.carousel__slide}>
+                  <div className="text-red-400 text-sm p-6">{error}</div>
+                </div>
+              )}
+              {!loading &&
+                !error &&
+                teamGroups.map((group, index) => (
+                  <div className={styles.carousel__slide} key={index}>
+                    {group.map((member, memberIndex) => (
+                      <TeamMemberCard
+                        key={`${index}-${memberIndex}`}
+                        member={member}
+                        className="team-card-container"
+                      />
+                    ))}
+                  </div>
+                ))}
             </div>
           </div>
 

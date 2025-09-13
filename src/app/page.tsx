@@ -30,12 +30,9 @@ const Sponsor = dynamic(() => import("@/components/Sponsor/Sponsor"), {
   loading: () => <div style={{ minHeight: 260 }} />,
 });
 
-import teamDataJson from "@/data/team.json";
-
 export default function Home() {
   return (
     <>
-      {/* Navbar removed (already in RootLayout) */}
       <main>
         <section id="register">
           <RegisterSection />
@@ -59,7 +56,6 @@ export default function Home() {
 
         <section id="team" className="py-16 px-4 md:px-8">
           <TeamCarousel
-            teamData={teamDataJson}
             options={{
               loop: true,
               align: "start",
