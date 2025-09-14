@@ -1,14 +1,17 @@
+"use client";
+
 import Image from "next/image";
+import React from "react";
 import styles from "./Register.module.css";
 import logo from "@/assets/logos/black-white-logo.svg";
 import MRUHacksCountdown from "./countdown/MRUHacksCountdown";
-import DynamicGradientBackground from "./background/DynamicGradientBackground";
+import { GradientBackground } from "./background/GradientBackground";
 
 const RegisterSection = () => {
   return (
     <section id="register" className={styles.registerSection}>
       <div className={styles.backgroundContainer}>
-        <DynamicGradientBackground />
+        <GradientBackground />
       </div>
       <div className={styles.contentContainer}>
         <div className={styles.logoContainer}>
