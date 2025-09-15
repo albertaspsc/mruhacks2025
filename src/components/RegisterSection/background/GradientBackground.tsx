@@ -1,7 +1,5 @@
 import React from "react";
 import styles from "./GradientBackground.module.css";
-import StaticNoiseOverlay from "./StaticNoiseOverlay";
-
 interface Props {}
 
 /**
@@ -39,7 +37,6 @@ export const GradientBackground: React.FC<Props> = () => {
   return (
     <div className={styles.layered} aria-hidden>
       {renderGradient()}
-      <StaticNoiseOverlay className={styles.noiseOverlay} />
     </div>
   );
 };

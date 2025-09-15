@@ -1,5 +1,4 @@
 import dynamic from "next/dynamic";
-import Navbar from "@/components/Navbar/Navbar";
 import RegisterSection from "@/components/RegisterSection/Register";
 import Footer from "@/components/Footer/Footer";
 

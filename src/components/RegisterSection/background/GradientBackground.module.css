@@ -145,24 +145,6 @@
   }
 }
 
-/* Static noise animation */
-@keyframes staticNoise {
-  0% {
-    background-position:
-      50% 0,
-      60% 60%;
-  }
-  100% {
-    background-position:
-      50% 0,
-      60% 50%;
-  }
-}
-
-.staticNoise {
-  animation: staticNoise 0.2s infinite alternate;
-}
-
 /* Accessibility: reduce motion */
 @media (prefers-reduced-motion: reduce) {
   .interactiveG1,
@@ -170,11 +152,6 @@
   .interactiveG3,
   .interactiveG4,
   .interactiveG5 {
-    animation: none !important;
-  }
-  .noiseOverlay,
-  .staticNoise {
-    opacity: 0.05 !important;
     animation: none !important;
   }
 }
