@@ -16,7 +16,6 @@ export default function AdminLayout({ children }: Props) {
   const supabase = createClient();
 
   useEffect(() => {
-    // Skip auth check for admin login portal
     if (pathname === "/admin-login-portal") {
       setIsLoading(false);
       setIsAuthorized(true);
@@ -25,51 +24,34 @@ export default function AdminLayout({ children }: Props) {
 
     const checkAuth = async () => {
       try {
-        // Check Supabase authentication
         const {
           data: { user },
           error: authError,
         } = await supabase.auth.getUser();
-
         if (authError || !user) {
-          console.log("No authenticated user, redirecting to admin login");
           router.push("/admin-login-portal");
           return;
         }
 
-        // Check if user is in admins table
         const { data: adminData, error: adminError } = await supabase
           .from("admins")
           .select("id, email, role, status")
           .eq("id", user.id)
           .single();
 
-        if (adminError || !adminData) {
-          console.log("User is not an admin, redirecting to login");
+        if (adminError || !adminData || adminData.status !== "active") {
           await supabase.auth.signOut();
           router.push("/admin-login-portal");
           return;
         }
 
-        // Check admin status
-        if (adminData.status !== "active") {
-          console.log("Admin account is not active");
-          await supabase.auth.signOut();
-          router.push("/admin-login-portal");
-          return;
-        }
-
-        // Check role permissions for admin routes
         if (pathname.startsWith("/admin") && adminData.role !== "admin") {
-          console.log("User is not admin, redirecting to volunteer dashboard");
           router.push("/volunteer/dashboard");
           return;
         }
 
-        console.log("Admin access granted:", adminData.email);
         setIsAuthorized(true);
       } catch (error) {
-        console.error("Auth check failed:", error);
         router.push("/admin-login-portal");
       } finally {
         setIsLoading(false);
@@ -79,7 +61,6 @@ export default function AdminLayout({ children }: Props) {
     checkAuth();
   }, [router, pathname, supabase]);
 
-  // Show loading spinner while checking auth
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -91,14 +72,8 @@ export default function AdminLayout({ children }: Props) {
     );
   }
 
-  // Don't render anything if not authorized (redirect is happening)
-  if (!isAuthorized) {
-    return null;
-  }
+  if (!isAuthorized) return null;
+  if (pathname === "/admin-login-portal") return <>{children}</>;
 
-  // For admin login portal, render without any wrapper
-  if (pathname === "/admin-login-portal") {
-    return <>{children}</>;
-  }
   return <>{children}</>;
 }
