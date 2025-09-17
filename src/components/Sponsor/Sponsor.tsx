@@ -8,7 +8,6 @@ import library from "../../assets/sponsors/mrulibrary.webp";
 import adx from "../../assets/sponsors/adx_logo.webp";
 import cnrl from "../../assets/sponsors/canadian_natural.webp";
 import village from "../../assets/sponsors/village_icecream.webp";
-import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 interface SponsorItem {
   img: any;
@@ -55,7 +54,7 @@ export default function Sponsor() {
       <div className={styles["become-sponsor-container"]}>
         <a href={sponsorFormLink} target="_blank" rel="noopener noreferrer">
           <span>Become a sponsor</span>
-          <Image src={arrowIcon} alt="arrow right" />
+          <span style={{ marginLeft: "8px" }}>→</span>
         </a>
         <div className="crt">
           <Image src={crt2} alt="CRT tv mascot" />
