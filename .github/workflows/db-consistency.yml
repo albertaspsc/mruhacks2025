@@ -1,0 +1,35 @@
+name: Database Consistency
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  schema-drift:
+    name: Prevent uncommitted migration drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate migrations (should be a no-op)
+        run: npm run db:gen
+
+      - name: Fail if migrations changed
+        run: |
+          git status --porcelain
+          if ! git diff --exit-code -- utils/migrations/; then
+            echo "Drizzle generated new migration files. Commit them or reconcile schema before merging." >&2
+            exit 1
+          fi
