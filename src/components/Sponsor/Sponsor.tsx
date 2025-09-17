@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import styles from "./Sponsor.module.scss";
 import crt2 from "../../assets/mascots/crt2.svg";
@@ -25,6 +27,7 @@ export default function Sponsor() {
       href: "https://www.mtroyal.ca/ProgramsCourses/FacultiesSchoolsCentres/Business/Institutes/InstituteInnovationEntrepreneurship/index.htm",
     },
     { img: library, href: "https://library.mtroyal.ca" },
+
     {
       img: adx,
       href: "https://www.abdiamond.ca/?gad_source=1&gad_campaignid=21486602802&gbraid=0AAAAAocBOJOMK1uXMlxXqUi7Ec0sjwsCv&gclid=CjwKCAjw4efDBhATEiwAaDBpbnF6Hno1EYFTfi94tso6NuHseNyx1TkGy1qJ4buIIP-2VS2SPyi6uxoCLN0QAvD_BwE",
