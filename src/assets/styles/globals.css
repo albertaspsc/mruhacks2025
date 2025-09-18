@@ -20,6 +20,7 @@ body {
   --text-color: #000000;
   --heading-font: "DM Sans", sans-serif;
   --body-font: "DM Sans", sans-serif;
+  --popover: 0 0% 100%; /* #ffffff converted to H S L */
 }
 
 /* Apply Global Styles */

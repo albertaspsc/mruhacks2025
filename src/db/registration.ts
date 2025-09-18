@@ -15,7 +15,7 @@ export interface Registration {
   lastName?: string;
 
   // Registration details
-  gender?: number | string;
+  gender?: string;
   university?: number | string;
   major?: number | string;
   experience?: number | string;
@@ -85,13 +85,19 @@ export async function register(user: RegistrationInput) {
       return { success: true, message: "Already registered" };
     }
 
-    // Gender mapping (form sends the ID)
-    let genderResult;
-    if (!isNaN(Number(user.gender))) {
-      genderResult = { data: { id: Number(user.gender) }, error: null };
-    } else {
-      return { error: "Gender must be a valid ID" };
-    }
+    // Gender mapping (form sends the string label, look up ID)
+    const { data: genderRow, error: genderLookupError } = await supabase
+      .from("gender")
+      .select("id")
+      .eq("gender", user.gender)
+      .single();
+    const genderResult =
+      genderLookupError || !genderRow
+        ? {
+            data: null,
+            error: genderLookupError || { message: "Gender not found" },
+          }
+        : { data: { id: genderRow.id }, error: null };
 
     // Experience mapping
     const experienceMap: { [key: string]: number } = {

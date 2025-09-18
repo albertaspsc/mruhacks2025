@@ -1,15 +1,26 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{}> },
+) {
+  const { params } = context;
   try {
     const supabase = await createClient(true);
-    const { searchParams } = new URL(request.url);
-    const workshopId = searchParams.get("workshopId");
+    // Try to get workshop id from query string first (e.g. /api/workshops/registrations?workshop=ID)
+    const url = new URL(request.url);
+    let workshopId = url.searchParams.get("workshop") ?? null;
+
+    // Fallback: if invoked via a dynamic route, read id from params
+    if (!workshopId) {
+      const maybeParams = (await params) as Record<string, string> | undefined;
+      workshopId = maybeParams?.id ?? null;
+    }
 
     if (!workshopId) {
       return NextResponse.json(
-        { error: "workshopId parameter is required" },
+        { error: "Missing workshop id" },
         { status: 400 },
       );
     }
