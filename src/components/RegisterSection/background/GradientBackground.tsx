@@ -4,7 +4,7 @@ interface Props {}
 
 /**
  * GradientBackground
- * Renders an animated CSS gradient background with noise overlay.
+ * Renders an animated CSS gradient background.
  */
 export const GradientBackground: React.FC<Props> = () => {
   const renderGradient = () => {

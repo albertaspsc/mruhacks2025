@@ -1,26 +1,34 @@
-import { differenceInSeconds } from "date-fns";
+import { useMemo } from "react";
 import styles from "./MRUHacksCountdown.module.css";
 
 // Target hackathon start date (October 4, 2025 @ 00:00 local time)
 const HACKATHON_DATE = new Date(2025, 9, 4, 0, 0, 0);
 
+// Constants for time calculations (avoid repeated calculations)
+const SECONDS_IN_MINUTE = 60;
+const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
+const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
+const SECONDS_IN_WEEK = SECONDS_IN_DAY * 7;
+
 function computeCountdown() {
   const now = new Date();
-  const diff = differenceInSeconds(HACKATHON_DATE, now);
+  const diff = Math.floor((HACKATHON_DATE.getTime() - now.getTime()) / 1000);
+
   if (diff <= 0) {
     return { weeks: 0, days: 0, hours: 0 };
   }
 
-  const weeks = Math.floor(diff / (60 * 60 * 24 * 7));
-  const remainingAfterWeeks = diff % (60 * 60 * 24 * 7);
-  const days = Math.floor(remainingAfterWeeks / (60 * 60 * 24));
-  const remainingAfterDays = remainingAfterWeeks % (60 * 60 * 24);
-  const hours = Math.floor(remainingAfterDays / (60 * 60));
+  const weeks = Math.floor(diff / SECONDS_IN_WEEK);
+  const remainingAfterWeeks = diff % SECONDS_IN_WEEK;
+  const days = Math.floor(remainingAfterWeeks / SECONDS_IN_DAY);
+  const remainingAfterDays = remainingAfterWeeks % SECONDS_IN_DAY;
+  const hours = Math.floor(remainingAfterDays / SECONDS_IN_HOUR);
+
   return { weeks, days, hours };
 }
 
 export default function MRUHacksCountdown() {
-  const { weeks, days, hours } = computeCountdown();
+  const { weeks, days, hours } = useMemo(() => computeCountdown(), []);
   return (
     <div className={styles.hackathonCountdown}>
       <div className={styles.cardContainer}>
