@@ -35,6 +35,12 @@ export default function LoginPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit(e as any);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white pt-[70px] max-[375px]:pt-[60px] max-[320px]:pt-[55px]">
       <div className="space-y-6 w-full max-w-md bg-white border border-gray-200 rounded-3xl px-8 py-10 shadow-lg z-10 flex flex-col items-center">
@@ -54,6 +60,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@mtroyal.ca"
               required
+              aria-required="true"
               autoComplete="email"
               className="mt-1 pr-10 text-black"
             />
@@ -68,8 +75,10 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Password"
               required
+              aria-required="true"
               autoComplete="current-password"
               className="mt-1 pr-10 text-black"
             />

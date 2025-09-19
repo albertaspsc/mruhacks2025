@@ -42,6 +42,45 @@ npm run dev
 # open http://localhost:3000
 ```
 
+### 5) Continuous Integration (CI)
+
+The project uses GitHub Actions for automated testing and quality checks. **No setup required** - the CI works out of the box!
+
+#### What happens automatically:
+
+- **On every push** → Tests run automatically
+- **On pull requests** → Quality checks and tests run (must pass to merge)
+- **Tests include** → Unit tests, E2E tests, TypeScript checking, ESLint, Prettier
+
+#### CI Environment:
+
+- **Node.js 20** - Latest LTS version
+- **Supabase CLI** - Manages local database and services
+- **Puppeteer** - For E2E testing
+- **Jest** - For unit testing
+
+#### Local Testing:
+
+```bash
+# Run all tests
+npm run test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only E2E tests
+npm run test:e2e
+
+# Run tests in watch mode
+npm run test:watch
+
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+```
+
 ### Troubleshooting
 
 - "Cannot connect to the Docker daemon": Start Docker Desktop and re-run `supabase start`.

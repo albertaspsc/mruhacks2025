@@ -1,0 +1,91 @@
+name: CI Tests & Quality Checks
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Initialize Supabase
+        run: supabase init
+
+      - name: Start Supabase database
+        run: supabase db start
+
+      - name: Get Supabase environment variables
+        id: supabase-env
+        run: |
+          supabase status --output env >> $GITHUB_ENV
+          echo "SUPABASE_URL=$(supabase status --output json | jq -r '.API_URL')" >> $GITHUB_ENV
+          echo "SUPABASE_ANON_KEY=$(supabase status --output json | jq -r '.anon_key')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status --output json | jq -r '.service_role_key')" >> $GITHUB_ENV
+          echo "DATABASE_URL=$(supabase status --output json | jq -r '.DB_URL')" >> $GITHUB_ENV
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          CI: true
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Stop Supabase services
+        if: always()
+        run: |
+          supabase stop
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit

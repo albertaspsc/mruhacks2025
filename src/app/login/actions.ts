@@ -31,8 +31,8 @@ export async function loginWithGoogle() {
 }
 
 const loginSchema = z.object({
-  email: z.string().nonempty().email(),
-  password: z.string(),
+  email: z.string().min(1).email(),
+  password: z.string().min(1),
 });
 
 export async function login(formData: FormData) {
