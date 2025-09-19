@@ -413,5 +413,3 @@ FROM available_workshops aw
 JOIN public.users u ON aw.id = u.id
 WHERE aw.rn = 1
 ON CONFLICT (user_id, workshop_id) DO NOTHING;
-
-

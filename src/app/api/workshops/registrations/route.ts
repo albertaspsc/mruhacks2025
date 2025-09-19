@@ -1,9 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// This route seems to handle fetching registrations for a specific workshop, with admin permission checks.
-// But there is a dynamic route already defined at src/app/api/workshops/[id]/registrations/route.ts
-// that seems to do the same thing.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{}> },
