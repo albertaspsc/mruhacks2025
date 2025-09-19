@@ -2,6 +2,7 @@
   "name": "mruhacks2025",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
