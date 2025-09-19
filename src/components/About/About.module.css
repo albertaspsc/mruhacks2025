@@ -80,6 +80,38 @@
   border-radius: 50px; /* Rounded corners added for smoother visual integration */
 }
 
+/* CSS Animation Classes */
+
+/* Image wrapper animation: starts hidden, slides in from left with scale effect */
+.imageWrapperAnimate {
+  opacity: 0;
+  transform: translateX(-30px) scale(0.9); /* Initial state: hidden, left offset, slightly smaller */
+  transition:
+    opacity 0.9s ease-out,
+    transform 0.9s ease-out; /* Smooth transition with ease-out timing */
+}
+
+/* When 'animate' class is added via Intersection Observer, trigger the animation */
+.imageWrapperAnimate.animate {
+  opacity: 1;
+  transform: translateX(0) scale(1); /* Final state: visible, normal position, normal size */
+}
+
+/* Text content animation: starts hidden, slides in from right */
+.textContentAnimate {
+  opacity: 0;
+  transform: translateX(50px); /* Initial state: hidden, right offset */
+  transition:
+    opacity 1s ease-out,
+    transform 1s ease-out; /* Slightly longer duration for text */
+}
+
+/* When 'animate' class is added via Intersection Observer, trigger the animation */
+.textContentAnimate.animate {
+  opacity: 1;
+  transform: translateX(0); /* Final state: visible, normal position */
+}
+
 @media (max-width: 1099px) {
   .heading {
     margin-top: 0%;

@@ -1,18 +1,42 @@
 "use client";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import styles from "./About.module.css";
 import aboutGraphic from "@/assets/graphics/about-component.webp";
 
 export default function AboutClient() {
+  // Refs to track DOM elements for intersection observation
+  const imageRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Create intersection observer to trigger animations when elements come into view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // When element becomes visible, add the 'animate' class to trigger CSS animation
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.animate);
+          }
+        });
+      },
+      { threshold: 0.15 }, // Trigger when 15% of the element is visible
+    );
+
+    // Start observing both elements for scroll-triggered animations
+    if (imageRef.current) observer.observe(imageRef.current);
+    if (textRef.current) observer.observe(textRef.current);
+
+    // Cleanup: disconnect observer when component unmounts
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className={styles.container}>
-      <motion.div
-        className={styles.imageWrapper}
-        initial={{ opacity: 0, x: -30, scale: 0.9 }}
-        whileInView={{ opacity: 1, x: 0, scale: 1 }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        viewport={{ once: true, amount: 0.15 }} // amount ~ top 85% analogue
+      {/* Image wrapper with CSS animation classes - starts hidden and animates in from left */}
+      <div
+        ref={imageRef}
+        className={`${styles.imageWrapper} ${styles.imageWrapperAnimate}`}
       >
         <Image
           src={aboutGraphic}
@@ -20,14 +44,12 @@ export default function AboutClient() {
           className={`${styles.aboutGraphic} aboutGraphic`}
           quality={100}
         />
-      </motion.div>
+      </div>
 
-      <motion.div
-        className={`${styles.textContent} textContent`}
-        initial={{ opacity: 0, x: 50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        viewport={{ once: true }}
+      {/* Text content with CSS animation classes - starts hidden and animates in from right */}
+      <div
+        ref={textRef}
+        className={`${styles.textContent} ${styles.textContentAnimate} textContent`}
       >
         <h2 className={styles.heading}>About the Competition</h2>
         <p className={styles.description}>
@@ -38,7 +60,7 @@ export default function AboutClient() {
           beginner, MRUHacks invites you to join a diverse community of problem
           solvers, programmers, and builders this October.
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }
