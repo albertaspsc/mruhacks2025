@@ -1,28 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import styles from "./About.module.css";
+import { usePrefersReducedMotion } from "@/components/hooks/use-prefers-reduced-motion";
 import background from "@/assets/backgrounds/background.webp";
 import aboutGraphic from "@/assets/graphics/about-component.webp";
 
 export default function About() {
-  const [prefersReduced, setPrefersReduced] = useState(false);
-
-  // Detect reduced motion preference for CSS animations
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setPrefersReduced(mq.matches);
-    apply();
-    mq.addEventListener
-      ? mq.addEventListener("change", apply)
-      : mq.removeEventListener("change", apply);
-    return () => {
-      mq.removeEventListener
-        ? mq.removeEventListener("change", apply)
-        : mq.removeListener(apply);
-    };
-  }, []);
+  const prefersReduced = usePrefersReducedMotion();
 
   return (
     <section className={styles.aboutSection}>
@@ -32,7 +17,7 @@ export default function About() {
         className={styles.backgroundImage}
       />
       <div className={styles.container}>
-        {/* Image wrapper with CSS animation classes - starts hidden and animates in from left */}
+        {/* Image wrapper - Slides in from left with fade and scale effect */}
         <div
           className={`${styles.imageWrapper} ${
             !prefersReduced ? styles.imageWrapperAnimated : ""
@@ -46,7 +31,7 @@ export default function About() {
           />
         </div>
 
-        {/* Text content with CSS animation classes - starts hidden and animates in from right */}
+        {/* Text content - Slides in from right with fade effect */}
         <div
           className={`${styles.textContent} ${
             !prefersReduced ? styles.textContentAnimated : ""

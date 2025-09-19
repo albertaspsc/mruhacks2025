@@ -2,32 +2,17 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
 import styles from "./Welcome.module.css";
+import { usePrefersReducedMotion } from "@/components/hooks/use-prefers-reduced-motion";
 import welcomeImage from "@/assets/graphics/welcome-component.webp";
 
 const Welcome = () => {
-  const [prefersReduced, setPrefersReduced] = useState(false);
-
-  // Detect reduced motion preference for CSS animations
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setPrefersReduced(mq.matches);
-    apply();
-    mq.addEventListener
-      ? mq.addEventListener("change", apply)
-      : mq.addListener(apply);
-    return () => {
-      mq.removeEventListener
-        ? mq.removeEventListener("change", apply)
-        : mq.removeListener(apply);
-    };
-  }, []);
+  const prefersReduced = usePrefersReducedMotion();
 
   return (
     <section className={styles.welcomeSection}>
       <div className={styles.container}>
-        {/* Left Text Section - Animated with CSS */}
+        {/* Left Text Section - Slides in from left with fade effect */}
         <div
           className={`${styles.textContainer} ${
             !prefersReduced ? styles.textContainerAnimated : ""
@@ -41,7 +26,7 @@ const Welcome = () => {
           <p className={styles.eventDate}>
             October 4th - 5th, 2025 | Riddell Library
           </p>
-          {/* Description with separate animation timing */}
+          {/* Description - Slides up from bottom with fade effect */}
           <p
             className={`${styles.description} ${
               !prefersReduced ? styles.descriptionAnimated : ""
@@ -59,7 +44,7 @@ const Welcome = () => {
           </p>
         </div>
 
-        {/* Right Side - Image & Full-Width Button - Animated with CSS */}
+        {/* Right Side - Image & Full-Width Button - Slides in from right with fade effect */}
         <div
           className={`${styles.imageContainer} ${
             !prefersReduced ? styles.imageContainerAnimated : ""
