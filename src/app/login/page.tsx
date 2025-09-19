@@ -36,7 +36,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white pt-[70px] max-[375px]:pt-[60px] max-[320px]:pt-[55px]">
       <div className="space-y-6 w-full max-w-md bg-white border border-gray-200 rounded-3xl px-8 py-10 shadow-lg z-10 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-center text-black mb-2">
           Log In
