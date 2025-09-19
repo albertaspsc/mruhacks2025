@@ -91,10 +91,10 @@ export async function PATCH(request: NextRequest) {
     const participantsWithUni = await db
       .select({
         id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        firstName: users.fName,
+        lastName: users.lName,
         email: users.email,
-        university: universities.university,
+        university: universities.uni,
         status: users.status,
         checkedIn: users.checkedIn,
         registrationDate: users.timestamp,
@@ -112,8 +112,7 @@ export async function PATCH(request: NextRequest) {
       university: p.university,
       status: p.status,
       checkedIn: p.checkedIn,
-      registrationDate:
-        p.registrationDate?.toISOString() || new Date().toISOString(),
+      registrationDate: p.registrationDate || new Date().toISOString(),
     }));
 
     const response = {
@@ -173,8 +172,8 @@ export async function POST(request: NextRequest) {
             deletedCount: participantsToDelete.length,
             deletedParticipants: participantsToDelete.map((p) => ({
               id: p.id,
-              firstName: p.firstName,
-              lastName: p.lastName,
+              firstName: p.fName,
+              lastName: p.lName,
               email: p.email,
             })),
           },
@@ -186,15 +185,15 @@ export async function POST(request: NextRequest) {
         const participantsToExport = await db
           .select({
             id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
+            firstName: users.fName,
+            lastName: users.lName,
             email: users.email,
-            university: universities.university,
+            university: universities.uni,
             status: users.status,
             checked_in: users.checkedIn,
             yearOfStudy: users.yearOfStudy,
             parking: users.parking,
-            previousAttendance: users.previousAttendance,
+            previousAttendance: users.prevAttendance,
             accommodations: users.accommodations,
             registrationDate: users.timestamp,
           })

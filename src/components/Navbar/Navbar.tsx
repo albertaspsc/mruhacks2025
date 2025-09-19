@@ -259,8 +259,14 @@ const Navbar = () => {
             },
           ];
 
+  // Determine navbar background based on route
+  const isUserRoute = pathname.startsWith("/user");
+  const navbarClass = isUserRoute
+    ? `${styles.navbarCustom} ${styles.navbarUser}`
+    : styles.navbarCustom;
+
   return (
-    <nav className={styles.navbarCustom}>
+    <nav className={navbarClass}>
       <div className={styles.navbarContainer}>
         <a
           href={isLanding ? "#register" : isAdmin ? "/admin/dashboard" : "/"}

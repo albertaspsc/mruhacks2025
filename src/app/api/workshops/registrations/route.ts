@@ -3,11 +3,27 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  context: { params: Promise<{}> },
 ) {
+  const { params } = context;
   try {
     const supabase = await createClient(true);
-    const { id: workshopId } = await params;
+    // Try to get workshop id from query string first (e.g. /api/workshops/registrations?workshop=ID)
+    const url = new URL(request.url);
+    let workshopId = url.searchParams.get("workshop") ?? null;
+
+    // Fallback: if invoked via a dynamic route, read id from params
+    if (!workshopId) {
+      const maybeParams = (await params) as Record<string, string> | undefined;
+      workshopId = maybeParams?.id ?? null;
+    }
+
+    if (!workshopId) {
+      return NextResponse.json(
+        { error: "Missing workshop id" },
+        { status: 400 },
+      );
+    }
 
     // Get current user for permission check
     const regularSupabase = await createClient();

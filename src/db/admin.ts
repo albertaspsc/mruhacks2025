@@ -1,7 +1,7 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./drizzle";
-import { admins, profiles as profilesTable, users } from "./schema";
+import { admins, profile as profilesTable, users } from "./schema";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 

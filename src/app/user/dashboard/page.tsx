@@ -1,7 +1,5 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import React, { use } from "react";
+import {} from "@/components/ui/loading-spinner";
 import { Registration, getRegistration } from "@/db/registration";
 import StatusBanner from "@/components/dashboards/common/StatusBanner";
 import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
@@ -9,40 +7,19 @@ import DashboardItem from "@/components/dashboards/common/DashboardItem";
 import Checklist from "@/components/dashboards/checklist/Checklist";
 import InfoCard from "@/components/dashboards/common/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
-
-// Define available views
-type DashboardView = "dashboard" | "settings" | "profile";
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<Registration>();
-  const [currentView, setCurrentView] = useState<DashboardView>("dashboard");
+  const { data: user } = use(getRegistration());
 
-  // Check authentication
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: registration } = await getRegistration();
-        setUser(registration || undefined);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  // Show loading state
-  if (isLoading) {
-    return <LoadingSpinner />;
+  if (!user) {
+    redirect("/register");
   }
 
-  // Render dashboard
   return (
     <div className="flex h-screen bg-gray-50 relative">
       {/* Main Content */}
       <div className="flex-1 overflow-auto min-w-0 flex flex-col">
-        {/* Dashboard Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}
