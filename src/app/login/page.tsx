@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { login, loginWithGoogle } from "./actions";
-import { FcGoogle } from "react-icons/fc";
+import GoogleIcon from "@/assets/icons/google.svg";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -93,7 +93,8 @@ export default function LoginPage() {
           className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 flex items-center justify-center gap-2"
           style={{ color: "#000" }}
         >
-          <FcGoogle size={20} /> Sign in with Google
+          <Image src={GoogleIcon} alt="Google" width={20} height={20} /> Sign in
+          with Google
         </Button>
         <button
           type="button"

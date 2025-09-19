@@ -5,7 +5,6 @@ import Image from "next/image";
 import acurve from "@/assets/sponsors/arcurve_logo.webp";
 import institute from "../../assets/sponsors/Institute.webp";
 import library from "../../assets/sponsors/mrulibrary.webp";
-import arrowIcon from "../../assets/icons/arrow_forward_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg";
 
 export default function Sponsor() {
   const sponsorFormLink =
@@ -41,7 +40,7 @@ export default function Sponsor() {
       <div className={styles["become-sponsor-container"]}>
         <a href={sponsorFormLink} target="_blank" rel="noopener noreferrer">
           <span>Become a sponsor</span>
-          <Image src={arrowIcon} alt="arrow right" />
+          <span style={{ marginLeft: "8px" }}>→</span>
         </a>
         <div className="crt">
           <Image src={crt2} alt="CRT tv mascot" />

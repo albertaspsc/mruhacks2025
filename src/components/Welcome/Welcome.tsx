@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FaArrowRight } from "react-icons/fa";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import styles from "./Welcome.module.css";
 import welcomeImage from "@/assets/graphics/welcome-component.webp";
@@ -79,7 +79,7 @@ const Welcome = () => {
           />
           <a href="/landing" className={styles.ctaButton}>
             <span className={styles.buttonText}>Apply Now</span>
-            <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+            <ArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
             <div className={styles.glareEffect}></div>
           </a>
         </div>
