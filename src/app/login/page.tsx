@@ -42,48 +42,52 @@ export default function LoginPage() {
           Log In
         </h1>
 
-        <div className="w-full">
-          <Label htmlFor="email" className="text-black">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@mtroyal.ca"
-            required
-            className="mt-1 pr-10 text-black"
-          />
-        </div>
-
-        <div className="w-full">
-          <Label htmlFor="password" className="text-black">
-            Password
-          </Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-            className="mt-1 pr-10 text-black"
-          />
-        </div>
-
-        {error && (
-          <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-700 text-sm text-center">{error}</p>
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
+          <div className="w-full">
+            <Label htmlFor="email" className="text-black">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@mtroyal.ca"
+              required
+              autoComplete="email"
+              className="mt-1 pr-10 text-black"
+            />
           </div>
-        )}
 
-        <Button
-          onClick={handleSubmit}
-          className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors disabled:opacity-50"
-        >
-          Log In
-        </Button>
+          <div className="w-full">
+            <Label htmlFor="password" className="text-black">
+              Password
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+              autoComplete="current-password"
+              className="mt-1 pr-10 text-black"
+            />
+          </div>
+
+          {error && (
+            <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-700 text-sm text-center">{error}</p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors disabled:opacity-50"
+          >
+            Log In
+          </Button>
+        </form>
 
         {/* Google Sign In Button */}
 
