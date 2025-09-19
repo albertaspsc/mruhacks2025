@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Trophy, AlertCircle, Loader2 } from "lucide-react";
