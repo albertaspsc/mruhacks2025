@@ -42,24 +42,7 @@ npm run dev
 # open http://localhost:3000
 ```
 
-### 5) Continuous Integration (CI)
-
-The project uses GitHub Actions for automated testing and quality checks. **No setup required** - the CI works out of the box!
-
-#### What happens automatically:
-
-- **On every push** → Tests run automatically
-- **On pull requests** → Quality checks and tests run (must pass to merge)
-- **Tests include** → Unit tests, E2E tests, TypeScript checking, ESLint, Prettier
-
-#### CI Environment:
-
-- **Node.js 20** - Latest LTS version
-- **Supabase CLI** - Manages local database and services
-- **Puppeteer** - For E2E testing
-- **Jest** - For unit testing
-
-#### Local Testing:
+### 5) Testing
 
 ```bash
 # Run all tests
