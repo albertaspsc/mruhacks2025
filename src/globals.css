@@ -17,6 +17,7 @@ body {
   /* Use the CSS variable provided by next/font (class applied to <body>) */
   --heading-font: var(--font-dm-sans), system-ui, sans-serif;
   --body-font: var(--font-dm-sans), system-ui, sans-serif;
+  --popover: 0 0% 100%; /* #ffffff converted to H S L */
 }
 
 /* Apply Global Styles */
