@@ -26,7 +26,7 @@ const Navbar = () => {
 
   // Track active section while scrolling (landing pages only)
   useEffect(() => {
-    const isLanding = pathname === "/" || pathname.startsWith("/landing");
+    const isLanding = pathname === "/" || pathname.startsWith("/login-gateway");
     if (!isLanding) return;
 
     const handleScroll = () => {
@@ -85,7 +85,7 @@ const Navbar = () => {
   const isActive = (sectionId: string) => activeSection === sectionId;
 
   // Determine navbar configuration based on route
-  const isLanding = pathname === "/" || pathname.startsWith("/landing");
+  const isLanding = pathname === "/" || pathname.startsWith("/login-gateway");
   const isUser = pathname.startsWith("/user");
   const isAdmin =
     pathname.startsWith("/admin") &&

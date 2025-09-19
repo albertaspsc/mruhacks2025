@@ -5,7 +5,7 @@ import mascot from "@/assets/mascots/crt.svg";
 import logo from "@/assets/logos/color-logo.svg";
 import { Button } from "@/components/ui/button";
 
-export default function LandingPage() {
+export default function LoginGateway() {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-fuchsia-50 to-amber-50 relative overflow-hidden">

@@ -1,10 +1,10 @@
 import React from "react";
 import styles from "./Sponsor.module.scss";
-import crt2 from "../../assets/mascots/crt2.svg";
+import crt2 from "../../../assets/mascots/crt2.svg";
 import Image from "next/image";
 import acurve from "@/assets/sponsors/arcurve_logo.webp";
-import institute from "../../assets/sponsors/Institute.webp";
-import library from "../../assets/sponsors/mrulibrary.webp";
+import institute from "../../../assets/sponsors/Institute.webp";
+import library from "../../../assets/sponsors/mrulibrary.webp";
 
 export default function Sponsor() {
   const sponsorFormLink =

@@ -13,7 +13,7 @@ import {
 } from "./CarouselArrowButtons";
 import Autoplay from "embla-carousel-autoplay";
 import useCarousel, { UseEmblaCarouselType } from "embla-carousel-react";
-import TeamMemberCard, { MemberData } from "../Cards/TeamMemberCard";
+import TeamMemberCard, { MemberData } from "../cards/TeamMemberCard";
 import styles from "./carousel.module.css";
 import { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 

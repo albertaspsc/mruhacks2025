@@ -6,10 +6,10 @@ import logo from "@/assets/logos/black-white-logo.svg";
 import MRUHacksCountdown from "./countdown/MRUHacksCountdown";
 import { DeferredGradientBackground } from "./background/DeferredGradientBackground";
 
-const RegisterSection = () => {
+const HeroSection = () => {
   return (
     <section
-      id="register"
+      id="hero"
       className="flex flex-col items-center justify-center w-full h-[90vh] mx-auto p-0 md:min-h-screen"
     >
       <div className="absolute top-0 left-0 right-0 w-full h-screen -z-10">
@@ -37,7 +37,7 @@ const RegisterSection = () => {
 
         <div className="m-4 flex justify-center">
           <a
-            href="/landing"
+            href="/login-gateway"
             className="inline-block px-8 py-2 md:px-12 md:py-4 text-base md:text-xl font-semibold uppercase tracking-wider text-black bg-white border-0 rounded-full cursor-pointer transition-all duration-300 no-underline hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/75 active:translate-y-0"
             style={{ boxShadow: "0 4px 15px rgb(255, 255, 255)" }}
           >
@@ -53,4 +53,4 @@ const RegisterSection = () => {
   );
 };
 
-export default RegisterSection;
+export default HeroSection;

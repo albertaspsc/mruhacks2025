@@ -77,7 +77,7 @@ const Welcome = () => {
               objectFit: "cover",
             }}
           />
-          <a href="/landing" className={styles.ctaButton}>
+          <a href="/login-gateway" className={styles.ctaButton}>
             <span className={styles.buttonText}>Apply Now</span>
             <ArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
             <div className={styles.glareEffect}></div>
