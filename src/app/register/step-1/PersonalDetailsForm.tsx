@@ -228,20 +228,11 @@ export default function PersonalDetailsForm({
               </FormLabel>
               <FormControl>
                 <Input
-                  list="university-list"
-                  placeholder="Select or type your institution"
+                  placeholder="Enter your institution"
                   {...field}
                   className="mt-1 pr-10 text-black"
                 />
               </FormControl>
-              <datalist id="university-list">
-                {universities.map((u) => (
-                  <option key={u} value={u} />
-                ))}
-              </datalist>
-              <p className="text-sm text-muted-foreground">
-                You can type any Canadian university or select from suggestions.
-              </p>
               <FormMessage />
             </FormItem>
           )}
@@ -257,17 +248,11 @@ export default function PersonalDetailsForm({
               </FormLabel>
               <FormControl>
                 <Input
-                  list="major-list"
-                  placeholder="Select or type your major"
+                  placeholder="Enter your major"
                   {...field}
                   className="mt-1 pr-10 text-black"
                 />
               </FormControl>
-              <datalist id="major-list">
-                {majors.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
               <FormMessage />
             </FormItem>
           )}
