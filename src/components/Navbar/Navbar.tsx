@@ -5,14 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
 import logo from "@/assets/logos/color-logo.svg";
 import NavbarItem from "./NavbarItem";
-import { createClient } from "@/utils/supabase/client";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
 
   useEffect(() => {
     if (isOpen) {
@@ -21,7 +19,6 @@ const Navbar = () => {
       document.body.classList.remove("menu-open");
     }
 
-    // Cleanup on component unmount
     return () => {
       document.body.classList.remove("menu-open");
     };
@@ -29,7 +26,7 @@ const Navbar = () => {
 
   // Track active section while scrolling (landing pages only)
   useEffect(() => {
-    const isLanding = pathname === "/" || pathname.startsWith("/landing");
+    const isLanding = pathname === "/" || pathname.startsWith("/login-gateway");
     if (!isLanding) return;
 
     const handleScroll = () => {
@@ -68,16 +65,14 @@ const Navbar = () => {
     event: React.MouseEvent<HTMLAnchorElement>,
   ) => {
     event.preventDefault();
-    setIsOpen(false); // Close the mobile menu
+    setIsOpen(false);
 
     const section = document.getElementById(sectionId);
     if (section) {
-      // Get the navbar height to offset the scroll position
       const navbar = document.querySelector<HTMLElement>(
         `.${styles.navbarCustom}`,
       );
       const navbarHeight = navbar ? navbar.offsetHeight : 0;
-
       const offsetTop = section.offsetTop - navbarHeight;
 
       window.scrollTo({
@@ -87,27 +82,19 @@ const Navbar = () => {
     }
   };
 
-  // Determines if a section is active
   const isActive = (sectionId: string) => activeSection === sectionId;
 
-  // Admin logout function
-  const handleAdminLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      router.push("/admin-login-portal");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
-  // Build items based on current route
-  const isLanding = pathname === "/" || pathname.startsWith("/landing");
+  // Determine navbar configuration based on route
+  const isLanding = pathname === "/" || pathname.startsWith("/login-gateway");
+  const isUser = pathname.startsWith("/user");
   const isAdmin =
     pathname.startsWith("/admin") &&
     !pathname.startsWith("/admin-login-portal");
 
-  const navItems = isLanding
-    ? [
+  // Get navbar items based on route
+  const getNavItems = () => {
+    if (isLanding) {
+      return [
         {
           key: "about",
           label: "About",
@@ -153,137 +140,160 @@ const Navbar = () => {
             router.push("/login");
           },
         },
-      ]
-    : pathname.startsWith("/user")
-      ? [
-          {
-            key: "user-dashboard",
-            label: "Dashboard",
-            href: "/user/dashboard",
-            isActive: pathname.startsWith("/user/dashboard"),
-            variant: "link" as const,
-            onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              setIsOpen(false);
-              router.push("/user/dashboard");
-            },
-          },
-          {
-            key: "user-profile",
-            label: "Profile",
-            href: "/user/profile",
-            isActive: pathname.startsWith("/user/profile"),
-            variant: "link" as const,
-            onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              setIsOpen(false);
-              router.push("/user/profile");
-            },
-          },
-          {
-            key: "user-settings",
-            label: "Settings",
-            href: "/user/settings",
-            isActive: pathname.startsWith("/user/settings"),
-            variant: "link" as const,
-            onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.preventDefault();
-              setIsOpen(false);
-              router.push("/user/settings");
-            },
-          },
-          {
-            key: "user-logout",
-            label: "Logout",
-            variant: "button" as const,
-            onClick: () => {
-              setIsOpen(false);
-              window.location.href = "/auth/logout?next=/";
-            },
-          },
-        ]
-      : isAdmin
-        ? [
-            {
-              key: "admin-participants",
-              label: "Participants",
-              href: "/admin/dashboard?tab=participants",
-              isActive:
-                pathname.startsWith("/admin/dashboard") &&
-                (pathname.includes("participants") ||
-                  !pathname.includes("tab=")),
-              variant: "link" as const,
-              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-                setIsOpen(false);
-                router.push("/admin/dashboard?tab=participants");
-              },
-            },
-            {
-              key: "admin-workshops",
-              label: "Workshops",
-              href: "/admin/dashboard?tab=workshops",
-              isActive:
-                pathname.includes("workshop") ||
-                (pathname.startsWith("/admin/dashboard") &&
-                  pathname.includes("workshops")),
-              variant: "link" as const,
-              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-                setIsOpen(false);
-                router.push("/admin/dashboard?tab=workshops");
-              },
-            },
-            {
-              key: "admin-logout",
-              label: "Logout",
-              variant: "button" as const,
-              onClick: () => {
-                setIsOpen(false);
-                handleAdminLogout();
-              },
-            },
-          ]
-        : [
-            {
-              key: "home",
-              label: "Home",
-              href: "/",
-              isActive: pathname === "/",
-              variant: "link" as const,
-              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-                setIsOpen(false);
-                router.push("/");
-              },
-            },
-          ];
+      ];
+    }
 
-  // Determine navbar background based on route
-  const isUserRoute = pathname.startsWith("/user");
-  const navbarClass = isUserRoute
+    if (isUser) {
+      return [
+        {
+          key: "user-dashboard",
+          label: "Dashboard",
+          href: "/user/dashboard",
+          isActive: pathname.startsWith("/user/dashboard"),
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/user/dashboard");
+          },
+        },
+        {
+          key: "user-profile",
+          label: "Profile",
+          href: "/user/profile",
+          isActive: pathname.startsWith("/user/profile"),
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/user/profile");
+          },
+        },
+        {
+          key: "user-settings",
+          label: "Settings",
+          href: "/user/settings",
+          isActive: pathname.startsWith("/user/settings"),
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/user/settings");
+          },
+        },
+        {
+          key: "user-home",
+          label: "Home",
+          href: "/",
+          isActive: pathname === "/",
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/");
+          },
+        },
+      ];
+    }
+
+    if (isAdmin) {
+      return [
+        {
+          key: "admin-participants",
+          label: "Participants",
+          href: "/admin/dashboard?tab=participants",
+          isActive:
+            pathname.startsWith("/admin/dashboard") &&
+            (pathname.includes("participants") || !pathname.includes("tab=")),
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/admin/dashboard?tab=participants");
+          },
+        },
+        {
+          key: "admin-workshops",
+          label: "Workshops",
+          href: "/admin/dashboard?tab=workshops",
+          isActive:
+            pathname.includes("workshop") ||
+            (pathname.startsWith("/admin/dashboard") &&
+              pathname.includes("workshops")),
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/admin/dashboard?tab=workshops");
+          },
+        },
+        {
+          key: "admin-home",
+          label: "Home",
+          href: "/",
+          isActive: pathname === "/",
+          variant: "link" as const,
+          onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault();
+            setIsOpen(false);
+            router.push("/");
+          },
+        },
+      ];
+    }
+
+    // Default navbar
+    return [
+      {
+        key: "home",
+        label: "Home",
+        href: "/",
+        isActive: pathname === "/",
+        variant: "link" as const,
+        onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+          e.preventDefault();
+          setIsOpen(false);
+          router.push("/");
+        },
+      },
+    ];
+  };
+
+  const navItems = getNavItems();
+
+  // Determine navbar styling based on route
+  const navbarClass = isUser
     ? `${styles.navbarCustom} ${styles.navbarUser}`
     : styles.navbarCustom;
+
+  // Get brand link behavior
+  const getBrandLink = () => {
+    if (isLanding) return "#register";
+    if (isAdmin) return "/admin/dashboard";
+    return "/";
+  };
+
+  const handleBrandClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isLanding) {
+      scrollToSection("register", e);
+    } else {
+      e.preventDefault();
+      setIsOpen(false);
+      if (isAdmin) {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/");
+      }
+    }
+  };
 
   return (
     <nav className={navbarClass}>
       <div className={styles.navbarContainer}>
         <a
-          href={isLanding ? "#register" : isAdmin ? "/admin/dashboard" : "/"}
+          href={getBrandLink()}
           className={styles.navbarBrand}
-          onClick={(e) => {
-            if (isLanding) {
-              scrollToSection("register", e);
-            } else {
-              e.preventDefault();
-              setIsOpen(false);
-              if (isAdmin) {
-                router.push("/admin/dashboard");
-              } else {
-                router.push("/");
-              }
-            }
-          }}
+          onClick={handleBrandClick}
         >
           <Image
             src={logo}

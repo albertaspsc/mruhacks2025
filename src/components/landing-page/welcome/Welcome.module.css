@@ -1,0 +1,331 @@
+/* Main Section */
+.welcomeSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 5%;
+  color: black;
+  text-align: left; /* Changed from center */
+}
+
+/* Grid Layout */
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 1300px;
+  gap: 50px;
+}
+
+/*Text Section */
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Changed from center to left-align items */
+  width: 100%;
+}
+
+/* Main Heading */
+.mainHeading {
+  font-size: 3.75rem;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 10px;
+  line-height: 1.1;
+  text-align: left;
+  width: 100%; /* Ensure full width */
+}
+
+/* Highlighted 'MRUHacks' */
+.highlight {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #000;
+  text-align: left;
+  width: 100%; /* Ensure full width */
+}
+
+/* Subheading */
+.subHeading {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  text-align: left;
+  width: 100%; /* Ensure full width */
+}
+
+/* Event Date */
+.eventDate {
+  font-size: 1.2rem;
+  color: #777;
+  margin-bottom: 16px;
+  text-align: left;
+  width: 100%; /* Ensure full width */
+}
+
+/* Description */
+.description {
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.8;
+  width: 100%; /* Changed from 90% to full width */
+  max-width: 600px;
+  text-align: left;
+  margin: 0; /* Remove auto margin */
+}
+
+/* Call-To-Action Button */
+.ctaButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 32px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background-color: black;
+  color: white;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgb(0, 0, 0);
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.ctaButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(187, 91, 228, 0.75);
+}
+
+.ctaButton:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(255, 255, 255, 0.4); /* Slight reduction in glow when pressed */
+}
+
+.buttonText {
+  margin-right: 12px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Changed from center */
+    justify-content: center;
+    text-align: left;
+    gap: 30px;
+    width: 100%;
+    padding: 15px 3%; /* Reduced side padding */
+  }
+
+  .textContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Changed from center */
+    justify-content: center;
+    text-align: left;
+    width: 100%;
+    padding: 0 3%; /* Reduced side padding */
+  }
+
+  .mainHeading {
+    text-align: left;
+  }
+
+  .description {
+    text-align: left;
+    max-width: 100%;
+    width: 100%;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0; /* Remove any auto margin */
+  }
+}
+
+@media (min-width: 385px) and (max-width: 400px) {
+  .container {
+    padding: 15px 2%; /* Further reduced padding */
+    align-items: flex-start; /* Ensure left alignment */
+  }
+
+  .textContainer {
+    padding: 0 2%; /* Further reduced padding */
+    align-items: flex-start; /* Ensure left alignment */
+  }
+
+  .mainHeading {
+    text-align: left;
+  }
+
+  .description {
+    max-width: 100%;
+    width: 100%;
+    font-size: 1rem;
+    margin: 0; /* Remove any auto margin */
+    padding: 0;
+  }
+}
+
+@media (min-width: 385px) and (max-width: 430px) {
+  .mainHeading {
+    font-size: 2.2rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .highlight {
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+
+  .subHeading {
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+  }
+
+  .eventDate {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+
+  .description {
+    font-size: 0.95rem;
+  }
+
+  .container {
+    gap: 25px;
+    padding: 15px 2%;
+  }
+}
+
+/* Ultra-Mobile Optimization for <385px */
+@media (max-width: 384px) {
+  .container {
+    align-items: flex-start; /* Ensure left alignment */
+    padding: 10px 2%;
+  }
+
+  .mainHeading {
+    font-size: 1.5rem;
+  }
+
+  .highlight {
+    font-size: 1.8rem;
+  }
+
+  .subHeading {
+    font-size: 1.3rem;
+  }
+
+  .textContainer {
+    align-items: flex-start; /* Ensure left alignment */
+    text-align: left;
+    padding: 0 2%;
+  }
+
+  .description {
+    text-align: left;
+    max-width: 100%;
+    width: 100%;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0; /* Remove any auto margin */
+    padding: 0;
+  }
+}
+
+/* Keyframe animations for fade and slide effects */
+@keyframes fadeInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation classes for text container (left side) */
+.textContainerAnimated {
+  animation: fadeInFromLeft 1.15s ease-out 0.8s both;
+}
+
+/* Animation classes for image container (right side) */
+.imageContainerAnimated {
+  animation: fadeInFromRight 1.15s ease-out 1s both;
+}
+
+/* Animation class for description text with delay */
+.descriptionAnimated {
+  animation: fadeInFromBottom 0.95s ease-out 1.2s both;
+}
+
+/* Image container styling (needed for the right side) */
+.imageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Glare effect for button */
+.glareEffect {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.ctaButton:hover .glareEffect {
+  left: 100%;
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .textContainerAnimated,
+  .imageContainerAnimated,
+  .descriptionAnimated {
+    animation: none;
+  }
+}
