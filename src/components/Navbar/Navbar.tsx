@@ -285,7 +285,13 @@ const Navbar = () => {
             }
           }}
         >
-          <Image src={logo} alt="Logo" width={120} height={40} />
+          <Image
+            src={logo}
+            alt="Logo"
+            width={120}
+            height={40}
+            style={{ width: "auto", height: "40px" }}
+          />
         </a>
 
         <button

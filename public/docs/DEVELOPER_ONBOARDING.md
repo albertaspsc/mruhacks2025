@@ -42,6 +42,28 @@ npm run dev
 # open http://localhost:3000
 ```
 
+### 5) Testing
+
+```bash
+# Run all tests
+npm run test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only E2E tests
+npm run test:e2e
+
+# Run tests in watch mode
+npm run test:watch
+
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+```
+
 ### Troubleshooting
 
 - "Cannot connect to the Docker daemon": Start Docker Desktop and re-run `supabase start`.

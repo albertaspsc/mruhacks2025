@@ -81,16 +81,11 @@ INSERT INTO "public"."majors" ("major") VALUES
 
 -- Marketing Types
 INSERT INTO "public"."marketing_types" ("marketing") VALUES 
-('Social Media'), 
-('University Website'), 
-('Word of Mouth'), 
 ('Poster'), 
-('Email'),
+('Social Media'), 
+('Word of Mouth'), 
 ('Website/Googling it'), 
 ('Attended the event before'), 
-('Student Organization'),
-('Professor/Instructor'),
-('Career Services'),
 ('Other');
 
 -- Universities
