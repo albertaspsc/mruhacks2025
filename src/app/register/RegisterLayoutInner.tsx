@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import ProgressBar from "@/components/Register/ProgressBar";
+import logo from "@/assets/logos/color-logo.svg";
 
 export default function RegisterLayoutInner({
   children,
@@ -26,7 +27,7 @@ export default function RegisterLayoutInner({
       <div className="space-y-6 w-full max-w-md bg-white border border-gray-200 rounded-3xl px-8 py-10 shadow-lg z-10 flex flex-col items-center">
         <div className="flex justify-center">
           <Image
-            src="/color-logo.svg"
+            src={logo}
             alt="MRUHacks Logo"
             width={200}
             height={60}

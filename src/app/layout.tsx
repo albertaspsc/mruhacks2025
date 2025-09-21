@@ -1,15 +1,14 @@
 import { DM_Sans } from "next/font/google";
-import "@/assets/styles/globals.css";
-import React from "react";
+import "@/globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  style: ["normal", "italic"],
   variable: "--font-dm-sans",
+  display: "swap",
+  // preload defaults to true; with a single variable font that's fine.
 });
 
 export const metadata = {
@@ -31,7 +30,6 @@ export const metadata = {
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon-16x16.png", sizes: "16x16" },
       { url: "/favicon-32x32.png", sizes: "32x32" },
-      { url: "/favicon-96x96.png", sizes: "96x96" },
     ],
     apple: { url: "/apple-icon.png", sizes: "180x180" },
   },

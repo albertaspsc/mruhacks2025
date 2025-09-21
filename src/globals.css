@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Root Variables */
+:root {
+  --background-color: #fcfbf4;
+  --text-color: #000000;
+  /* Use the CSS variable provided by next/font (class applied to <body>) */
+  --heading-font: var(--font-dm-sans), system-ui, sans-serif;
+  --body-font: var(--font-dm-sans), system-ui, sans-serif;
+  --popover: 0 0% 100%; /* #ffffff converted to H S L */
+}
+
+/* Apply Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+/* Set Background and Font */
+body {
+  font-family: var(--body-font);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  padding: 0;
+  margin: 0;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--heading-font);
+  font-weight: 700; /* Bold */
+  color: var(--text-color);
+}
+
+/* Paragraphs */
+p {
+  font-family: var(--body-font);
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+/* Sections */
+section {
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Container */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
