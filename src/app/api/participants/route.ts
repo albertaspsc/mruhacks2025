@@ -28,8 +28,7 @@ export const GET = withApiAuth(
           .from(users)
           .leftJoin(gender, eq(users.gender, gender.id))
           .leftJoin(universities, eq(users.university, universities.id))
-          .orderBy(desc(users.timestamp))
-          .limit(100);
+          .orderBy(desc(users.timestamp));
 
         const transformedParticipants = participants.map((participant) => ({
           id: participant.id,
@@ -69,8 +68,7 @@ export const GET = withApiAuth(
         .leftJoin(universities, eq(users.university, universities.id))
         .leftJoin(majors, eq(users.major, majors.id))
         .leftJoin(experienceTypes, eq(users.experience, experienceTypes.id))
-        .orderBy(desc(users.timestamp))
-        .limit(100);
+        .orderBy(desc(users.timestamp));
 
       const transformedParticipants = participants.map((participant) => ({
         id: participant.id,
