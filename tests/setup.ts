@@ -49,8 +49,8 @@ jest.mock("@/utils/supabase/server", () => ({
 }));
 
 // Mock database functions
-jest.mock("@/db/registration", () => ({
-  getRegistration: jest.fn(),
+jest.mock("@/actions/registration-actions", () => ({
+  getRegistrationDataAction: jest.fn(),
 }));
 
 // E2E Test Setup

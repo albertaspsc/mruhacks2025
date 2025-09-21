@@ -1111,7 +1111,7 @@ export const profile = pgTable(
     fName: varchar("f_name", { length: 255 }),
     lName: varchar("l_name", { length: 255 }),
     marketingEmails: boolean("marketing_emails").default(false),
-    parking: varchar({ length: 10 }).default("Not sure"),
+    parking: parkingState().default("Not sure"),
     licensePlate: varchar("license_plate", { length: 20 }),
     pendingEmail: text("pending_email"),
     emailChangeRequestedAt: timestamp("email_change_requested_at", {
@@ -1160,10 +1160,6 @@ export const profile = pgTable(
       for: "select",
       to: ["authenticated"],
     }),
-    check(
-      "profile_parking_check",
-      sql`(parking)::text = ANY (ARRAY[('Yes'::character varying)::text, ('No'::character varying)::text, ('Not sure'::character varying)::text])`,
-    ),
   ],
 );
 

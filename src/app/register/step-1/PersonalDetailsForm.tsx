@@ -23,31 +23,27 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useRegisterForm } from "@/context/RegisterFormContext"; // keep your context for cross-step persistence
-import { RegistrationSchema } from "@/context/RegisterFormContext"; // uses your existing enum for yearOfStudy
+import { useRegisterForm } from "@/context/RegisterFormContext";
+import {
+  PersonalDetailsSchema,
+  PersonalDetailsInput,
+} from "@/types/registration";
 
 type Props = {
   initial: { email: string; firstName: string; lastName: string };
-  genders: { id: number; label: string }[];
-  majors: string[];
-  universities: string[];
+  genders: { id: number; gender: string }[];
+  majors: { id: number; major: string }[];
+  universities: { id: number; uni: string }[];
 };
 
-// Schema (client-side)
-const PersonalSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+// Use shared schema with additional form-specific fields
+const PersonalFormSchema = PersonalDetailsSchema.extend({
   previousAttendance: z.enum(["true", "false"], {
     required_error: "Please answer this question",
   }),
-  gender: z.string().min(1, "Please select gender"),
-  university: z.string().min(1, "Institution is required"),
-  major: z.string().min(1, "Major is required"),
-  yearOfStudy: RegistrationSchema.shape.yearOfStudy, // reuse your enum
 });
 
-type PersonalForm = z.infer<typeof PersonalSchema>;
+type PersonalForm = z.infer<typeof PersonalFormSchema>;
 
 export default function PersonalDetailsForm({
   initial,
@@ -68,15 +64,15 @@ export default function PersonalDetailsForm({
         ? "true"
         : data.previousAttendance === false
           ? "false"
-          : ("" as any),
-    gender: (data.gender ? String(data.gender) : "") as string,
-    university: data.university || "",
-    major: data.major || "",
+          : undefined,
+    gender: data.gender || 0,
+    university: data.university || 0,
+    major: data.major || 0,
     yearOfStudy: (data.yearOfStudy as PersonalForm["yearOfStudy"]) || undefined,
   };
 
   const form = useForm<PersonalForm>({
-    resolver: zodResolver(PersonalSchema),
+    resolver: zodResolver(PersonalFormSchema),
     defaultValues: defaults,
     mode: "onBlur",
   });
@@ -91,9 +87,9 @@ export default function PersonalDetailsForm({
         firstName: current.firstName ?? "",
         lastName: current.lastName ?? "",
         previousAttendance: current.previousAttendance === "true",
-        gender: current.gender || undefined,
-        university: current.university ?? "",
-        major: current.major ?? "",
+        gender: current.gender || 0,
+        university: current.university || 0,
+        major: current.major || 0,
         yearOfStudy: current.yearOfStudy,
       });
     });
@@ -107,7 +103,7 @@ export default function PersonalDetailsForm({
       ...data,
       ...values,
       previousAttendance: values.previousAttendance === "true",
-      gender: values.gender || undefined,
+      gender: values.gender || 0,
     });
     router.push("/register/step-2");
   };
@@ -198,7 +194,10 @@ export default function PersonalDetailsForm({
               <FormLabel className="text-black">
                 Gender <span className="text-destructive">*</span>
               </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value?.toString()}
+                onValueChange={(value) => field.onChange(parseInt(value))}
+              >
                 <FormControl>
                   <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
                     <SelectValue placeholder="Select gender" />
@@ -206,8 +205,8 @@ export default function PersonalDetailsForm({
                 </FormControl>
                 <SelectContent>
                   {genders.map((g) => (
-                    <SelectItem key={g.id} value={g.label}>
-                      {g.label}
+                    <SelectItem key={g.id} value={g.id.toString()}>
+                      {g.gender}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,13 +225,23 @@ export default function PersonalDetailsForm({
                 University / Institution{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your institution"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
+              <Select
+                value={field.value?.toString()}
+                onValueChange={(value) => field.onChange(parseInt(value))}
+              >
+                <FormControl>
+                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                    <SelectValue placeholder="Select your institution" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {universities.map((u) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.uni}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -246,13 +255,23 @@ export default function PersonalDetailsForm({
               <FormLabel className="text-black">
                 Major / Program <span className="text-destructive">*</span>
               </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your major"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
+              <Select
+                value={field.value?.toString()}
+                onValueChange={(value) => field.onChange(parseInt(value))}
+              >
+                <FormControl>
+                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                    <SelectValue placeholder="Select your major" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {majors.map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.major}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -274,13 +293,11 @@ export default function PersonalDetailsForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
-                    (x) => (
-                      <SelectItem key={x} value={x}>
-                        {x}
-                      </SelectItem>
-                    ),
-                  )}
+                  {["1st", "2nd", "3rd", "4th+", "Recent Grad"].map((x) => (
+                    <SelectItem key={x} value={x}>
+                      {x}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

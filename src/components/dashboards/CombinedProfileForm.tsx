@@ -1,0 +1,870 @@
+"use client";
+
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { redirect } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Mail } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { createClient } from "@/utils/supabase/client";
+import { z } from "zod";
+import { updateUserNameAndEmail, updateUserNameOnly } from "@/db/settings";
+import { bulkUpdateProfileAction } from "@/actions/profile-actions";
+import {
+  ToastBanner,
+  ToastState,
+  ToastType,
+} from "@/components/dashboards/toast/Toast";
+
+type ParkingState = import("@/types/registration").ParkingState;
+type YearOfStudy = import("@/types/registration").YearOfStudy;
+
+// Combined validation schema
+const combinedProfileSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be less than 50 characters"),
+  lastName: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  gender: z.number().min(1, "Gender is required"),
+  university: z.number().min(1, "University is required"),
+  major: z.number().min(1, "Major is required"),
+  yearOfStudy: z.enum(["1st", "2nd", "3rd", "4th+", "Recent Grad"]),
+  previousAttendance: z.boolean(),
+  experience: z.number().min(1, "Experience level is required"),
+  interests: z
+    .array(z.number())
+    .min(1, "Please select at least one interest")
+    .max(3, "Maximum 3 interests allowed"),
+  dietaryRestrictions: z.array(z.number()),
+  accommodations: z.string(),
+  parking: z.enum(["Yes", "No", "Not sure"]),
+  marketing: z.number().min(1, "Marketing source is required"),
+  resume: z.string(),
+});
+
+type CombinedProfileValues = z.infer<typeof combinedProfileSchema>;
+
+type FormOptions = {
+  genders: { id: number; gender: string }[];
+  universities: { id: number; uni: string }[];
+  majors: { id: number; major: string }[];
+  interests: { id: number; interest: string }[];
+  dietaryRestrictions: { id: number; restriction: string }[];
+  marketingTypes: { id: number; marketing: string }[];
+};
+
+interface CombinedProfileFormProps {
+  initialData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    gender: number;
+    university: number;
+    major: number;
+    yearOfStudy: YearOfStudy;
+    previousAttendance: boolean;
+    experience: number;
+    interests: number[];
+    dietaryRestrictions: number[];
+    accommodations: string;
+    parking: ParkingState;
+    marketing: number;
+    resume: string;
+  };
+  formOptions: FormOptions;
+}
+
+export default function CombinedProfileForm({
+  initialData,
+  formOptions,
+}: CombinedProfileFormProps) {
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [resumeUploading, setResumeUploading] = React.useState(false);
+  const [resumeUploadError, setResumeUploadError] = React.useState("");
+  const [toast, setToast] = React.useState<ToastState | null>(null);
+  const [emailVerificationSent, setEmailVerificationSent] =
+    React.useState(false);
+  const [currentUserData, setCurrentUserData] = React.useState({
+    firstName: initialData.firstName,
+    lastName: initialData.lastName,
+    email: initialData.email,
+  });
+  const supabase = createClient();
+
+  const form = useForm<CombinedProfileValues>({
+    defaultValues: initialData,
+    mode: "onChange",
+  });
+
+  const showToast = (type: ToastType, title: string, description?: string) => {
+    setToast({ type, title, description });
+  };
+
+  async function uploadResume(file: File): Promise<string | null> {
+    try {
+      setResumeUploading(true);
+      setResumeUploadError("");
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/resume", { method: "POST", body: fd });
+      if (!res.ok) {
+        const text = await res.text();
+        setResumeUploadError(text || "Upload failed");
+        return null;
+      }
+      const { publicUrl } = (await res.json()) as { publicUrl: string };
+      return publicUrl;
+    } catch (e) {
+      setResumeUploadError("Upload failed unexpectedly");
+      return null;
+    } finally {
+      setResumeUploading(false);
+    }
+  }
+
+  async function onSubmit(values: CombinedProfileValues) {
+    const validation = combinedProfileSchema.safeParse(values);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      showToast("error", "Validation Error", firstError.message);
+      return;
+    }
+
+    setIsSaving(true);
+    setEmailVerificationSent(false);
+
+    try {
+      const emailChanged = values.email !== currentUserData.email;
+      const nameChanged =
+        values.firstName !== currentUserData.firstName ||
+        values.lastName !== currentUserData.lastName;
+
+      // Handle name changes
+      if (nameChanged) {
+        console.log("Updating name:", {
+          firstName: values.firstName,
+          lastName: values.lastName,
+        });
+
+        const { error: nameUpdateError } = await updateUserNameOnly({
+          firstName: values.firstName,
+          lastName: values.lastName,
+        });
+
+        if (nameUpdateError) {
+          console.error("Name update error:", nameUpdateError);
+          throw new Error("Failed to update name information");
+        }
+
+        // Update local state immediately for name changes
+        setCurrentUserData((prev) => ({
+          ...prev,
+          firstName: values.firstName,
+          lastName: values.lastName,
+        }));
+      }
+
+      // Handle email change (requires verification)
+      if (emailChanged) {
+        console.log(
+          "Updating email from",
+          currentUserData.email,
+          "to",
+          values.email,
+        );
+
+        const { error: emailUpdateError } = await supabase.auth.updateUser({
+          email: values.email,
+        });
+
+        if (emailUpdateError) {
+          console.error("Supabase auth email update error:", emailUpdateError);
+
+          if (emailUpdateError.message.includes("rate limit")) {
+            showToast(
+              "error",
+              "Too many requests",
+              "Please wait a moment before trying again.",
+            );
+            return;
+          }
+
+          if (emailUpdateError.message.includes("already registered")) {
+            showToast(
+              "error",
+              "Email already in use",
+              "This email is already associated with another account.",
+            );
+            return;
+          }
+
+          throw new Error(emailUpdateError.message || "Failed to update email");
+        }
+
+        try {
+          const result = await updateUserNameAndEmail({
+            email: values.email,
+          });
+
+          if (result.error) {
+            console.error("Failed to store pending email:", result.error);
+            console.warn("Continuing despite pending email storage failure");
+          } else {
+            console.log("Pending email stored successfully");
+          }
+        } catch (pendingEmailError) {
+          console.error(
+            "Exception while storing pending email:",
+            pendingEmailError,
+          );
+        }
+
+        setEmailVerificationSent(true);
+      }
+
+      // Update registration data using bulk update
+      const result = await bulkUpdateProfileAction({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        gender: values.gender,
+        university: values.university,
+        major: values.major,
+        yearOfStudy: values.yearOfStudy,
+        previousAttendance: values.previousAttendance,
+        experience: values.experience,
+        interests: values.interests,
+        dietaryRestrictions: values.dietaryRestrictions,
+        accommodations: values.accommodations,
+        parking: values.parking,
+        marketing: values.marketing,
+        resume: values.resume,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update registration data");
+      }
+
+      // Show appropriate success message
+      if (emailChanged && nameChanged) {
+        showToast(
+          "info",
+          "Updates saved",
+          `Profile and registration updated successfully. Please check ${values.email} for email verification.`,
+        );
+      } else if (emailChanged) {
+        showToast(
+          "info",
+          "Verification email sent",
+          `Profile updated successfully. Please check ${values.email} and click the verification link to confirm your new email address.`,
+        );
+      } else if (nameChanged) {
+        showToast(
+          "success",
+          "Profile updated",
+          "Your profile and registration information has been updated successfully.",
+        );
+      } else {
+        showToast(
+          "success",
+          "Profile updated",
+          "Your registration information has been updated successfully.",
+        );
+      }
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+
+      if (error.message?.includes("session")) {
+        showToast(
+          "error",
+          "Session expired",
+          "Please log in again to continue.",
+        );
+        setTimeout(() => redirect("/login"), 2000);
+        return;
+      }
+
+      showToast(
+        "error",
+        "Update failed",
+        error.message || "Failed to update your profile. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <ToastBanner toast={toast} onClose={() => setToast(null)} />
+
+      {emailVerificationSent && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Mail className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800">
+            Email verification sent
+          </AlertTitle>
+          <AlertDescription className="text-blue-700">
+            We&apos;ve sent a verification email to your new address. Please
+            check your inbox and click the verification link to confirm the
+            change.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile & Registration Information</CardTitle>
+          <CardDescription>
+            Update your personal details and registration information. Email
+            changes require verification.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Basic Profile Information */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your first name"
+                            {...field}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your last name"
+                            {...field}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your email address"
+                          type="email"
+                          {...field}
+                          disabled={isSaving}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        This email is used for login and all communications.
+                        Changing it will require email verification.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Academic Information */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Academic Information</h3>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender *</FormLabel>
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(v) => field.onChange(parseInt(v))}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            {formOptions.genders.map((g) => (
+                              <SelectItem key={g.id} value={String(g.id)}>
+                                {g.gender}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="university"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>University *</FormLabel>
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(v) => field.onChange(parseInt(v))}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            {formOptions.universities.map((u) => (
+                              <SelectItem key={u.id} value={String(u.id)}>
+                                {u.uni}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="major"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Major *</FormLabel>
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(v) => field.onChange(parseInt(v))}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            {formOptions.majors.map((m) => (
+                              <SelectItem key={m.id} value={String(m.id)}>
+                                {m.major}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="yearOfStudy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year of Study *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select year" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            {(
+                              [
+                                "1st",
+                                "2nd",
+                                "3rd",
+                                "4th+",
+                                "Recent Grad",
+                              ] as const
+                            ).map((y) => (
+                              <SelectItem key={y} value={y}>
+                                {y}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="previousAttendance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Attended MRUHacks before? *</FormLabel>
+                        <Select
+                          value={field.value ? "true" : "false"}
+                          onValueChange={(v) => field.onChange(v === "true")}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            <SelectItem value="true">Yes</SelectItem>
+                            <SelectItem value="false">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Programming Experience *</FormLabel>
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(v) => field.onChange(parseInt(v))}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            <SelectItem value="1">Beginner</SelectItem>
+                            <SelectItem value="2">Intermediate</SelectItem>
+                            <SelectItem value="3">Advanced</SelectItem>
+                            <SelectItem value="4">Expert</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Interests and Preferences */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">
+                  Interests & Preferences
+                </h3>
+
+                <FormField
+                  control={form.control}
+                  name="interests"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interests (max 3) *</FormLabel>
+                      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {formOptions.interests.map((interest) => {
+                          const checked =
+                            field.value?.includes(interest.id) ?? false;
+                          const disableAdd =
+                            !checked && (field.value?.length ?? 0) >= 3;
+                          return (
+                            <div
+                              key={interest.id}
+                              className="flex items-start space-x-3"
+                            >
+                              <Checkbox
+                                id={`interest-${interest.id}`}
+                                checked={checked}
+                                disabled={disableAdd || isSaving}
+                                onCheckedChange={(v) => {
+                                  const isChecked = Boolean(v);
+                                  if (isChecked) {
+                                    if (
+                                      !field.value?.includes(interest.id) &&
+                                      (field.value?.length ?? 0) < 3
+                                    ) {
+                                      field.onChange([
+                                        ...(field.value ?? []),
+                                        interest.id,
+                                      ]);
+                                    }
+                                  } else {
+                                    field.onChange(
+                                      (field.value ?? []).filter(
+                                        (i: number) => i !== interest.id,
+                                      ),
+                                    );
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor={`interest-${interest.id}`}
+                                className="text-sm"
+                              >
+                                {interest.interest}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <FormDescription>
+                        Select up to 3 interests ({field.value?.length ?? 0}/3
+                        selected)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dietaryRestrictions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dietary Restrictions</FormLabel>
+                      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {formOptions.dietaryRestrictions.map((restriction) => {
+                          const checked =
+                            field.value?.includes(restriction.id) ?? false;
+                          return (
+                            <div
+                              key={restriction.id}
+                              className="flex items-start space-x-3"
+                            >
+                              <Checkbox
+                                id={`dietary-${restriction.id}`}
+                                checked={checked}
+                                disabled={isSaving}
+                                onCheckedChange={(v) => {
+                                  const isChecked = Boolean(v);
+                                  if (isChecked) {
+                                    field.onChange([
+                                      ...(field.value ?? []),
+                                      restriction.id,
+                                    ]);
+                                  } else {
+                                    field.onChange(
+                                      (field.value ?? []).filter(
+                                        (r: number) => r !== restriction.id,
+                                      ),
+                                    );
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor={`dietary-${restriction.id}`}
+                                className="text-sm"
+                              >
+                                {restriction.restriction}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="accommodations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Special Accommodations</FormLabel>
+                      <FormControl>
+                        <textarea
+                          className="w-full rounded-md border px-3 py-2 h-24"
+                          placeholder="If yes, please specify…"
+                          {...field}
+                          disabled={isSaving}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Event Details */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Event Details</h3>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="parking"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Will you require parking? *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                            <SelectItem value="Not sure">Not sure</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="marketing"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>How did you hear about us? *</FormLabel>
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(v) => field.onChange(parseInt(v))}
+                          disabled={isSaving}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a source" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800">
+                            {formOptions.marketingTypes.map((m) => (
+                              <SelectItem key={m.id} value={String(m.id)}>
+                                {m.marketing}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <FormLabel>Resume Upload (optional)</FormLabel>
+                  {resumeUploadError && (
+                    <div className="mb-2 rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-600">
+                      {resumeUploadError}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const url = await uploadResume(file);
+                        if (url)
+                          form.setValue("resume", url, { shouldDirty: true });
+                      }}
+                      disabled={resumeUploading || isSaving}
+                    />
+                    {resumeUploading && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                  </div>
+                  {form.getValues("resume") && (
+                    <p className="mt-2 text-xs text-muted-foreground break-all">
+                      Existing resume: {form.getValues("resume")}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="w-full sm:w-auto"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>Save Changes</>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Additional Info Alert */}
+      <Alert className="mt-6 rounded-xl">
+        <Mail className="h-4 w-4" />
+        <AlertTitle>Email Change Security</AlertTitle>
+        <AlertDescription>
+          For security reasons, email changes require verification. You&apos;ll
+          receive an email at your new address with a verification link. Your
+          login email won&apos;t change until you verify the new address.
+        </AlertDescription>
+      </Alert>
+    </>
+  );
+}

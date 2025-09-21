@@ -1,10 +1,10 @@
 import { login, loginWithGoogle } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
-import { getRegistration } from "@/db/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
 
 // Mock dependencies
 jest.mock("@/utils/supabase/server");
-jest.mock("@/db/registration");
+jest.mock("@/actions/registration-actions");
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
@@ -12,9 +12,10 @@ jest.mock("next/cache", () => ({
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
 >;
-const mockGetRegistration = getRegistration as jest.MockedFunction<
-  typeof getRegistration
->;
+const mockGetRegistrationDataAction =
+  getRegistrationDataAction as jest.MockedFunction<
+    typeof getRegistrationDataAction
+  >;
 
 // Test data factory
 const createLoginFormData = (
@@ -45,7 +46,10 @@ describe("Login Actions", () => {
       },
     };
     mockCreateClient.mockResolvedValue(mockSupabase);
-    mockGetRegistration.mockResolvedValue({ data: null, error: undefined });
+    mockGetRegistrationDataAction.mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
   describe("login function", () => {
@@ -58,7 +62,10 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ id: "reg123" } as any);
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: { id: "reg123" } as any,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
@@ -170,11 +177,14 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ id: "reg123" } as any);
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: { id: "reg123" } as any,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockGetRegistration).toHaveBeenCalled();
+      expect(mockGetRegistrationDataAction).toHaveBeenCalled();
     });
 
     it("should redirect to registration for new user", async () => {
@@ -186,11 +196,14 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ data: null });
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: null,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockGetRegistration).toHaveBeenCalled();
+      expect(mockGetRegistrationDataAction).toHaveBeenCalled();
     });
   });
 

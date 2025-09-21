@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParkingState } from "@/types/registration";
 import {
   Card,
   CardContent,
@@ -48,7 +49,8 @@ import {
   getParkingPreference,
   getMarketingPreference,
 } from "@/db/settings";
-import { getRegistration, Registration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
 import { createClient } from "@/utils/supabase/client";
 
 // Password validation function
@@ -147,14 +149,14 @@ type PasswordFormValues = {
 };
 
 type ParkingPreferencesValues = {
-  parkingPreference: "Yes" | "No" | "Not sure";
+  parkingPreference: ParkingState;
   licensePlate: string;
 };
 
 export default function SettingsPage() {
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<Registration>();
+  const [user, setUser] = useState<UserRegistration>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toast, setToast] = useState<{
@@ -166,6 +168,7 @@ export default function SettingsPage() {
     parking: false,
     password: false,
   });
+  const [userId, setUserId] = useState<string>("");
 
   // Show toast function
   const showToast = (message: string, type: ToastType) => {
@@ -204,9 +207,14 @@ export default function SettingsPage() {
       setIsLoading(true);
       try {
         // Get user registration data
-        const { data: userData, error: userError } = await getRegistration();
-        if (userError) throw userError;
-        setUser(userData || undefined);
+        const supabase = createClient();
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) throw new Error("Not authenticated");
+        setUserId(auth.user.id);
+        const regResult = await getRegistrationDataAction();
+        if (!regResult.success)
+          throw new Error(regResult.error || "Failed to get user data");
+        setUser(regResult.data || undefined);
 
         // Get parking preferences
         const { data: parkingData, error: parkingError } =

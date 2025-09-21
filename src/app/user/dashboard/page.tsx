@@ -1,6 +1,8 @@
-import React, { use } from "react";
+import React from "react";
 import {} from "@/components/ui/loading-spinner";
-import { Registration, getRegistration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { createClient } from "@/utils/supabase/server";
 import StatusBanner from "@/components/dashboards/common/StatusBanner";
 import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
 import DashboardItem from "@/components/dashboards/common/DashboardItem";
@@ -9,8 +11,16 @@ import InfoCard from "@/components/dashboards/common/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export default function DashboardPage() {
-  const { data: user } = use(getRegistration());
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+
+  if (!auth.user) {
+    redirect("/login");
+  }
+
+  const result = await getRegistrationDataAction();
+  const user = result.success ? result.data : null;
 
   if (!user) {
     redirect("/register");

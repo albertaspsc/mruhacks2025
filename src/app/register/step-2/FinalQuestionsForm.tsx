@@ -37,33 +37,31 @@ import {
 } from "@/components/ui/file-upload";
 import { Upload, X } from "lucide-react";
 import { useRegisterForm } from "@/context/RegisterFormContext";
+import {
+  FinalQuestionsSchema,
+  FinalQuestionsInput,
+  ParkingState,
+} from "@/types/registration";
+import { processCompleteRegistrationAction } from "@/actions/registration-actions";
 
 type Props = {
   initial: {
-    experience: string;
-    parking?: "Yes" | "No" | "Not Sure";
-    marketing: string;
+    experience: number;
+    parking?: ParkingState;
+    marketing: number;
   };
-  interests: string[];
-  dietaryRestrictions: string[];
-  marketingTypes: string[];
+  interests: { id: number; interest: string }[];
+  dietaryRestrictions: { id: number; restriction: string }[];
+  marketingTypes: { id: number; marketing: string }[];
   userId: string;
 };
 
-const Schema = z.object({
-  experience: z.string(),
-  interests: z
-    .array(z.string())
-    .min(1, "Select at least one interest")
-    .max(3, "Select up to 3 interests"),
-  dietaryRestrictions: z.array(z.string()).optional().default([]),
-  accommodations: z.string().optional().default(""),
-  parking: z.string(),
-  marketing: z.string().min(1, "Required"),
-  resume: z.string().url().optional().or(z.literal("")).default(""),
+// Use shared schema with additional form-specific fields
+const FinalFormSchema = FinalQuestionsSchema.extend({
+  resume: z.string().default(""),
 });
 
-type FinalForm = z.infer<typeof Schema>;
+type FinalForm = z.infer<typeof FinalFormSchema>;
 
 export default function FinalQuestionsForm({
   initial,
@@ -77,10 +75,9 @@ export default function FinalQuestionsForm({
 
   // RHF defaults: prefer context, fall back to SSR "initial"
   const form = useForm<FinalForm>({
-    resolver: zodResolver(Schema) as any,
+    resolver: zodResolver(FinalFormSchema) as any,
     defaultValues: {
-      experience:
-        (data.experience as FinalForm["experience"]) || initial.experience,
+      experience: data.experience || initial.experience,
       interests: data.interests || [],
       dietaryRestrictions: data.dietaryRestrictions || [],
       accommodations: data.accommodations || "",
@@ -97,14 +94,16 @@ export default function FinalQuestionsForm({
   );
   const [uploading, setUploading] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string>("");
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string>("");
 
   // Keep context in sync as user edits (useful for multi-step back/forward)
   React.useEffect(() => {
     const sub = form.watch((v) => {
       setValues({
-        ...(data as any),
+        ...data,
         ...v,
-      });
+      } as any);
     });
     return () => sub.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +161,8 @@ export default function FinalQuestionsForm({
     }
   }
 
-  async function onSubmit(values: FinalForm) {
+  async function onSubmit(values: any) {
+    setSubmitError("");
     // Upload if a new file was selected
     let resumeUrl = values.resume ?? "";
     if (resumeFile) {
@@ -172,24 +172,49 @@ export default function FinalQuestionsForm({
     }
 
     // Persist into context
-    setValues(
-      {
+    setValues({
+      ...data,
+      ...values,
+      resume: resumeUrl,
+    });
+
+    // Invoke server action to complete registration
+    try {
+      setSubmitting(true);
+      const payload = {
         ...data,
         ...values,
         resume: resumeUrl,
-      } as any /*There is a stupid fucking type mismatch with
-            two a over specified and normal string; I cannot hunt
-            down where paking is defined to be
-            '"Yes" | "No" | "Not sure" | undefined' so `as any` it is */,
-    );
-
-    // Next page
-    router.push("/register/complete");
+      } as Record<string, unknown>;
+      const serialized = JSON.parse(JSON.stringify(payload));
+      const result = await processCompleteRegistrationAction(serialized);
+      if (!result.success) {
+        setSubmitError(
+          result.error || "Registration failed. Please try again.",
+        );
+        return;
+      }
+      // Next page on success
+      router.push("/user/dashboard");
+    } catch (e) {
+      setSubmitError(
+        e instanceof Error
+          ? e.message
+          : "Registration failed. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {submitError && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-3">
+            <p className="text-sm text-red-600">{submitError}</p>
+          </div>
+        )}
         {/* Experience */}
         <FormField
           control={form.control}
@@ -200,23 +225,26 @@ export default function FinalQuestionsForm({
                 Programming Experience{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value?.toString()}
+                onValueChange={(value) => field.onChange(parseInt(value))}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your level" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Beginner">
+                  <SelectItem value="1">
                     Beginner – What is a computer?
                   </SelectItem>
-                  <SelectItem value="Intermediate">
+                  <SelectItem value="2">
                     Intermediate – My spaghetti code is made out of tagliatelle.
                   </SelectItem>
-                  <SelectItem value="Advanced">
+                  <SelectItem value="3">
                     Advanced – Firewalls disabled, mainframes bypassed.
                   </SelectItem>
-                  <SelectItem value="Expert">
+                  <SelectItem value="4">
                     Expert – I know what a computer is.
                   </SelectItem>
                 </SelectContent>
@@ -237,41 +265,44 @@ export default function FinalQuestionsForm({
               </FormLabel>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {interests.map((interest) => {
-                  const checked = field.value?.includes(interest) ?? false;
+                  const checked = field.value?.includes(interest.id) ?? false;
                   const disableAdd =
                     !checked && (field.value?.length ?? 0) >= 3;
                   return (
-                    <div key={interest} className="flex items-start space-x-3">
+                    <div
+                      key={interest.id}
+                      className="flex items-start space-x-3"
+                    >
                       <Checkbox
-                        id={`interest-${interest}`}
+                        id={`interest-${interest.id}`}
                         checked={checked}
                         disabled={disableAdd}
                         onCheckedChange={(v) => {
                           const isChecked = Boolean(v);
                           if (isChecked) {
                             if (
-                              !field.value?.includes(interest) &&
+                              !field.value?.includes(interest.id) &&
                               (field.value?.length ?? 0) < 3
                             ) {
                               field.onChange([
                                 ...(field.value ?? []),
-                                interest,
+                                interest.id,
                               ]);
                             }
                           } else {
                             field.onChange(
                               (field.value ?? []).filter(
-                                (i: string) => i !== interest,
+                                (i: number) => i !== interest.id,
                               ),
                             );
                           }
                         }}
                       />
                       <Label
-                        htmlFor={`interest-${interest}`}
+                        htmlFor={`interest-${interest.id}`}
                         className="text-sm"
                       >
-                        {interest}
+                        {interest.interest}
                       </Label>
                     </div>
                   );
@@ -294,36 +325,37 @@ export default function FinalQuestionsForm({
               <FormLabel>Dietary Restrictions</FormLabel>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {dietaryRestrictions.map((restriction) => {
-                  const checked = field.value?.includes(restriction) ?? false;
+                  const checked =
+                    field.value?.includes(restriction.id) ?? false;
                   return (
                     <div
-                      key={restriction}
+                      key={restriction.id}
                       className="flex items-start space-x-3"
                     >
                       <Checkbox
-                        id={`dietary-${restriction}`}
+                        id={`dietary-${restriction.id}`}
                         checked={checked}
                         onCheckedChange={(v) => {
                           const isChecked = Boolean(v);
                           if (isChecked) {
                             field.onChange([
                               ...(field.value ?? []),
-                              restriction,
+                              restriction.id,
                             ]);
                           } else {
                             field.onChange(
                               (field.value ?? []).filter(
-                                (r: string) => r !== restriction,
+                                (r: number) => r !== restriction.id,
                               ),
                             );
                           }
                         }}
                       />
                       <Label
-                        htmlFor={`dietary-${restriction}`}
+                        htmlFor={`dietary-${restriction.id}`}
                         className="text-sm"
                       >
-                        {restriction}
+                        {restriction.restriction}
                       </Label>
                     </div>
                   );
@@ -389,7 +421,10 @@ export default function FinalQuestionsForm({
                 How did you hear about us?{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value?.toString()}
+                onValueChange={(value) => field.onChange(parseInt(value))}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a source" />
@@ -397,8 +432,8 @@ export default function FinalQuestionsForm({
                 </FormControl>
                 <SelectContent>
                   {marketingTypes.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.marketing}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -526,7 +561,7 @@ export default function FinalQuestionsForm({
             <div key={ack.key} className="flex items-start space-x-3">
               <Checkbox
                 id={ack.key}
-                checked={(acks as any)[ack.key]}
+                checked={acks[ack.key as keyof typeof acks]}
                 onCheckedChange={(v) =>
                   setAcks((prev) => ({ ...prev, [ack.key]: Boolean(v) }))
                 }
@@ -551,9 +586,10 @@ export default function FinalQuestionsForm({
             onClick={() => {
               // Persist current values explicitly before going back
               const v = form.getValues();
-              setValues(
-                { ...data, ...v } as any /* this is not worth fixing */,
-              );
+              setValues({
+                ...data,
+                ...v,
+              });
               goBack();
             }}
             disabled={uploading}
