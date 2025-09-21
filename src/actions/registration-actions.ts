@@ -7,7 +7,6 @@ import {
   UserRegistration,
   validateFormData,
 } from "@/types/registration";
-import { db } from "@/db/drizzle";
 import { revalidatePath } from "next/cache";
 
 // Server action for user registration

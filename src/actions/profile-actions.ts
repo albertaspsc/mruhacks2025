@@ -5,8 +5,59 @@ import * as UserRegistrationDAL from "@/dal/user-registration";
 import { ProfileUpdateInput, UserRegistration } from "@/types/registration";
 import { revalidatePath } from "next/cache";
 
-// Server action for updating user profile
-export async function updateUserProfileAction(updates: ProfileUpdateInput) {
+/**
+ * Updates data in the users database table with flexible options for different update scenarios.
+ *
+ * This is the main server action for all profile updates, consolidating functionality
+ * that was previously split across multiple actions. It handles both single field
+ * and multiple field updates with optional validation and cache management.
+ *
+ * @param updates - The profile fields to update. All fields are optional.
+ * @param options - Optional configuration for update behavior
+ * @param options.validateEmail - When true, email updates trigger verification flow:
+ *   - Calls updateUserEmailAction to send verification email
+ *   - Stores pending email in database for tracking
+ *   - Handles rate limiting and duplicate email errors
+ *   - Email is not directly updated until verification is complete
+ *   - When false, email is updated directly in the database
+ * @param options.syncProfile - When true, performs additional cache revalidation:
+ *   - Always revalidates /user/profile page cache
+ *   - Additionally revalidates /user/dashboard page cache
+ *   - Use when profile changes should be reflected across multiple pages
+ *   - Use sparingly for performance - only when dashboard needs fresh data
+ *   - Consider user flow: if users stay on profile page after updates, false is fine
+ *
+ * @returns Promise<ServiceResult<UserRegistration>> - Success/error result with updated user data
+ *
+ * @example
+ * // Simple profile update
+ * await updateUserProfileAction({ firstName: "John" });
+ *
+ * @example
+ * // Email update with verification
+ * await updateUserProfileAction(
+ *   { email: "newemail@example.com" },
+ *   { validateEmail: true }
+ * );
+ *
+ * @example
+ * // Bulk update with dashboard sync
+ * await updateUserProfileAction(
+ *   { firstName: "John", lastName: "Doe", university: 1 },
+ *   { syncProfile: true }
+ * );
+ *
+ * @example
+ * // Email change with verification and dashboard sync
+ * await updateUserProfileAction(
+ *   { email: "newemail@example.com" },
+ *   { validateEmail: true, syncProfile: true }
+ * );
+ */
+export async function updateUserProfileAction(
+  updates: ProfileUpdateInput,
+  options?: { validateEmail?: boolean; syncProfile?: boolean },
+) {
   try {
     const supabase = await createClient();
 
@@ -25,6 +76,21 @@ export async function updateUserProfileAction(updates: ProfileUpdateInput) {
     }
 
     const updateData: Partial<UserRegistration> = {};
+
+    // Handle email update with validation if requested
+    if (updates.email !== undefined && options?.validateEmail) {
+      const emailResult = await updateUserEmailAction(updates.email);
+      if (!emailResult.success) {
+        return {
+          success: false,
+          error: emailResult.error,
+        };
+      }
+      // Don't update email in the database here - it will be updated after verification
+    } else if (updates.email !== undefined) {
+      // Direct email update without validation
+      updateData.email = updates.email;
+    }
 
     // Handle basic fields
     if (updates.firstName !== undefined) updateData.f_name = updates.firstName;
@@ -107,6 +173,11 @@ export async function updateUserProfileAction(updates: ProfileUpdateInput) {
     // Revalidate the user profile page
     revalidatePath("/user/profile");
 
+    // Additional revalidation based on options
+    if (options?.syncProfile) {
+      revalidatePath("/user/dashboard");
+    }
+
     return {
       success: true,
       data: updateResult.data!,
@@ -166,11 +237,8 @@ export async function getUserProfileAction() {
   }
 }
 
-// Server action for updating specific profile fields
-export async function updateProfileFieldAction(
-  field: keyof ProfileUpdateInput,
-  value: any,
-) {
+// Server action for email verification
+export async function updateUserEmailAction(newEmail: string) {
   try {
     const supabase = await createClient();
 
@@ -183,65 +251,83 @@ export async function updateProfileFieldAction(
       };
     }
 
-    // Update specific field
-    const updates = { [field]: value } as ProfileUpdateInput;
-    const result = await updateUserProfileAction(updates);
+    // Update email in Supabase auth (this sends verification email)
+    const { error: emailUpdateError } = await supabase.auth.updateUser({
+      email: newEmail,
+    });
 
-    if (!result.success) {
+    if (emailUpdateError) {
+      console.error("Supabase auth email update error:", emailUpdateError);
+
+      if (emailUpdateError.message.includes("rate limit")) {
+        return {
+          success: false,
+          error: "Too many requests. Please wait a moment before trying again.",
+        };
+      }
+
+      if (emailUpdateError.message.includes("already registered")) {
+        return {
+          success: false,
+          error: "This email is already associated with another account.",
+        };
+      }
+
       return {
         success: false,
-        error: result.error,
+        error: emailUpdateError.message || "Failed to update email",
       };
+    }
+
+    // Store pending email in our database for tracking
+    try {
+      const { error: pendingEmailError } = await supabase
+        .from("users")
+        .update({
+          pending_email: newEmail,
+          email_change_requested_at: new Date().toISOString(),
+        })
+        .eq("id", auth.user.id);
+
+      if (pendingEmailError) {
+        console.error("Failed to store pending email:", pendingEmailError);
+        // Don't fail the whole operation if pending email storage fails
+      }
+    } catch (pendingEmailError) {
+      console.error(
+        "Exception while storing pending email:",
+        pendingEmailError,
+      );
+      // Don't fail the whole operation if pending email storage fails
     }
 
     return {
       success: true,
-      data: result.data,
-      message: `${field} updated successfully`,
+      message: "Verification email sent successfully",
     };
   } catch (error) {
-    console.error("Update field error:", error);
+    console.error("Email update error:", error);
     return {
       success: false,
-      error: `Failed to update ${field}`,
+      error: "Failed to update email",
     };
   }
 }
 
-// Server action for bulk profile update
-export async function bulkUpdateProfileAction(updates: ProfileUpdateInput) {
-  try {
-    const supabase = await createClient();
+// Convenience function for updating a single field
+export async function updateProfileFieldAction(
+  field: keyof ProfileUpdateInput,
+  value: any,
+  options?: { validateEmail?: boolean; syncProfile?: boolean },
+) {
+  const updates = { [field]: value } as ProfileUpdateInput;
+  return await updateUserProfileAction(updates, options);
+}
 
-    // Get current user
-    const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError || !auth.user) {
-      return {
-        success: false,
-        error: "Authentication required",
-      };
-    }
-
-    // Update multiple fields
-    const result = await updateUserProfileAction(updates);
-
-    if (!result.success) {
-      return {
-        success: false,
-        error: result.error,
-      };
-    }
-
-    return {
-      success: true,
-      data: result.data,
-      message: "Profile updated successfully",
-    };
-  } catch (error) {
-    console.error("Bulk update error:", error);
-    return {
-      success: false,
-      error: "Failed to update profile",
-    };
-  }
+// Convenience function for bulk updates (maintains backward compatibility)
+export async function bulkUpdateProfileAction(
+  updates: ProfileUpdateInput,
+  options?: { validateEmail?: boolean; syncProfile?: boolean },
+) {
+  return await updateUserProfileAction(updates, options);
 }

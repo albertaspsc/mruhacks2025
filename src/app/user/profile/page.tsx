@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { getUserProfileAction } from "@/actions/profile-actions";
 import { getFormOptionsAction } from "@/actions/registration-actions";
-import CombinedProfileForm from "@/components/dashboards/CombinedProfileForm";
+import ProfileForm from "@/components/dashboards/CombinedProfileForm";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
@@ -66,10 +66,7 @@ export default async function ProfilePage() {
           </p>
         </div>
 
-        <CombinedProfileForm
-          initialData={initialData}
-          formOptions={formOptions}
-        />
+        <ProfileForm initialData={initialData} formOptions={formOptions} />
       </div>
     </div>
   );

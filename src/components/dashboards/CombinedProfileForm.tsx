@@ -31,48 +31,25 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Mail } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { createClient } from "@/utils/supabase/client";
 import { z } from "zod";
-import { updateUserNameAndEmail, updateUserNameOnly } from "@/db/settings";
-import { bulkUpdateProfileAction } from "@/actions/profile-actions";
+import {
+  bulkUpdateProfileAction,
+  updateUserEmailAction,
+} from "@/actions/profile-actions";
 import {
   ToastBanner,
   ToastState,
   ToastType,
 } from "@/components/dashboards/toast/Toast";
+import { ProfileUpdateSchema } from "@/types/registration";
 
 type ParkingState = import("@/types/registration").ParkingState;
 type YearOfStudy = import("@/types/registration").YearOfStudy;
 
-// Combined validation schema
-const combinedProfileSchema = z.object({
-  firstName: z
-    .string()
-    .min(1, "First name is required")
-    .max(50, "First name must be less than 50 characters"),
-  lastName: z
-    .string()
-    .min(1, "Last name is required")
-    .max(50, "Last name must be less than 50 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  gender: z.number().min(1, "Gender is required"),
-  university: z.number().min(1, "University is required"),
-  major: z.number().min(1, "Major is required"),
-  yearOfStudy: z.enum(["1st", "2nd", "3rd", "4th+", "Recent Grad"]),
-  previousAttendance: z.boolean(),
-  experience: z.number().min(1, "Experience level is required"),
-  interests: z
-    .array(z.number())
-    .min(1, "Please select at least one interest")
-    .max(3, "Maximum 3 interests allowed"),
-  dietaryRestrictions: z.array(z.number()),
-  accommodations: z.string(),
-  parking: z.enum(["Yes", "No", "Not sure"]),
-  marketing: z.number().min(1, "Marketing source is required"),
-  resume: z.string(),
-});
+// Use ProfileUpdateSchema from types/registration.ts
+const ProfileSchema = ProfileUpdateSchema;
 
-type CombinedProfileValues = z.infer<typeof combinedProfileSchema>;
+type ProfileValues = z.infer<typeof ProfileSchema>;
 
 type FormOptions = {
   genders: { id: number; gender: string }[];
@@ -83,7 +60,7 @@ type FormOptions = {
   marketingTypes: { id: number; marketing: string }[];
 };
 
-interface CombinedProfileFormProps {
+interface ProfileFormProps {
   initialData: {
     firstName: string;
     lastName: string;
@@ -104,10 +81,10 @@ interface CombinedProfileFormProps {
   formOptions: FormOptions;
 }
 
-export default function CombinedProfileForm({
+export default function ProfileForm({
   initialData,
   formOptions,
-}: CombinedProfileFormProps) {
+}: ProfileFormProps) {
   const [isSaving, setIsSaving] = React.useState(false);
   const [resumeUploading, setResumeUploading] = React.useState(false);
   const [resumeUploadError, setResumeUploadError] = React.useState("");
@@ -119,9 +96,8 @@ export default function CombinedProfileForm({
     lastName: initialData.lastName,
     email: initialData.email,
   });
-  const supabase = createClient();
 
-  const form = useForm<CombinedProfileValues>({
+  const form = useForm<ProfileValues>({
     defaultValues: initialData,
     mode: "onChange",
   });
@@ -152,8 +128,8 @@ export default function CombinedProfileForm({
     }
   }
 
-  async function onSubmit(values: CombinedProfileValues) {
-    const validation = combinedProfileSchema.safeParse(values);
+  async function onSubmit(values: ProfileValues) {
+    const validation = ProfileSchema.safeParse(values);
     if (!validation.success) {
       const firstError = validation.error.errors[0];
       showToast("error", "Validation Error", firstError.message);
@@ -169,32 +145,7 @@ export default function CombinedProfileForm({
         values.firstName !== currentUserData.firstName ||
         values.lastName !== currentUserData.lastName;
 
-      // Handle name changes
-      if (nameChanged) {
-        console.log("Updating name:", {
-          firstName: values.firstName,
-          lastName: values.lastName,
-        });
-
-        const { error: nameUpdateError } = await updateUserNameOnly({
-          firstName: values.firstName,
-          lastName: values.lastName,
-        });
-
-        if (nameUpdateError) {
-          console.error("Name update error:", nameUpdateError);
-          throw new Error("Failed to update name information");
-        }
-
-        // Update local state immediately for name changes
-        setCurrentUserData((prev) => ({
-          ...prev,
-          firstName: values.firstName,
-          lastName: values.lastName,
-        }));
-      }
-
-      // Handle email change (requires verification)
+      // Handle email change (requires verification) - use server action
       if (emailChanged) {
         console.log(
           "Updating email from",
@@ -203,56 +154,17 @@ export default function CombinedProfileForm({
           values.email,
         );
 
-        const { error: emailUpdateError } = await supabase.auth.updateUser({
-          email: values.email,
-        });
+        const emailResult = await updateUserEmailAction(values.email!);
 
-        if (emailUpdateError) {
-          console.error("Supabase auth email update error:", emailUpdateError);
-
-          if (emailUpdateError.message.includes("rate limit")) {
-            showToast(
-              "error",
-              "Too many requests",
-              "Please wait a moment before trying again.",
-            );
-            return;
-          }
-
-          if (emailUpdateError.message.includes("already registered")) {
-            showToast(
-              "error",
-              "Email already in use",
-              "This email is already associated with another account.",
-            );
-            return;
-          }
-
-          throw new Error(emailUpdateError.message || "Failed to update email");
-        }
-
-        try {
-          const result = await updateUserNameAndEmail({
-            email: values.email,
-          });
-
-          if (result.error) {
-            console.error("Failed to store pending email:", result.error);
-            console.warn("Continuing despite pending email storage failure");
-          } else {
-            console.log("Pending email stored successfully");
-          }
-        } catch (pendingEmailError) {
-          console.error(
-            "Exception while storing pending email:",
-            pendingEmailError,
-          );
+        if (!emailResult.success) {
+          showToast("error", "Email Update Failed", emailResult.error);
+          return;
         }
 
         setEmailVerificationSent(true);
       }
 
-      // Update registration data using bulk update
+      // Update registration data using bulk update (includes firstName and lastName)
       const result = await bulkUpdateProfileAction({
         firstName: values.firstName,
         lastName: values.lastName,
@@ -272,6 +184,15 @@ export default function CombinedProfileForm({
 
       if (!result.success) {
         throw new Error(result.error || "Failed to update registration data");
+      }
+
+      // Update local state for name changes
+      if (nameChanged) {
+        setCurrentUserData((prev) => ({
+          ...prev,
+          firstName: values.firstName!,
+          lastName: values.lastName!,
+        }));
       }
 
       // Show appropriate success message
