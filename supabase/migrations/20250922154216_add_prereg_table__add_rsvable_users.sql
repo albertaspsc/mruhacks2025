@@ -11,12 +11,21 @@ CREATE UNIQUE INDEX pre_reg_pkey ON public.pre_reg USING btree (id);
 
 alter table "public"."pre_reg" add constraint "pre_reg_pkey" PRIMARY KEY using index "pre_reg_pkey";
 
-create or replace view "public"."rsvpable_users" as  SELECT u.id
-   FROM (users u
-     LEFT JOIN pre_reg p ON ((p.email = (u.email)::text)))
-  WHERE (u.status = ANY (ARRAY['pending'::status, 'waitlisted'::status]))
-  ORDER BY (p.email IS NOT NULL) DESC, u.updated_at
- LIMIT 145;
+
+create or replace view public.rsvpable_users as
+select
+  u.id
+from
+  users u
+  left join pre_reg p on p.email = u.email::text
+  left join auth.users on users.id = u.id
+where
+  u.status = any (array['pending'::status, 'waitlisted'::status])
+order by
+  (p.email is not null) desc,
+  users.created_at
+limit
+  145;
 
 
 grant delete on table "public"."pre_reg" to "anon";
