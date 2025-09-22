@@ -1,5 +1,12 @@
 "use server";
-
+/**
+ * @fileoverview Profile management server actions for user registration system.
+ *
+ * This module provides server actions for managing user profile data including:
+ * - Profile updates with flexible field handling
+ * - Email verification workflows
+ * - Profile data retrieval with related information
+ */
 import { createClient } from "@/utils/supabase/server";
 import * as UserRegistrationDAL from "@/dal/user-registration";
 import { ProfileUpdateInput, UserRegistration } from "@/types/registration";
@@ -28,31 +35,6 @@ import { revalidatePath } from "next/cache";
  *   - Consider user flow: if users stay on profile page after updates, false is fine
  *
  * @returns Promise<ServiceResult<UserRegistration>> - Success/error result with updated user data
- *
- * @example
- * // Simple profile update
- * await updateUserProfileAction({ firstName: "John" });
- *
- * @example
- * // Email update with verification
- * await updateUserProfileAction(
- *   { email: "newemail@example.com" },
- *   { validateEmail: true }
- * );
- *
- * @example
- * // Bulk update with dashboard sync
- * await updateUserProfileAction(
- *   { firstName: "John", lastName: "Doe", university: 1 },
- *   { syncProfile: true }
- * );
- *
- * @example
- * // Email change with verification and dashboard sync
- * await updateUserProfileAction(
- *   { email: "newemail@example.com" },
- *   { validateEmail: true, syncProfile: true }
- * );
  */
 export async function updateUserProfileAction(
   updates: ProfileUpdateInput,
@@ -192,7 +174,17 @@ export async function updateUserProfileAction(
   }
 }
 
-// Server action for getting user profile data
+/**
+ * Retrieves the current user's profile data including interests and dietary restrictions.
+ *
+ * This server action fetches the complete profile information for the authenticated user,
+ * including their basic profile data, interests, and dietary restrictions. It performs
+ * parallel queries to optimize performance.
+ *
+ * @returns Promise<ServiceResult<{ user: UserRegistration; interests: any[]; dietaryRestrictions: any[] }>>
+ *   - Success: Contains user profile data with interests and dietary restrictions arrays
+ *   - Error: Authentication or data retrieval failure
+ */
 export async function getUserProfileAction() {
   try {
     const supabase = await createClient();
@@ -237,7 +229,24 @@ export async function getUserProfileAction() {
   }
 }
 
-// Server action for email verification
+/**
+ * Updates user email address with verification flow.
+ *
+ * This server action handles email updates by triggering Supabase's email verification
+ * process. It updates the email in Supabase auth (which sends a verification email)
+ * and stores the pending email in the database for tracking purposes.
+ *
+ * The email is not actually changed until the user clicks the verification link
+ * in the email.
+ *
+ * @param newEmail - The new email address to update to
+ * @returns Promise<ServiceResult<{ message: string }>> - Success/error result
+ *   - Success: Verification email sent successfully
+ *   - Error: Authentication failure, rate limiting, duplicate email, or update failure
+ *
+ * @throws {Error} When rate limit is exceeded
+ * @throws {Error} When email is already registered to another account
+ */
 export async function updateUserEmailAction(newEmail: string) {
   try {
     const supabase = await createClient();
@@ -312,22 +321,4 @@ export async function updateUserEmailAction(newEmail: string) {
       error: "Failed to update email",
     };
   }
-}
-
-// Convenience function for updating a single field
-export async function updateProfileFieldAction(
-  field: keyof ProfileUpdateInput,
-  value: any,
-  options?: { validateEmail?: boolean; syncProfile?: boolean },
-) {
-  const updates = { [field]: value } as ProfileUpdateInput;
-  return await updateUserProfileAction(updates, options);
-}
-
-// Convenience function for bulk updates (maintains backward compatibility)
-export async function bulkUpdateProfileAction(
-  updates: ProfileUpdateInput,
-  options?: { validateEmail?: boolean; syncProfile?: boolean },
-) {
-  return await updateUserProfileAction(updates, options);
 }

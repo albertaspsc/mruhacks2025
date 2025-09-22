@@ -23,7 +23,16 @@ export function RegisterFormProvider({ children }: React.PropsWithChildren) {
   const router = useRouter();
 
   const setValues = (vals: Partial<BaseRegistrationInput>) => {
-    setData((prev) => ({ ...prev, ...vals }));
+    // Ensure boolean values are properly converted
+    const processedVals = { ...vals };
+    if (processedVals.previousAttendance !== undefined) {
+      // Convert string "true"/"false" to boolean if needed
+      if (typeof processedVals.previousAttendance === "string") {
+        processedVals.previousAttendance =
+          processedVals.previousAttendance === "true";
+      }
+    }
+    setData((prev) => ({ ...prev, ...processedVals }));
   };
 
   const goBack = () => {

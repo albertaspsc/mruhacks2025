@@ -29,8 +29,8 @@
       "@/assets/*": ["src/assets/*"],
       "@/db/*": ["src/db/*"],
       "@db/*": ["src/db/*"],
-      "@/utils/*": ["./utils/*"],
-      "@utils/*": ["./utils/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@utils/*": ["src/utils/*"],
       "@/auth/*": ["src/auth/*"],
       "@auth/*": ["src/auth/*"]
     },

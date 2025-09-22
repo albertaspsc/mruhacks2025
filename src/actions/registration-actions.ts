@@ -1,16 +1,36 @@
+/**
+ * @fileoverview Registration Actions
+ *
+ * This module contains server actions for handling user registration functionality.
+ * It provides functions for registering users, retrieving registration data,
+ * checking registration status, and getting form options.
+ */
+
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
 import * as UserRegistrationDAL from "@/dal/user-registration";
 import {
   BaseRegistrationSchema,
+  BaseRegistrationInput,
   UserRegistration,
   validateFormData,
 } from "@/types/registration";
 import { revalidatePath } from "next/cache";
 
-// Server action for user registration
-export async function registerUserAction(formData: Record<string, unknown>) {
+/**
+ * Server action for user registration
+ *
+ * Handles the complete user registration process including validation,
+ * authentication, duplicate checking, and user record creation with
+ * associated interests and dietary restrictions.
+ *
+ * @param formData - Partial registration form data containing user details
+ * @returns Promise with success status, data, and error message
+ */
+export async function registerUserAction(
+  formData: Partial<BaseRegistrationInput>,
+) {
   try {
     // Validate form data on the server
     const validationResult = validateFormData(BaseRegistrationSchema, formData);
@@ -51,7 +71,7 @@ export async function registerUserAction(formData: Record<string, unknown>) {
       };
     }
 
-    // Create user record - registrationData now contains IDs directly
+    // Create user record with interests and dietary restrictions in a single transaction
     const userRecord: Omit<UserRegistration, "id"> = {
       email: auth.user.email!,
       f_name: registrationData.firstName,
@@ -74,30 +94,13 @@ export async function registerUserAction(formData: Record<string, unknown>) {
     const createResult = await UserRegistrationDAL.createUser(
       auth.user.id,
       userRecord,
+      registrationData.interests || [],
+      registrationData.dietaryRestrictions || [],
     );
+
     if (!createResult.success) {
       return { success: false, error: createResult.error };
     }
-
-    // Handle interests and dietary restrictions - registrationData now contains IDs directly
-    if (registrationData.interests && registrationData.interests.length > 0) {
-      await UserRegistrationDAL.setUserInterests(
-        auth.user.id,
-        registrationData.interests,
-      );
-    }
-
-    if (
-      registrationData.dietaryRestrictions &&
-      registrationData.dietaryRestrictions.length > 0
-    ) {
-      await UserRegistrationDAL.setUserDietaryRestrictions(
-        auth.user.id,
-        registrationData.dietaryRestrictions,
-      );
-    }
-
-    // Note: Profile table sync removed - users table is now the single source of truth
 
     // Revalidate user dashboard
     revalidatePath("/user/dashboard");
@@ -122,7 +125,14 @@ export async function registerUserAction(formData: Record<string, unknown>) {
   }
 }
 
-// Server action for getting registration data
+/**
+ * Server action for getting registration data
+ *
+ * Retrieves the current user's registration data from the database.
+ * This function is typically used to populate forms or display user information.
+ *
+ * @returns Promise with success status and user registration data
+ */
 export async function getRegistrationDataAction() {
   try {
     const supabase = await createClient();
@@ -159,38 +169,15 @@ export async function getRegistrationDataAction() {
   }
 }
 
-// Server action for checking if user is already registered
-export async function checkRegistrationStatusAction() {
-  try {
-    const supabase = await createClient();
-
-    // Get current user
-    const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError || !auth.user) {
-      return {
-        success: false,
-        error: "Authentication required",
-      };
-    }
-
-    // Check if user is registered
-    const result = await UserRegistrationDAL.getUserById(auth.user.id);
-
-    return {
-      success: true,
-      isRegistered: result.success && !!result.data,
-      data: result.data,
-    };
-  } catch (error) {
-    console.error("Check registration error:", error);
-    return {
-      success: false,
-      error: "Failed to check registration status",
-    };
-  }
-}
-
-// Server action for getting form options
+/**
+ * Server action for getting form options
+ *
+ * Retrieves all the dropdown/select options needed for the registration form.
+ * This includes genders, universities, majors, interests, dietary restrictions,
+ * and marketing types. All options are fetched in parallel for optimal performance.
+ *
+ * @returns Promise with success status and all form options data
+ */
 export async function getFormOptionsAction() {
   try {
     const [
@@ -241,45 +228,6 @@ export async function getFormOptionsAction() {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to get form options",
-    };
-  }
-}
-
-// Server action for processing complete registration (includes auth check)
-export async function processCompleteRegistrationAction(
-  formData: Record<string, unknown>,
-) {
-  try {
-    // First check authentication
-    const supabase = await createClient();
-    const { data: auth, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !auth.user) {
-      console.error("Authentication failed:", {
-        authError: authError?.message,
-        hasUser: !!auth.user,
-        userId: auth.user?.id,
-      });
-      return {
-        success: false,
-        error: "Authentication required",
-      };
-    }
-    // Then process registration
-    const result = await registerUserAction(formData);
-
-    return result;
-  } catch (error) {
-    console.error("Process complete registration error:", {
-      error: error,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
-      errorName: error instanceof Error ? error.name : undefined,
-      formDataAtError: formData,
-    });
-    return {
-      success: false,
-      error: "Registration processing failed",
     };
   }
 }

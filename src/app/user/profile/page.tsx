@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { getUserProfileAction } from "@/actions/profile-actions";
 import { getFormOptionsAction } from "@/actions/registration-actions";
-import ProfileForm from "@/components/dashboards/CombinedProfileForm";
+import ProfileForm from "@/components/dashboards/ProfileForm";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
@@ -37,7 +37,7 @@ export default async function ProfilePage() {
   const { user, interests, dietaryRestrictions } = profileResult.data!;
   const formOptions = formOptionsResult.data!;
 
-  // Transform data for the form - now using IDs directly
+  // Transform data for the form
   const initialData = {
     firstName: user.f_name,
     lastName: user.l_name,

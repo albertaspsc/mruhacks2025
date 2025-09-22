@@ -52,31 +52,7 @@ import {
 import { UserRegistration } from "@/types/registration";
 import { getRegistrationDataAction } from "@/actions/registration-actions";
 import { createClient } from "@/utils/supabase/client";
-
-// Password validation function
-function validatePassword(password: string): string | null {
-  if (!password) return "Password is required";
-  if (password.length < 8) return "Password must be at least 8 characters long";
-  if (!/(?=.*[a-z])/.test(password))
-    return "Password must contain at least one lowercase letter";
-  if (!/(?=.*[A-Z])/.test(password))
-    return "Password must contain at least one uppercase letter";
-  if (!/(?=.*\d)/.test(password))
-    return "Password must contain at least one number";
-  if (!/(?=.*\W)/.test(password))
-    return "Password must contain at least one special character";
-  return null;
-}
-
-// License plate validation
-function validateLicensePlate(plate: string): string | null {
-  if (!plate) return "License plate is required when parking is selected";
-  if (plate.length < 2 || plate.length > 10)
-    return "License plate must be between 2-10 characters";
-  if (!/^[A-Z0-9-\s]+$/.test(plate))
-    return "License plate can only contain letters, numbers, hyphens, and spaces";
-  return null;
-}
+import { useFormValidation } from "@/hooks";
 
 // Toast component for better UX
 type ToastType = "success" | "error" | "warning" | "info";
@@ -155,6 +131,15 @@ type ParkingPreferencesValues = {
 
 export default function SettingsPage() {
   const supabase = createClient();
+  const { validatePassword, validateLicensePlate } = useFormValidation({
+    password: {
+      minLength: 8,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumbers: true,
+      requireSpecialChars: true,
+    },
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserRegistration>();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -330,10 +315,10 @@ export default function SettingsPage() {
   async function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
     // Validate license plate if parking is required
     if (data.parkingPreference === "Yes") {
-      const licenseError = validateLicensePlate(data.licensePlate);
-      if (licenseError) {
+      const licenseResult = validateLicensePlate(data.licensePlate);
+      if (!licenseResult.isValid) {
         parkingPreferencesForm.setError("licensePlate", {
-          message: licenseError,
+          message: licenseResult.error || "Invalid license plate",
         });
         return;
       }
@@ -359,9 +344,11 @@ export default function SettingsPage() {
   // Handle password submission with validation
   async function onPasswordSubmit(data: PasswordFormValues) {
     // Validate new password
-    const passwordError = validatePassword(data.newPassword);
-    if (passwordError) {
-      passwordForm.setError("newPassword", { message: passwordError });
+    const passwordResult = validatePassword(data.newPassword);
+    if (!passwordResult.isValid) {
+      passwordForm.setError("newPassword", {
+        message: passwordResult.errors[0] || "Invalid password",
+      });
       return;
     }
 

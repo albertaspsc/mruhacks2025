@@ -105,6 +105,16 @@ export const InterestSelectionSchema = z.object({
     .max(3, "Maximum 3 interests allowed"),
 });
 
+// Form options type for dropdowns and selections
+export interface FormOptions {
+  genders: { id: number; gender: string }[];
+  universities: { id: number; uni: string }[];
+  majors: { id: number; major: string }[];
+  interests: { id: number; interest: string }[];
+  dietaryRestrictions: { id: number; restriction: string }[];
+  marketingTypes: { id: number; marketing: string }[];
+}
+
 // Type exports
 export type BaseRegistrationInput = z.infer<typeof BaseRegistrationSchema>;
 export type ProfileUpdateInput = z.infer<typeof ProfileUpdateSchema>;
@@ -178,7 +188,6 @@ export interface ServiceResult<T = any> {
 export const PersonalDetailsSchema = BaseRegistrationSchema.pick({
   firstName: true,
   lastName: true,
-  email: true,
   gender: true,
   university: true,
   major: true,
@@ -213,61 +222,4 @@ export function validateFormData<T>(
       error: result.error.errors.map((e) => e.message).join(", "),
     };
   }
-}
-
-export function getFieldError(
-  errors: z.ZodError | undefined,
-  fieldName: string,
-): string | undefined {
-  return errors?.errors.find((e) => e.path.includes(fieldName))?.message;
-}
-
-// Form data transformation utilities
-export function transformFormDataToRegistration(
-  data: Record<string, unknown>,
-): BaseRegistrationInput {
-  return {
-    firstName: String(data.firstName || ""),
-    lastName: String(data.lastName || ""),
-    email: String(data.email || ""),
-    gender: Number(data.gender) || 0,
-    university: Number(data.university) || 0,
-    major: Number(data.major) || 0,
-    yearOfStudy: (data.yearOfStudy as YearOfStudy) || "1st",
-    experience: Number(data.experience) || 0,
-    marketing: Number(data.marketing) || 0,
-    previousAttendance:
-      data.previousAttendance === "true" || data.previousAttendance === true,
-    parking: (data.parking as ParkingState) || "Not sure",
-    accommodations: String(data.accommodations || ""),
-    dietaryRestrictions: Array.isArray(data.dietaryRestrictions)
-      ? data.dietaryRestrictions.map(Number).filter((n) => !isNaN(n))
-      : [],
-    interests: Array.isArray(data.interests)
-      ? data.interests.map(Number).filter((n) => !isNaN(n))
-      : [],
-    resume: String(data.resume || ""),
-  };
-}
-
-export function transformRegistrationToFormData(
-  data: UserRegistration,
-): BaseRegistrationInput {
-  return {
-    firstName: data.f_name || "",
-    lastName: data.l_name || "",
-    email: data.email,
-    gender: data.gender,
-    university: data.university,
-    major: data.major,
-    yearOfStudy: data.yearOfStudy,
-    experience: data.experience,
-    marketing: data.marketing,
-    previousAttendance: data.prev_attendance,
-    parking: data.parking,
-    accommodations: data.accommodations || "",
-    dietaryRestrictions: [], // Will be loaded separately
-    interests: [], // Will be loaded separately
-    resume: data.resume_url || "",
-  };
 }

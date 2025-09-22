@@ -22,73 +22,15 @@ import {
   userInterests as userInterestsTable,
   userDietRestrictions as userDietRestrictionsTable,
 } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 // User CRUD operations with transaction management
-export async function createUser(
-  userId: string,
-  userData: Omit<UserRegistration, "id">,
-): Promise<ServiceResult<UserRegistration>> {
-  try {
-    return await db.transaction(async (tx) => {
-      // Map snake_case API type to Drizzle column names
-      const insertValues: any = {
-        id: userId,
-        email: userData.email,
-        fName: userData.f_name,
-        lName: userData.l_name,
-        gender: userData.gender,
-        university: userData.university,
-        major: userData.major,
-        yearOfStudy: userData.yearOfStudy,
-        experience: userData.experience,
-        marketing: userData.marketing,
-        prevAttendance: userData.prev_attendance,
-        parking: userData.parking,
-        accommodations: userData.accommodations,
-        resumeUrl: userData.resume_url,
-        status: userData.status,
-        checkedIn: userData.checked_in,
-        timestamp: userData.timestamp,
-        updatedAt: userData.updated_at,
-        resumeFilename: userData.resume_filename,
-      };
 
-      const [row] = await tx.insert(users).values(insertValues).returning();
-      if (!row) return { success: false, error: "Failed to create user" };
-
-      const mapped: UserRegistration = {
-        id: row.id,
-        email: row.email!,
-        f_name: row.fName!,
-        l_name: row.lName!,
-        gender: row.gender!,
-        university: row.university!,
-        major: row.major!,
-        yearOfStudy: row.yearOfStudy!,
-        experience: row.experience!,
-        marketing: row.marketing!,
-        prev_attendance: row.prevAttendance!,
-        parking: row.parking!,
-        accommodations: row.accommodations!,
-        resume_url: row.resumeUrl || undefined,
-        resume_filename: row.resumeFilename || undefined,
-        status: row.status!,
-        checked_in: Boolean(row.checkedIn),
-        timestamp: row.timestamp || undefined,
-        updated_at: row.updatedAt || undefined,
-      };
-
-      return { success: true, data: mapped };
-    });
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create user",
-    };
-  }
-}
-
+/**
+ * Retrieves a user by their unique identifier.
+ * @param userId - The unique identifier of the user to retrieve
+ * @returns A service result containing the user data or null if not found
+ */
 export async function getUserById(
   userId: string,
 ): Promise<ServiceResult<UserRegistration | null>> {
@@ -127,6 +69,12 @@ export async function getUserById(
   }
 }
 
+/**
+ * Updates a user's information with the provided partial data.
+ * @param userId - The unique identifier of the user to update
+ * @param updates - Partial user data containing the fields to update
+ * @returns A service result containing the updated user data
+ */
 export async function updateUser(
   userId: string,
   updates: Partial<UserRegistration>,
@@ -201,6 +149,11 @@ export async function updateUser(
   }
 }
 
+/**
+ * Deletes a user from the database by their unique identifier.
+ * @param userId - The unique identifier of the user to delete
+ * @returns A service result indicating success or failure
+ */
 export async function deleteUser(userId: string): Promise<ServiceResult<void>> {
   try {
     await db.delete(users).where(eq(users.id, userId));
@@ -214,6 +167,11 @@ export async function deleteUser(userId: string): Promise<ServiceResult<void>> {
 }
 
 // Lookup table operations
+
+/**
+ * Retrieves all available gender options from the database.
+ * @returns A service result containing an array of gender options
+ */
 export async function getGenderOptions(): Promise<
   ServiceResult<GenderOption[]>
 > {
@@ -232,6 +190,10 @@ export async function getGenderOptions(): Promise<
   }
 }
 
+/**
+ * Retrieves all available university options from the database.
+ * @returns A service result containing an array of university options
+ */
 export async function getUniversityOptions(): Promise<
   ServiceResult<UniversityOption[]>
 > {
@@ -252,6 +214,10 @@ export async function getUniversityOptions(): Promise<
   }
 }
 
+/**
+ * Retrieves all available major options from the database.
+ * @returns A service result containing an array of major options
+ */
 export async function getMajorOptions(): Promise<ServiceResult<MajorOption[]>> {
   try {
     const rows = await db
@@ -268,6 +234,10 @@ export async function getMajorOptions(): Promise<ServiceResult<MajorOption[]>> {
   }
 }
 
+/**
+ * Retrieves all available interest options from the database.
+ * @returns A service result containing an array of interest options
+ */
 export async function getInterestOptions(): Promise<
   ServiceResult<InterestOption[]>
 > {
@@ -288,6 +258,10 @@ export async function getInterestOptions(): Promise<
   }
 }
 
+/**
+ * Retrieves all available dietary restriction options from the database.
+ * @returns A service result containing an array of dietary restriction options
+ */
 export async function getDietaryRestrictionOptions(): Promise<
   ServiceResult<DietaryRestrictionOption[]>
 > {
@@ -311,6 +285,10 @@ export async function getDietaryRestrictionOptions(): Promise<
   }
 }
 
+/**
+ * Retrieves all available marketing type options from the database.
+ * @returns A service result containing an array of marketing type options
+ */
 export async function getMarketingTypeOptions(): Promise<
   ServiceResult<MarketingTypeOption[]>
 > {
@@ -334,61 +312,110 @@ export async function getMarketingTypeOptions(): Promise<
   }
 }
 
-// Get or create operations for dynamic data
-export async function getOrCreateUniversity(
-  universityName: string,
-): Promise<ServiceResult<number>> {
+/**
+ * Creates a new user with their registration data, interests, and dietary restrictions.
+ * @param userId - The unique identifier for the new user
+ * @param userData - The user registration data excluding the ID
+ * @param interestIds - Array of interest IDs to associate with the user
+ * @param dietaryRestrictionIds - Array of dietary restriction IDs to associate with the user
+ * @returns A service result containing the created user data
+ */
+export async function createUser(
+  userId: string,
+  userData: Omit<UserRegistration, "id">,
+  interestIds: number[] = [],
+  dietaryRestrictionIds: number[] = [],
+): Promise<ServiceResult<UserRegistration>> {
   try {
-    const existing = await db.query.universities.findFirst({
-      where: (u, { eq }) => eq(u.uni, universityName),
-      columns: { id: true },
+    return await db.transaction(async (tx) => {
+      // Create user record
+      const insertValues: any = {
+        id: userId,
+        email: userData.email,
+        fName: userData.f_name,
+        lName: userData.l_name,
+        gender: userData.gender,
+        university: userData.university,
+        major: userData.major,
+        yearOfStudy: userData.yearOfStudy,
+        experience: userData.experience,
+        marketing: userData.marketing,
+        prevAttendance: userData.prev_attendance,
+        parking: userData.parking,
+        accommodations: userData.accommodations,
+        resumeUrl: userData.resume_url,
+        status: userData.status,
+        checkedIn: userData.checked_in,
+        timestamp: userData.timestamp,
+        updatedAt: userData.updated_at,
+        resumeFilename: userData.resume_filename,
+      };
+
+      const [row] = await tx.insert(users).values(insertValues).returning();
+      if (!row) return { success: false, error: "Failed to create user" };
+
+      // Set user interests if provided
+      if (interestIds.length > 0) {
+        await tx.insert(userInterestsTable).values(
+          interestIds.map((interestId) => ({
+            id: userId,
+            interest: interestId,
+          })),
+        );
+      }
+
+      // Set user dietary restrictions if provided
+      if (dietaryRestrictionIds.length > 0) {
+        await tx.insert(userDietRestrictionsTable).values(
+          dietaryRestrictionIds.map((restrictionId) => ({
+            id: userId,
+            restriction: restrictionId,
+          })),
+        );
+      }
+
+      // Map and return the created user
+      const mapped: UserRegistration = {
+        id: row.id,
+        email: row.email!,
+        f_name: row.fName!,
+        l_name: row.lName!,
+        gender: row.gender!,
+        university: row.university!,
+        major: row.major!,
+        yearOfStudy: row.yearOfStudy!,
+        experience: row.experience!,
+        marketing: row.marketing!,
+        prev_attendance: row.prevAttendance!,
+        parking: row.parking!,
+        accommodations: row.accommodations!,
+        resume_url: row.resumeUrl || undefined,
+        resume_filename: row.resumeFilename || undefined,
+        status: row.status!,
+        checked_in: Boolean(row.checkedIn),
+        timestamp: row.timestamp || undefined,
+        updated_at: row.updatedAt || undefined,
+      };
+
+      return { success: true, data: mapped };
     });
-    if (existing) return { success: true, data: existing.id };
-    const [inserted] = await db
-      .insert(universitiesTable)
-      .values({ uni: universityName })
-      .returning({ id: universitiesTable.id });
-    if (!inserted)
-      return { success: false, error: "Failed to create university" };
-    return { success: true, data: inserted.id };
   } catch (error) {
     return {
       success: false,
       error:
         error instanceof Error
           ? error.message
-          : "Failed to get or create university",
+          : "Failed to create user with interests and dietary restrictions",
     };
   }
 }
 
-export async function getOrCreateMajor(
-  majorName: string,
-): Promise<ServiceResult<number>> {
-  try {
-    const existing = await db.query.majors.findFirst({
-      where: (m, { eq }) => eq(m.major, majorName),
-      columns: { id: true },
-    });
-    if (existing) return { success: true, data: existing.id };
-    const [inserted] = await db
-      .insert(majorsTable)
-      .values({ major: majorName })
-      .returning({ id: majorsTable.id });
-    if (!inserted) return { success: false, error: "Failed to create major" };
-    return { success: true, data: inserted.id };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get or create major",
-    };
-  }
-}
-
-// User interests and dietary restrictions with transaction management
+/**
+ * Sets the interests for a specific user, replacing any existing interests.
+ * @param userId - The unique identifier of the user
+ * @param interestIds - Array of interest IDs to associate with the user
+ * @returns A service result indicating success or failure
+ */
 export async function setUserInterests(
   userId: string,
   interestIds: number[],
@@ -419,6 +446,12 @@ export async function setUserInterests(
   }
 }
 
+/**
+ * Sets the dietary restrictions for a specific user, replacing any existing restrictions.
+ * @param userId - The unique identifier of the user
+ * @param restrictionIds - Array of dietary restriction IDs to associate with the user
+ * @returns A service result indicating success or failure
+ */
 export async function setUserDietaryRestrictions(
   userId: string,
   restrictionIds: number[],
@@ -449,6 +482,11 @@ export async function setUserDietaryRestrictions(
   }
 }
 
+/**
+ * Retrieves all interests associated with a specific user.
+ * @param userId - The unique identifier of the user
+ * @returns A service result containing an array of the user's interests
+ */
 export async function getUserInterests(
   userId: string,
 ): Promise<ServiceResult<InterestOption[]>> {
@@ -474,6 +512,11 @@ export async function getUserInterests(
   }
 }
 
+/**
+ * Retrieves all dietary restrictions associated with a specific user.
+ * @param userId - The unique identifier of the user
+ * @returns A service result containing an array of the user's dietary restrictions
+ */
 export async function getUserDietaryRestrictions(
   userId: string,
 ): Promise<ServiceResult<DietaryRestrictionOption[]>> {
