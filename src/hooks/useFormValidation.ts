@@ -54,9 +54,10 @@ export function useFormValidation(options: UseFormValidationOptions = {}) {
   const validationRules = useMemo(() => {
     const rules: Record<string, ValidationRule[]> = {};
 
-    // Password validation
+    // Password validation - use passwordValidations as base and apply custom options as overrides
+    const passwordRules: ValidationRule[] = [...passwordValidations];
+
     if (options.password) {
-      const passwordRules: ValidationRule[] = [];
       const {
         minLength = 8,
         requireUppercase = true,
@@ -64,6 +65,9 @@ export function useFormValidation(options: UseFormValidationOptions = {}) {
         requireNumbers = true,
         requireSpecialChars = true,
       } = options.password;
+
+      // Override rules based on custom options
+      passwordRules.length = 0; // Clear default rules
 
       if (minLength > 0) {
         passwordRules.push({
@@ -100,9 +104,9 @@ export function useFormValidation(options: UseFormValidationOptions = {}) {
             "Password must include at least one special character (@$!%*?&)",
         });
       }
-
-      rules.password = passwordRules;
     }
+
+    rules.password = passwordRules;
 
     // Email validation
     if (options.email) {
@@ -165,20 +169,11 @@ export function useFormValidation(options: UseFormValidationOptions = {}) {
     password: string,
   ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
+    const rules = validationRules.password || [];
 
-    if (options.password) {
-      const rules = validationRules.password || [];
-      for (const rule of rules) {
-        if (!rule.test(password)) {
-          errors.push(rule.message);
-        }
-      }
-    } else {
-      // Use default password validation from types
-      for (const validation of passwordValidations) {
-        if (!validation.test(password)) {
-          errors.push(validation.message);
-        }
+    for (const rule of rules) {
+      if (!rule.test(password)) {
+        errors.push(rule.message);
       }
     }
 

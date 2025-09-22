@@ -20,7 +20,11 @@ import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
 import { useFormState, useResumeUpload } from "@/hooks";
-import { formOptionTransformers } from "@/utils/formDataTransformers";
+import {
+  formOptionTransformers,
+  mergeFormData,
+  commonFieldMappings,
+} from "@/utils/formDataTransformers";
 
 type BaseRegistrationInput =
   import("@/types/registration").BaseRegistrationInput;
@@ -41,8 +45,16 @@ export default function ProfileForm({
     email: initialData.email,
   });
 
+  // Use mergeFormData for consistent form data handling, even with just initial data
+  // This ensures proper field mapping and fallback values are applied
+  const formDefaults = mergeFormData<ProfileUpdateInput>(
+    {}, // No context data for profile form
+    initialData,
+    commonFieldMappings,
+  );
+
   const form = useForm<ProfileUpdateInput>({
-    defaultValues: initialData,
+    defaultValues: formDefaults,
     mode: "onChange",
   });
 
