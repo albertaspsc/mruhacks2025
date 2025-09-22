@@ -1,6 +1,18 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define the workshop registration type based on the database query
+interface WorkshopRegistration {
+  id: string;
+  workshop_id: string;
+  registered_at: string;
+  f_name: string;
+  l_name: string;
+  yearOfStudy: string;
+  gender: string;
+  major: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient(true);
@@ -177,7 +189,7 @@ export async function GET(request: NextRequest) {
       // Get all registrations for these workshops
       const workshopIds = workshops?.map((w) => w.id) || [];
 
-      let allRegistrations: any[] = [];
+      let allRegistrations: WorkshopRegistration[] = [];
       if (workshopIds.length > 0) {
         const { data: registrations, error: registrationsError } =
           await supabase
@@ -205,7 +217,7 @@ export async function GET(request: NextRequest) {
           );
         }
 
-        allRegistrations = (registrations || []) as Registration[];
+        allRegistrations = (registrations || []) as WorkshopRegistration[];
       }
 
       const csvHeaders = [
