@@ -51,6 +51,7 @@ import {
 } from "@/db/settings";
 import { UserRegistration } from "@/types/registration";
 import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { updateUserEmailAction } from "@/actions/profile-actions";
 import { createClient } from "@/utils/supabase/client";
 import { useFormValidation } from "@/hooks";
 
@@ -118,6 +119,10 @@ type EmailPreferencesValues = {
   marketingEmails: boolean;
 };
 
+type EmailChangeValues = {
+  newEmail: string;
+};
+
 type PasswordFormValues = {
   currentPassword: string;
   newPassword: string;
@@ -131,15 +136,16 @@ type ParkingPreferencesValues = {
 
 export default function SettingsPage() {
   const supabase = createClient();
-  const { validatePassword, validateLicensePlate } = useFormValidation({
-    password: {
-      minLength: 8,
-      requireUppercase: true,
-      requireLowercase: true,
-      requireNumbers: true,
-      requireSpecialChars: true,
-    },
-  });
+  const { validatePassword, validateLicensePlate, validateEmail } =
+    useFormValidation({
+      password: {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+      },
+    });
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserRegistration>();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -150,6 +156,7 @@ export default function SettingsPage() {
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState({
     email: false,
+    emailChange: false,
     parking: false,
     password: false,
   });
@@ -165,6 +172,14 @@ export default function SettingsPage() {
     defaultValues: {
       marketingEmails: false,
     },
+  });
+
+  // Email change form
+  const emailChangeForm = useForm<EmailChangeValues>({
+    defaultValues: {
+      newEmail: "",
+    },
+    mode: "onChange",
   });
 
   // Password form with validation
@@ -290,7 +305,7 @@ export default function SettingsPage() {
     };
 
     loadData();
-  }, []);
+  }, [emailPreferencesForm, parkingPreferencesForm]);
 
   // Handle email preferences submission
   async function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
@@ -308,6 +323,54 @@ export default function SettingsPage() {
       );
     } finally {
       setIsSubmitting((prev) => ({ ...prev, email: false }));
+    }
+  }
+
+  // Handle email change submission
+  async function onEmailChangeSubmit(data: EmailChangeValues) {
+    // Validate email
+    const emailResult = validateEmail(data.newEmail);
+    if (!emailResult.isValid) {
+      emailChangeForm.setError("newEmail", {
+        message: emailResult.error || "Invalid email address",
+      });
+      return;
+    }
+
+    // Check if email is different from current
+    if (data.newEmail === user?.email) {
+      emailChangeForm.setError("newEmail", {
+        message: "This is already your current email address",
+      });
+      return;
+    }
+
+    setIsSubmitting((prev) => ({ ...prev, emailChange: true }));
+    try {
+      const result = await updateUserEmailAction(data.newEmail);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Reset form on success
+      emailChangeForm.reset({
+        newEmail: "",
+      });
+
+      showToast(
+        "Verification email sent! Please check your new email address to complete the change.",
+        "success",
+      );
+    } catch (error) {
+      console.error("Error updating email:", error);
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to update email. Please try again.",
+        "error",
+      );
+    } finally {
+      setIsSubmitting((prev) => ({ ...prev, emailChange: false }));
     }
   }
 
@@ -508,69 +571,142 @@ export default function SettingsPage() {
 
           {/* Email Preferences Tab */}
           <TabsContent value="email">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Email Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Mandatory Email Notice */}
-                <Alert className="mb-6">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Notice</AlertTitle>
-                  <AlertDescription>
-                    All confirmed participants will receive mandatory logistics
-                    emails with essential event information and updates. These
-                    emails cannot be opted out of to ensure you don&apos;t miss
-                    critical details for your MRUHacks experience.
-                  </AlertDescription>
-                </Alert>
-
-                <Form {...emailPreferencesForm}>
-                  <form
-                    onSubmit={emailPreferencesForm.handleSubmit(
-                      onEmailPreferencesSubmit,
-                    )}
-                    className="space-y-6"
-                  >
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="marketingEmails"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Marketing Emails</FormLabel>
-                            <FormDescription>
-                              Receive emails about our services, partners, and
-                              other opportunities.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
+            <div className="space-y-6">
+              {/* Email Change Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Change Email Address
+                  </CardTitle>
+                  <CardDescription>
+                    Update your email address. You&apos;ll receive a
+                    verification email to confirm the change.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...emailChangeForm}>
+                    <form
+                      onSubmit={emailChangeForm.handleSubmit(
+                        onEmailChangeSubmit,
                       )}
-                    />
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting.email}
-                      className="w-full sm:w-auto"
+                      className="space-y-6"
                     >
-                      {isSubmitting.email && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <div className="space-y-2">
+                        <FormLabel>Current Email</FormLabel>
+                        <Input
+                          value={user?.email || ""}
+                          disabled
+                          className="bg-gray-50"
+                        />
+                        <FormDescription>
+                          Your current email address
+                        </FormDescription>
+                      </div>
+
+                      <FormField
+                        control={emailChangeForm.control}
+                        name="newEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Email Address</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your new email address"
+                                type="email"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter the new email address you want to use for
+                              your account.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting.emailChange}
+                        className="w-full sm:w-auto"
+                      >
+                        {isSubmitting.emailChange && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Send Verification Email
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+
+              {/* Email Preferences Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Email Preferences
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Mandatory Email Notice */}
+                  <Alert className="mb-6">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Notice</AlertTitle>
+                    <AlertDescription>
+                      All confirmed participants will receive mandatory
+                      logistics emails with essential event information and
+                      updates. These emails cannot be opted out of to ensure you
+                      don&apos;t miss critical details for your MRUHacks
+                      experience.
+                    </AlertDescription>
+                  </Alert>
+
+                  <Form {...emailPreferencesForm}>
+                    <form
+                      onSubmit={emailPreferencesForm.handleSubmit(
+                        onEmailPreferencesSubmit,
                       )}
-                      Save Preferences
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                      className="space-y-6"
+                    >
+                      <FormField
+                        control={emailPreferencesForm.control}
+                        name="marketingEmails"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Marketing Emails</FormLabel>
+                              <FormDescription>
+                                Receive emails about our services, partners, and
+                                other opportunities.
+                              </FormDescription>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting.email}
+                        className="w-full sm:w-auto"
+                      >
+                        {isSubmitting.email && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Save Preferences
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Parking Preferences Tab */}
