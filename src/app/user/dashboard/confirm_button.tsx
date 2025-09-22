@@ -1,19 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-
-import { confirm, deny } from "./api";
-
-export default function RSVPButton({ disabled }: { disabled?: boolean }) {
-  return (
-    <form action={confirm}>
-      <Button type="submit" disabled={disabled}>
-        RSVP
-      </Button>
-    </form>
-  );
-}
-
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -24,13 +11,43 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { confirm, deny } from "./api";
+import { useState } from "react";
+
+export default function RSVPButton({ disabled }: { disabled?: boolean }) {
+  const [hasBeenClicked, setHasBeenClicked] = useState(false);
+  const action = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (hasBeenClicked) return;
+    setHasBeenClicked(true);
+
+    confirm();
+  };
+
+  return (
+    <form onSubmit={action}>
+      <Button type="submit" disabled={disabled || hasBeenClicked}>
+        RSVP
+      </Button>
+    </form>
+  );
+}
 
 type Props = {
-  // Keep flexible: works whether your action expects FormData or nothing
   label?: string;
 };
 
 export function ConfirmDecline({ label = "Decline" }: Props) {
+  const [hasBeenClicked, setHasBeenClicked] = useState(false);
+
+  const handleDecline = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (hasBeenClicked) return;
+    setHasBeenClicked(true);
+
+    await deny();
+  };
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -48,9 +65,13 @@ export function ConfirmDecline({ label = "Decline" }: Props) {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
 
-          {/* Keep the server action semantics via a form submit */}
-          <form action={deny}>
-            <Button type="submit" variant="destructive">
+          {/* debounced submit */}
+          <form onSubmit={handleDecline}>
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={hasBeenClicked}
+            >
               Yes, decline
             </Button>
           </form>
