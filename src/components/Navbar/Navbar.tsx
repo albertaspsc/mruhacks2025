@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import styles from "./Navbar.module.css";
 import logo from "@/assets/logos/color-logo.svg";
 import NavbarItem from "./NavbarItem";
@@ -11,6 +12,7 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = createClient();
 
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +85,21 @@ const Navbar = () => {
   };
 
   const isActive = (sectionId: string) => activeSection === sectionId;
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Sign out error:", error);
+        return;
+      }
+      setIsOpen(false);
+      router.push("/");
+    } catch (error) {
+      console.error("Unexpected sign out error:", error);
+    }
+  };
 
   // Determine navbar configuration based on route
   const isLanding = pathname === "/" || pathname.startsWith("/login-gateway");
@@ -191,6 +208,15 @@ const Navbar = () => {
             e.preventDefault();
             setIsOpen(false);
             router.push("/");
+          },
+        },
+        {
+          key: "user-logout",
+          label: "Logout",
+          variant: "button" as const,
+          onClick: () => {
+            setIsOpen(false);
+            handleLogout();
           },
         },
       ];
