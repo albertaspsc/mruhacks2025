@@ -1,7 +1,9 @@
 import React, { Suspense, use } from "react";
 import {} from "@/components/ui/loading-spinner";
 import { Registration, getRegistration } from "@/db/registration";
-import StatusBanner from "@/components/dashboards/common/StatusBanner";
+import StatusBanner, {
+  RegistrationStatus,
+} from "@/components/dashboards/common/StatusBanner";
 import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
 import DashboardItem from "@/components/dashboards/common/DashboardItem";
 import Checklist from "@/components/dashboards/checklist/Checklist";
@@ -27,15 +29,7 @@ export default function DashboardPage() {
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}
             {user && (
-              <StatusBanner
-                status={
-                  user.status === "confirmed" ||
-                  user.status === "pending" ||
-                  user.status === "waitlisted"
-                    ? user.status
-                    : "pending" // default fallback
-                }
-              />
+              <StatusBanner status={user.status as RegistrationStatus} />
             )}
 
             {/* Discord Card */}

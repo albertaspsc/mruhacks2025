@@ -4,23 +4,9 @@ import DashboardItem from "@/components/dashboards/common/DashboardItem";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db/drizzle";
 import { createClient } from "@/utils/supabase/server";
-import RSVPButton from "./confirm_button";
-
-async function confirm() {
-  "use server";
-  // await client.from("rsvp").upsert({ id: userData.user!.id });
-}
-
-async function deny() {
-  "use server";
-  const client = await createClient();
-  const { data: userData, error: userError } = await client.auth.getUser();
-
-  await client
-    .from("users")
-    .update({ status: "declined" })
-    .eq("id", userData.user!.id);
-}
+import RSVPButton, { ConfirmDecline } from "./confirm_button";
+import { deny } from "./api";
+import { RegistrationStatus } from "@/components/dashboards/common/StatusBanner";
 
 export default async function Rsvp() {
   const client = await createClient();
@@ -28,26 +14,43 @@ export default async function Rsvp() {
 
   if (!userData || userError) throw new Error("Cannot load user");
 
-  const { data } = await client
-    .from("rsvpable_users")
-    .select()
-    .eq("id", userData.user.id)
-    .maybeSingle();
+  const [rsvpRes, statusRes] = await Promise.all([
+    client
+      .from("rsvpable_users")
+      .select()
+      .eq("id", userData.user.id)
+      .maybeSingle(),
+    client
+      .from("users")
+      .select("status")
+      .eq("id", userData.user.id)
+      .maybeSingle(),
+  ]);
 
-  const userCanRSVP = !!data;
+  const userCanRSVP = !!rsvpRes.data;
+  const status = statusRes.data?.status as RegistrationStatus;
 
-  if (!userCanRSVP) return null;
+  const messages: Partial<Record<RegistrationStatus, string>> = {
+    confirmed: "You’ve confirmed your spot. See you at the event!",
+    pending: "Your registration is pending. Please RSVP to secure your spot.",
+    waitlisted:
+      "We don't have a spot for you at this time. We'll email you if a slot opens up.",
+  };
+
+  if (status == "denied" || status == "declined") {
+    return null;
+  }
 
   return (
     <DashboardItem
-      title="RSVP Now!"
+      title="Registration Status"
       className="overflow-hidden"
       contentClassName="py-2 px-3 space-y-2 flex flex-col"
     >
-      Congratulations you have a spot waiting for you, save your spot now.
+      {messages[status]}
       <div className="flex flex-row lg:w-1/2 mt-2 space-x-2">
-        <RSVPButton />
-        <Button>Decline</Button>
+        <RSVPButton disabled={!userCanRSVP} />
+        <ConfirmDecline />
       </div>
     </DashboardItem>
   );
