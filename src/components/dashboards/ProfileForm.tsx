@@ -12,12 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Loader2, Mail } from "lucide-react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import {
-  updateUserEmailAction,
-  updateUserProfileAction,
-} from "@/actions/profile-actions";
+import { Loader2 } from "lucide-react";
+import { updateUserProfileAction } from "@/actions/profile-actions";
 import { ToastBanner } from "@/components/dashboards/toast/Toast";
 import { ProfileUpdateSchema, FormOptions } from "@/types/registration";
 import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/PersonalDetailsSection";
@@ -39,8 +35,6 @@ export default function ProfileForm({
   initialData,
   formOptions,
 }: ProfileFormProps) {
-  const [emailVerificationSent, setEmailVerificationSent] =
-    React.useState(false);
   const [currentUserData, setCurrentUserData] = React.useState({
     firstName: initialData.firstName,
     lastName: initialData.lastName,
@@ -71,32 +65,10 @@ export default function ProfileForm({
       return;
     }
 
-    setEmailVerificationSent(false);
-
     try {
-      const emailChanged = values.email !== currentUserData.email;
       const nameChanged =
         values.firstName !== currentUserData.firstName ||
         values.lastName !== currentUserData.lastName;
-
-      // Handle email change (requires verification) - use server action
-      if (emailChanged) {
-        console.log(
-          "Updating email from",
-          currentUserData.email,
-          "to",
-          values.email,
-        );
-
-        const emailResult = await updateUserEmailAction(values.email!);
-
-        if (!emailResult.success) {
-          showToast("error", "Email Update Failed", emailResult.error);
-          return;
-        }
-
-        setEmailVerificationSent(true);
-      }
 
       // Update registration data using bulk update (includes firstName and lastName)
       const result = await updateUserProfileAction({
@@ -130,19 +102,7 @@ export default function ProfileForm({
       }
 
       // Show appropriate success message
-      if (emailChanged && nameChanged) {
-        showToast(
-          "info",
-          "Updates saved",
-          `Profile and registration updated successfully. Please check ${values.email} for email verification.`,
-        );
-      } else if (emailChanged) {
-        showToast(
-          "info",
-          "Verification email sent",
-          `Profile updated successfully. Please check ${values.email} and click the verification link to confirm your new email address.`,
-        );
-      } else if (nameChanged) {
+      if (nameChanged) {
         showToast(
           "success",
           "Profile updated",
@@ -171,7 +131,8 @@ export default function ProfileForm({
       showToast(
         "error",
         "Update failed",
-        error.message || "Failed to update your profile. Please try again.",
+        error.message ||
+          "Failed to update your profile. Please try again. If the problem persists, please contact us.",
       );
     }
   }
@@ -196,27 +157,11 @@ export default function ProfileForm({
   return (
     <>
       <ToastBanner toast={toast} onClose={clearToast} />
-
-      {emailVerificationSent && (
-        <Alert className="mb-6 bg-blue-50 border-blue-200">
-          <Mail className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">
-            Email verification sent
-          </AlertTitle>
-          <AlertDescription className="text-blue-700">
-            We&apos;ve sent a verification email to your new address. Please
-            check your inbox and click the verification link to confirm the
-            change.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <Card>
         <CardHeader>
-          <CardTitle>Profile & Registration Information</CardTitle>
+          <CardTitle>Registration Information</CardTitle>
           <CardDescription>
-            Update your personal details and registration information. Email
-            changes require verification.
+            Update your registration information.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -270,17 +215,6 @@ export default function ProfileForm({
           </Form>
         </CardContent>
       </Card>
-
-      {/* Additional Info Alert */}
-      <Alert className="mt-6 rounded-xl">
-        <Mail className="h-4 w-4" />
-        <AlertTitle>Email Change Security</AlertTitle>
-        <AlertDescription>
-          For security reasons, email changes require verification. You&apos;ll
-          receive an email at your new address with a verification link. Your
-          login email won&apos;t change until you verify the new address.
-        </AlertDescription>
-      </Alert>
     </>
   );
 }

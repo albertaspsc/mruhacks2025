@@ -47,25 +47,25 @@ export const passwordValidations = [
 // Email validation schema
 export const EmailSchema = z
   .string()
-  .email("Enter a valid email")
-  .min(1, "Email is required");
+  .min(1, "Please enter your email address")
+  .email("Please enter a valid email address");
 
 // Base registration schema that can be reused across forms
 export const BaseRegistrationSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "Please enter your first name"),
+  lastName: z.string().min(1, "Please enter your last name"),
   email: EmailSchema,
-  gender: z.number().min(1, "Gender is required"),
-  university: z.number().min(1, "University is required"),
-  major: z.number().min(1, "Major is required"),
+  gender: z.number().min(1, "Please select your gender"),
+  university: z.number().min(1, "Please select your university"),
+  major: z.number().min(1, "Please select your major"),
   yearOfStudy: createSelectSchema(yearOfStudy),
-  experience: z.number().min(1, "Experience level is required"),
+  experience: z.number().min(1, "Please select your experience level"),
   marketing: z.number().min(1, "Please tell us how you heard about us"),
   previousAttendance: z.boolean(),
   parking: createSelectSchema(parkingState),
   accommodations: z.string().optional().default(""),
   dietaryRestrictions: z.array(z.number()).default([]),
-  interests: z.array(z.number()).min(1, "At least one interest is required"),
+  interests: z.array(z.number()).min(1, "Please select at least one interest"),
   resume: z.string().url().optional().or(z.literal("")).default(""),
 });
 
@@ -182,6 +182,7 @@ export interface ServiceResult<T = any> {
   data?: T;
   error?: string;
   message?: string;
+  fieldErrors?: Record<string, string[]>;
 }
 
 // Form step schemas for multi-step registration
@@ -212,14 +213,54 @@ export type FinalQuestionsInput = z.infer<typeof FinalQuestionsSchema>;
 export function validateFormData<T>(
   schema: z.ZodSchema<T>,
   data: unknown,
-): { success: boolean; data?: T; error?: string } {
+): {
+  success: boolean;
+  data?: T;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+} {
   const result = schema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
   } else {
+    // Group errors by field for better error handling
+    const fieldErrors: Record<string, string[]> = {};
+    const generalErrors: string[] = [];
+
+    result.error.errors.forEach((error) => {
+      const fieldPath = error.path.join(".");
+      const errorMessage = error.message;
+
+      if (fieldPath) {
+        if (!fieldErrors[fieldPath]) {
+          fieldErrors[fieldPath] = [];
+        }
+        fieldErrors[fieldPath].push(errorMessage);
+      } else {
+        generalErrors.push(errorMessage);
+      }
+    });
+
+    // Create a comprehensive error message
+    const errorMessages: string[] = [];
+
+    // Add field-specific errors
+    Object.entries(fieldErrors).forEach(([field, errors]) => {
+      const fieldName =
+        field.charAt(0).toUpperCase() +
+        field.slice(1).replace(/([A-Z])/g, " $1");
+      errorMessages.push(`${fieldName}: ${errors.join(", ")}`);
+    });
+
+    // Add general errors
+    if (generalErrors.length > 0) {
+      errorMessages.push(...generalErrors);
+    }
+
     return {
       success: false,
-      error: result.error.errors.map((e) => e.message).join(", "),
+      error: errorMessages.join("; "),
+      fieldErrors,
     };
   }
 }

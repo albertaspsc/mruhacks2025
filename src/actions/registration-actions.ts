@@ -37,11 +37,13 @@ export async function registerUserAction(
     if (!validationResult.success) {
       console.error("Validation failed:", {
         error: validationResult.error,
+        fieldErrors: validationResult.fieldErrors,
         formData: formData,
       });
       return {
         success: false,
-        error: `Validation failed: ${validationResult.error}`,
+        error: validationResult.error,
+        fieldErrors: validationResult.fieldErrors,
       };
     }
 

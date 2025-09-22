@@ -20,7 +20,7 @@ export default async function RegisterLayout({ children }: Props) {
     const registrationExists =
       registrationResult.success && !!registrationResult.data;
 
-    /** If a registration is complete, redirect to the dash */
+    // If a registration is complete, redirect to the dash
     if (registrationExists) {
       redirect("/user/dashboard");
     }

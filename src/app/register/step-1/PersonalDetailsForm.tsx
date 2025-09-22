@@ -26,7 +26,7 @@ import {
  */
 type Props = {
   /** Initial form values containing first and last name */
-  initial: { firstName: string; lastName: string };
+  initial: { firstName: string; lastName: string; email: string };
   genders: GenderOption[];
   majors: MajorOption[];
   universities: UniversityOption[];
@@ -84,6 +84,7 @@ export default function PersonalDetailsForm({
       const current = v as Partial<PersonalForm>;
       setValues({
         ...data,
+        email: initial.email, // Include email from initial data
         firstName: current.firstName ?? "",
         lastName: current.lastName ?? "",
         previousAttendance: current.previousAttendance,
@@ -106,6 +107,7 @@ export default function PersonalDetailsForm({
     // Save once more to be explicit
     setValues({
       ...data,
+      email: initial.email, // Include email from initial data
       ...values,
       previousAttendance: values.previousAttendance,
       gender: values.gender || 0,
