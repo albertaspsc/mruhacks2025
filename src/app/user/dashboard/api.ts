@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -15,6 +16,8 @@ export async function deny() {
   if (resp.error) {
     throw new Error(resp.error.message);
   }
+
+  revalidatePath("/user/dashboard");
 
   redirect("/user/dashboard");
 }
@@ -42,6 +45,8 @@ export async function confirm() {
   if (resp.error) {
     throw new Error(resp.error.message);
   }
+
+  revalidatePath("/user/dashboard");
 
   redirect("/user/dashboard");
 }
