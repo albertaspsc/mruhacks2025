@@ -26,4 +26,4 @@ order by
   (p.email is not null) desc,
   users.created_at
 limit
-  145;
+  145 - (select count(*) from users where status='confirmed');
