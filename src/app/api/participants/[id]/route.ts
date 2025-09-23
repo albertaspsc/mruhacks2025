@@ -57,7 +57,15 @@ export async function PATCH(
     } else if (user.role === "admin") {
       // Admins can update both status and checkedIn
       if (status !== undefined) {
-        if (!["pending", "confirmed", "waitlisted"].includes(status)) {
+        if (
+          ![
+            "pending",
+            "confirmed",
+            "waitlisted",
+            "denied",
+            "declined",
+          ].includes(status)
+        ) {
           return NextResponse.json(
             {
               error:

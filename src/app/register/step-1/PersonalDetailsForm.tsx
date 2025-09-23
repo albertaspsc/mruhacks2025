@@ -114,7 +114,7 @@ export default function PersonalDetailsForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
         {/* Hidden email */}
         <FormField
           control={form.control}
@@ -122,46 +122,52 @@ export default function PersonalDetailsForm({
           render={({ field }) => <input type="hidden" {...field} />}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  First Name <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="firstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-black">
+                First Name <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="John"
+                  {...field}
+                  className="mt-1 pr-10 text-black"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Last Name <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="lastName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-black">
+                Last Name <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Doe"
+                  {...field}
+                  className="mt-1 pr-10 text-black"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
           name="previousAttendance"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel className="text-black">
                 Have you attended MRUHacks before?{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
@@ -170,7 +176,7 @@ export default function PersonalDetailsForm({
                 onValueChange={(v) => field.onChange(v)}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
                     <SelectValue placeholder="Select an option" />
                   </SelectTrigger>
                 </FormControl>
@@ -189,12 +195,12 @@ export default function PersonalDetailsForm({
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel className="text-black">
                 Gender <span className="text-destructive">*</span>
               </FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                 </FormControl>
@@ -211,75 +217,59 @@ export default function PersonalDetailsForm({
           )}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="university"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  University / Institution{" "}
-                  <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    list="university-list"
-                    placeholder="Select or type your institution"
-                    {...field}
-                  />
-                </FormControl>
-                <datalist id="university-list">
-                  {universities.map((u) => (
-                    <option key={u} value={u} />
-                  ))}
-                </datalist>
-                <p className="text-sm text-muted-foreground">
-                  You can type any Canadian university or select from
-                  suggestions.
-                </p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="university"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-black">
+                University / Institution{" "}
+                <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter your institution"
+                  {...field}
+                  className="mt-1 pr-10 text-black"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="major"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Major / Program <span className="text-destructive">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    list="major-list"
-                    placeholder="Select or type your major"
-                    {...field}
-                  />
-                </FormControl>
-                <datalist id="major-list">
-                  {majors.map((m) => (
-                    <option key={m} value={m} />
-                  ))}
-                </datalist>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="major"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-black">
+                Major / Program <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter your major"
+                  {...field}
+                  className="mt-1 pr-10 text-black"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
           name="yearOfStudy"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
+              <FormLabel className="text-black">
                 What year will you be in as of Fall?{" "}
                 <span className="text-destructive">*</span>
               </FormLabel>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                 </FormControl>
@@ -299,7 +289,10 @@ export default function PersonalDetailsForm({
         />
 
         <div className="flex gap-4">
-          <Button type="submit" className="flex-1">
+          <Button
+            type="submit"
+            className="w-full bg-black text-white font-semibold shadow-none hover:bg-gray-900 transition-colors disabled:opacity-50"
+          >
             Next: Final Questions
           </Button>
         </div>

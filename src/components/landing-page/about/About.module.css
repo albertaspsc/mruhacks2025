@@ -1,0 +1,199 @@
+/* Main container setup */
+.aboutSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 120px 20px;
+  background-color: #fcfbf4;
+  overflow: hidden;
+}
+
+/* Container that holds the image and text content */
+.container {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr;
+  max-width: 1300px;
+  width: 100%;
+  position: relative;
+  align-items: center;
+}
+
+/* Wrapper for the overlapping graphic image */
+.imageWrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Graphic image (left side), overlaps background */
+.aboutGraphic {
+  width: 110%;
+  max-width: 700px;
+  height: auto;
+  object-fit: contain;
+  position: relative;
+  top: -15px;
+  transform: translateY(-10%);
+}
+
+/* Textual content styling */
+.textContent {
+  padding: 10px;
+  border-radius: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading for About section */
+.heading {
+  font-size: 2.7rem;
+  color: #000;
+  margin-bottom: 2px;
+  font-weight: 800;
+  text-align: left;
+}
+
+/* Paragraph description styling */
+.description {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #333;
+  text-align: left;
+}
+
+/* Background image container - positioned centrally behind content */
+.backgroundImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50px; /* Rounded corners added for smoother visual integration */
+}
+
+/* Keyframe animations for fade and slide effects */
+@keyframes fadeInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes fadeInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation classes for image wrapper (left side) */
+.imageWrapperAnimated {
+  animation: fadeInFromLeft 0.9s ease-out 0.8s both;
+}
+
+/* Animation classes for text content (right side) */
+.textContentAnimated {
+  animation: fadeInFromRight 1s ease-out 1s both;
+}
+
+@media (max-width: 1099px) {
+  .heading {
+    margin-top: 0%;
+    margin-bottom: 0;
+    font-size: 2rem;
+  }
+  .description {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 871px) {
+  .heading {
+    margin-top: 0%;
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+  .description {
+    font-size: 0.7rem;
+  }
+
+  .aboutGraphic {
+    top: -35px;
+  }
+}
+
+/* Responsive adjustments for small screens (768px and below) */
+@media (max-width: 768px) {
+  .aboutSection {
+    padding: 60px 20px;
+  }
+
+  .container {
+    grid-template-columns: 1fr; /* Stack vertically */
+    gap: 40px;
+  }
+
+  .imageWrapper {
+    position: static;
+    margin-bottom: 20px;
+  }
+
+  .aboutGraphic {
+    background: linear-gradient(135deg, #f8c0c8, #d9a7f9);
+    background-size: cover;
+    max-width: 100%;
+    width: 75%;
+    height: auto;
+    transform: none;
+    margin-bottom: 20px;
+    border-radius: 20px; /* Add rounded corners for better visual appearance */
+  }
+
+  .textContent {
+    position: relative;
+    padding: 20px;
+    order: -1;
+    text-align: left;
+    color: #000; /* Ensures text readability over gradient */
+  }
+
+  .heading {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .description {
+    font-size: 1rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .backgroundImage {
+    display: none;
+  }
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .imageWrapperAnimated,
+  .textContentAnimated {
+    animation: none;
+  }
+}

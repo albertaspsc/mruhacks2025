@@ -1,0 +1,157 @@
+/* Shared layered container for gradient + noise overlay */
+.layered {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.gradientBase {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.noiseOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Interactive gradient with mouse tracking */
+.interactive {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #efae83 0%, #f5c4a0 100%);
+  overflow: hidden;
+}
+
+.interactiveGradients {
+  position: absolute;
+  inset: 0;
+  filter: blur(40px);
+}
+
+.interactiveCircle {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: hard-light;
+  opacity: 1;
+}
+
+.interactiveG1 {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 222, 0, 0.4) 0,
+    rgba(255, 222, 0, 0) 50%
+  );
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  animation: moveVertical 30s ease infinite;
+}
+
+.interactiveG2 {
+  background: radial-gradient(
+    circle at center,
+    rgba(232, 44, 162, 0.4) 0,
+    rgba(232, 44, 162, 0) 50%
+  );
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  transform-origin: calc(50% - 400px);
+  animation: moveInCircle 20s reverse infinite;
+}
+
+.interactiveG3 {
+  background: radial-gradient(
+    circle at center,
+    rgba(251, 84, 65, 0.4) 0,
+    rgba(251, 84, 65, 0) 50%
+  );
+  width: 80%;
+  height: 80%;
+  top: calc(10% + 200px);
+  left: calc(10% - 500px);
+  transform-origin: calc(50% + 400px);
+  animation: moveInCircle 40s linear infinite;
+}
+
+.interactiveG4 {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 222, 0, 0.4) 0,
+    rgba(255, 222, 0, 0) 50%
+  );
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  transform-origin: calc(50% - 200px);
+  animation: moveHorizontal 40s ease infinite;
+  opacity: 0.7;
+}
+
+.interactiveG5 {
+  background: radial-gradient(
+    circle at center,
+    rgba(232, 44, 162, 0.3) 0,
+    rgba(232, 44, 162, 0) 50%
+  );
+  width: 160%;
+  height: 160%;
+  top: -30%;
+  left: -30%;
+  transform-origin: calc(50% - 800px) calc(50% + 200px);
+  animation: moveInCircle 20s ease infinite;
+}
+
+@keyframes moveInCircle {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes moveVertical {
+  0% {
+    transform: translateY(-50%);
+  }
+  50% {
+    transform: translateY(50%);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes moveHorizontal {
+  0% {
+    transform: translateX(-50%) translateY(-10%);
+  }
+  50% {
+    transform: translateX(50%) translateY(10%);
+  }
+  100% {
+    transform: translateX(-50%) translateY(-10%);
+  }
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .interactiveG1,
+  .interactiveG2,
+  .interactiveG3,
+  .interactiveG4,
+  .interactiveG5 {
+    animation: none !important;
+  }
+}

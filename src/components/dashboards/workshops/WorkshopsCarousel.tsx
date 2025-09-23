@@ -7,12 +7,12 @@ import { useToast } from "@/components/hooks/use-toast";
 import useCarousel from "embla-carousel-react";
 import { MapPin } from "lucide-react";
 import Image from "next/image";
-import { usePrevNextButtons } from "@/components/Carousel/CarouselArrowButtons";
+import { usePrevNextButtons } from "@/components/landing-page/team/carousel/CarouselArrowButtons";
 import {
   WorkshopPrevButton as PrevButton,
   WorkshopNextButton as NextButton,
 } from "./WorkshopButtons";
-import carouselStyles from "@/components/Carousel/carousel.module.css";
+import carouselStyles from "@/components/landing-page/team/carousel/carousel.module.css";
 import styles from "./workshopsCarousel.module.css";
 
 type Workshop = {
