@@ -1,15 +1,21 @@
-import React from "react";
+
+import React, { Suspense, use } from "react";
 import {} from "@/components/ui/loading-spinner";
 import { UserRegistration } from "@/types/registration";
 import { getRegistrationDataAction } from "@/actions/registration-actions";
 import { createClient } from "@/utils/supabase/server";
-import StatusBanner from "@/components/dashboards/common/StatusBanner";
+import StatusBanner, {
+  RegistrationStatus,
+} from "@/components/dashboards/common/StatusBanner";
 import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
 import DashboardItem from "@/components/dashboards/common/DashboardItem";
 import Checklist from "@/components/dashboards/checklist/Checklist";
 import InfoCard from "@/components/dashboards/common/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Rsvp from "./rsvp";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -34,16 +40,10 @@ export default async function DashboardPage() {
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}
             {user && (
-              <StatusBanner
-                status={
-                  user.status === "confirmed" ||
-                  user.status === "pending" ||
-                  user.status === "waitlisted"
-                    ? user.status
-                    : "pending" // default fallback
-                }
-              />
+              <StatusBanner status={user.status as RegistrationStatus} />
             )}
+
+            {/* Discord Card */}
 
             {/* Dashboard Content */}
             <div className="max-w-full">
@@ -52,6 +52,8 @@ export default async function DashboardPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto p-1">
                   {/* Left Column - Workshops Carousel and Discord */}
                   <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-2 h-auto">
+                    <Rsvp />
+
                     <DashboardItem
                       title="Upcoming Workshops"
                       className="overflow-hidden"
@@ -61,14 +63,6 @@ export default async function DashboardPage() {
                     </DashboardItem>
 
                     {/* Discord Card */}
-                    <DashboardItem title="Join Our Community">
-                      <InfoCard
-                        description="Connect with fellow hackers, mentors, and organizers in our Discord community. Get real-time updates, ask questions, and find teammates!"
-                        linkUrl="https://discord.gg/e7Fg6jsnrm"
-                        linkText="Join Discord"
-                        icon={<MessageSquare className="h-5 w-5" />}
-                      />
-                    </DashboardItem>
                   </div>
 
                   {/* Right Column - Checklist and Hackerpack */}
@@ -100,6 +94,15 @@ export default async function DashboardPage() {
                         linkUrl="mailto:hello@mruhacks.ca"
                         linkText="Contact Support"
                         icon={<HelpCircle className="h-5 w-5" />}
+                      />
+                    </DashboardItem>
+
+                    <DashboardItem title="Join Our Community">
+                      <InfoCard
+                        description="Connect with fellow hackers, mentors, and organizers in our Discord community. Get real-time updates, ask questions, and find teammates!"
+                        linkUrl="https://discord.gg/e7Fg6jsnrm"
+                        linkText="Join Discord"
+                        icon={<MessageSquare className="h-5 w-5" />}
                       />
                     </DashboardItem>
                   </div>

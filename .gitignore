@@ -42,8 +42,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# next.js swc cache
-.swc
-
 .cursor
 .vscode
