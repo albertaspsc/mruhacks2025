@@ -1,13 +1,13 @@
 import {
   pgTable,
   pgSchema,
-  varchar,
   uuid,
   text,
   timestamp,
   uniqueIndex,
   index,
   check,
+  varchar,
   jsonb,
   boolean,
   smallint,
@@ -20,6 +20,7 @@ import {
   unique,
   date,
   time,
+  bigint,
   pgView,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -71,10 +72,6 @@ export const yearOfStudy = pgEnum("year_of_study", [
   "4th+",
   "Recent Grad",
 ]);
-
-export const schemaMigrationsInAuth = auth.table("schema_migrations", {
-  version: varchar({ length: 255 }).notNull(),
-});
 
 export const instancesInAuth = auth.table("instances", {
   id: uuid().notNull(),
@@ -1406,6 +1403,24 @@ export const workshops = pgTable(
     }),
   ],
 );
+
+export const schemaMigrationsInAuth = auth.table("schema_migrations", {
+  version: varchar({ length: 255 }).notNull(),
+});
+
+export const preReg = pgTable("pre_reg", {
+  // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+  id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+    name: "pre_reg_id_seq",
+    startWith: 1,
+    increment: 1,
+    minValue: 1,
+    maxValue: 9223372036854775807,
+    cache: 1,
+  }),
+  time: timestamp({ withTimezone: true, mode: "string" }).notNull(),
+  email: text().notNull(),
+});
 export const adminManagementView = pgView("admin_management_view", {
   id: uuid(),
   email: varchar({ length: 255 }),
@@ -1426,4 +1441,8 @@ export const adminManagementView = pgView("admin_management_view", {
   }),
 }).as(
   sql`SELECT a.id, a.email, a.role, a.status, a.f_name AS "firstName", a.l_name AS "lastName", a.is_admin_only, a.created_at, a.updated_at, u.last_sign_in_at, u.email_confirmed_at FROM admins a JOIN auth.users u ON a.id = u.id ORDER BY a.created_at DESC`,
+);
+
+export const rsvpableUsers = pgView("rsvpable_users", { id: uuid() }).as(
+  sql`SELECT u.id FROM users u LEFT JOIN pre_reg p ON p.email = u.email::text WHERE u.status = ANY (ARRAY['pending'::status, 'waitlisted'::status]) ORDER BY (p.email IS NOT NULL) DESC, u.updated_at LIMIT 145`,
 );
