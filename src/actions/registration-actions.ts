@@ -182,20 +182,22 @@ export async function getRegistrationDataAction() {
  */
 export async function getFormOptionsAction() {
   try {
-    const [
-      gendersResult,
-      universitiesResult,
-      majorsResult,
-      interestsResult,
-      dietaryRestrictionsResult,
-      marketingTypesResult,
-    ] = await Promise.all([
+    // Split queries into smaller batches to prevent timeout issues
+    const [gendersResult, marketingTypesResult] = await Promise.all([
       UserRegistrationDAL.getGenderOptions(),
+      UserRegistrationDAL.getMarketingTypeOptions(),
+    ]);
+
+    // Second batch: larger lookup tables
+    const [universitiesResult, majorsResult] = await Promise.all([
       UserRegistrationDAL.getUniversityOptions(),
       UserRegistrationDAL.getMajorOptions(),
+    ]);
+
+    // Third batch: interest-related tables
+    const [interestsResult, dietaryRestrictionsResult] = await Promise.all([
       UserRegistrationDAL.getInterestOptions(),
       UserRegistrationDAL.getDietaryRestrictionOptions(),
-      UserRegistrationDAL.getMarketingTypeOptions(),
     ]);
 
     const errors = [

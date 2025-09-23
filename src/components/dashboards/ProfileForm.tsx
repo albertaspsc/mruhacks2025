@@ -32,7 +32,7 @@ type ProfileUpdateInput = import("@/types/registration").ProfileUpdateInput;
 
 interface ProfileFormProps {
   initialData: BaseRegistrationInput;
-  formOptions: FormOptions;
+  formOptions: FormOptions | null;
 }
 
 export default function ProfileForm({
@@ -150,21 +150,27 @@ export default function ProfileForm({
   }
 
   // Transform data for the shared components using utilities
-  const transformedGenders = formOptionTransformers.genders(
-    formOptions.genders,
-  );
-  const transformedUniversities = formOptionTransformers.universities(
-    formOptions.universities,
-  );
-  const transformedMajors = formOptionTransformers.majors(formOptions.majors);
-  const transformedInterests = formOptionTransformers.interests(
-    formOptions.interests,
-  );
-  const transformedDietaryRestrictions =
-    formOptionTransformers.dietaryRestrictions(formOptions.dietaryRestrictions);
-  const transformedMarketingTypes = formOptionTransformers.marketingTypes(
-    formOptions.marketingTypes,
-  );
+  // Provide fallback empty arrays if formOptions is null
+  const transformedGenders = formOptions
+    ? formOptionTransformers.genders(formOptions.genders)
+    : [];
+  const transformedUniversities = formOptions
+    ? formOptionTransformers.universities(formOptions.universities)
+    : [];
+  const transformedMajors = formOptions
+    ? formOptionTransformers.majors(formOptions.majors)
+    : [];
+  const transformedInterests = formOptions
+    ? formOptionTransformers.interests(formOptions.interests)
+    : [];
+  const transformedDietaryRestrictions = formOptions
+    ? formOptionTransformers.dietaryRestrictions(
+        formOptions.dietaryRestrictions,
+      )
+    : [];
+  const transformedMarketingTypes = formOptions
+    ? formOptionTransformers.marketingTypes(formOptions.marketingTypes)
+    : [];
 
   return (
     <>
