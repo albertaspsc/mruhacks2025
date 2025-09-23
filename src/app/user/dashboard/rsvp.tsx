@@ -1,11 +1,10 @@
 "use server";
 
 import DashboardItem from "@/components/dashboards/common/DashboardItem";
-import { Button } from "@/components/ui/button";
-import { db } from "@/db/drizzle";
+
+import DashboardItem from "@/components/dashboards/common/DashboardItem";
 import { createClient } from "@/utils/supabase/server";
 import RSVPButton, { ConfirmDecline } from "./confirm_button";
-import { deny } from "./api";
 import { RegistrationStatus } from "@/components/dashboards/common/StatusBanner";
 
 export default async function Rsvp() {
@@ -37,9 +36,8 @@ export default async function Rsvp() {
       "We don't have a spot for you at this time. We'll email you if a slot opens up.",
   };
 
-  if (status == "denied" || status == "declined") {
-    return null;
-  }
+  if (status == "denied" || status == "declined" || !userCanRSVP) return null;
+
 
   return (
     <DashboardItem
