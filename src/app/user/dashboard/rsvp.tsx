@@ -34,7 +34,8 @@ export default async function Rsvp() {
       "We don't have a spot for you at this time. We'll email you if a slot opens up.",
   };
 
-  if (status == "denied" || status == "declined" || !userCanRSVP) return null;
+  if (!(status == "pending" && userCanRSVP) && !(status == "confirmed"))
+    return null;
 
   return (
     <DashboardItem
