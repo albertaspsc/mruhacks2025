@@ -3,6 +3,115 @@
  * This data is generated from the database and should not be modified manually.
  */
 
+// Complete university and major mappings - single source of truth
+export const universityMappings = {
+  // Current/clean entries
+  15: "SAIT",
+  16: "Athabasca",
+  34: "University of Calgary",
+  35: "University of Waterloo",
+  36: "Bowvalley College",
+  37: "University of Toronto",
+  39: "University of Saskatchewan",
+  40: "University of Victoria",
+  42: "Mount Royal University",
+  43: "University of British Columbia",
+  44: "Stanford University",
+
+  // Legacy entries that map to current ones
+  1: "Mount Royal University", // MRU
+  2: "University of Calgary", // U of C
+  30: "University of British Columbia", // UBC
+  32: "Mount Royal University", // Mount Royal University
+  45: "Mount Royal University", // Mount Royal
+  48: "Mount Royal University", // MountRoyalUniversity
+} as const;
+
+export const majorMappings = {
+  // Current/clean entries
+  1: "Computer Information Systems",
+  2: "Data Science",
+  3: "Computer Science",
+  4: "Mathematics",
+  29: "Accounting",
+  44: "Data Analytics",
+  47: "Software Development",
+  48: "Software Engineering",
+  52: "Geology",
+  54: "University Entrance Option",
+  56: "Open Studies",
+  60: "Criminal Justice",
+  61: "Natural Science (Concentration in CS and Math)",
+  64: "Information Design",
+  66: "BCom",
+  67: "Business Administration",
+  68: "BSc. General Science",
+  69: "Electrical Engineering",
+  76: "Mechanical Engineering",
+  77: "Science",
+
+  // Legacy entries that map to current ones
+  46: "Software Development", // Software development
+  49: "Computer Information Systems", // Computer Information systems
+  50: "Computer Information Systems", // BCIS
+  51: "Computer Science", // Computer science (with space)
+  53: "Computer Science", // Comp Sci
+  55: "Computer Information Systems", // Bcis
+  57: "Computer Science", // Comp Science (with space)
+  58: "Computer Science", // Computer science
+  59: "Computer Science", // B.Sc. Computer Science
+  62: "Computer Information Systems", // Computer information systems
+  63: "Computer Information Systems", // B.Sc. Computer info systems
+  65: "Computer Science", // Computer Science (with space)
+  71: "Computer Science", // Computer science- Bsc
+  72: "Computer Science", // computer science (with space)
+  73: "Computer Science", // CS
+  74: "Computer Information Systems", // Computer Information System (with space)
+  75: "Computer Information Systems", // Computer Info Systems
+  78: "Computer Science", // CIS
+  79: "Mechanical Engineering", // Mechanical engineering
+  80: "Computer Information Systems", // Bachelor of Computer information systems
+  81: "Computer Science", // Batchlor of science, Computer science
+  83: "University Entrance Option", // University Entrance Option
+  84: "Computer Science", // computer science
+} as const;
+
+// Helper functions to get display values for any ID (including legacy)
+export function getUniversityDisplayValue(id: number): string {
+  return (
+    universityMappings[id as keyof typeof universityMappings] ||
+    "Unknown University"
+  );
+}
+
+export function getMajorDisplayValue(id: number): string {
+  return majorMappings[id as keyof typeof majorMappings] || "Unknown Major";
+}
+
+// Helper functions to get clean options for dropdowns (only current IDs)
+export function getCleanUniversityOptions() {
+  return Object.entries(universityMappings)
+    .filter(([id]) => {
+      const numId = parseInt(id);
+      // Only include current IDs (not legacy ones)
+      return [15, 16, 34, 35, 36, 37, 39, 40, 42, 43, 44].includes(numId);
+    })
+    .map(([id, name]) => ({ id: parseInt(id), uni: name }));
+}
+
+export function getCleanMajorOptions() {
+  return Object.entries(majorMappings)
+    .filter(([id]) => {
+      const numId = parseInt(id);
+      // Only include current IDs (not legacy ones)
+      return [
+        1, 2, 3, 4, 29, 44, 47, 48, 52, 54, 56, 60, 61, 64, 66, 67, 68, 69, 76,
+        77,
+      ].includes(numId);
+    })
+    .map(([id, name]) => ({ id: parseInt(id), major: name }));
+}
+
 export const lookupTables = {
   genders: [
     { id: 1, gender: "Male" },
@@ -11,42 +120,8 @@ export const lookupTables = {
     { id: 4, gender: "Prefer not to say" },
     { id: 5, gender: "Other" },
   ],
-  universities: [
-    { id: 15, uni: "SAIT" },
-    { id: 16, uni: "Athabasca" },
-    { id: 34, uni: "University of Calgary" },
-    { id: 35, uni: "University of Waterloo" },
-    { id: 36, uni: "Bowvalley College" },
-    { id: 37, uni: "University of Toronto" },
-    { id: 39, uni: "University of Saskatchewan" },
-    { id: 40, uni: "University of Victoria" },
-    { id: 42, uni: "Mount Royal University" },
-    { id: 43, uni: "University of British Columbia" },
-    { id: 44, uni: "Stanford University" },
-  ],
-  majors: [
-    { id: 1, major: "Computer Information Systems" },
-    { id: 2, major: "Data Science" },
-    { id: 3, major: "Computer Science" },
-    { id: 4, major: "Mathematics" },
-    { id: 29, major: "Accounting" },
-    { id: 44, major: "Data Analytics" },
-    { id: 47, major: "Software Development" },
-    { id: 48, major: "Software Engineering" },
-    { id: 52, major: "Geology" },
-    { id: 54, major: "University Entrance Option" },
-    { id: 56, major: "Open Studies" },
-    { id: 60, major: "Criminal Justice" },
-    { id: 61, major: "Natural Science (Concentration in CS and Math)" },
-    { id: 64, major: "Information Design" },
-    { id: 66, major: "BCom" },
-    { id: 67, major: "Business Administration" },
-    { id: 68, major: "BSc. General Science" },
-    { id: 69, major: "Electrical Engineering" },
-    { id: 73, major: "CS" },
-    { id: 76, major: "Mechanical Engineering" },
-    { id: 77, major: "Science" },
-  ],
+  universities: getCleanUniversityOptions(),
+  majors: getCleanMajorOptions(),
   interests: [
     { id: 1, interest: "Mobile App Development" },
     { id: 2, interest: "Web Development" },

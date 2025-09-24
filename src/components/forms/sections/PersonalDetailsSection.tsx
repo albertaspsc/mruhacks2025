@@ -94,6 +94,7 @@ export function PersonalDetailsSection<
           label="University / Institution"
           placeholder="Select your institution"
           options={universities}
+          fieldType="university"
           disabled={disabled}
           required
         />
@@ -104,6 +105,7 @@ export function PersonalDetailsSection<
           label="Major / Program"
           placeholder="Select your major"
           options={majors}
+          fieldType="major"
           disabled={disabled}
           required
         />

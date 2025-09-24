@@ -17,6 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  getUniversityDisplayValue,
+  getMajorDisplayValue,
+} from "@/data/lookup-tables";
 
 export interface SelectOption {
   id: number;
@@ -54,6 +58,7 @@ interface IdSelectFieldProps<
 > extends BaseSelectFieldProps<TFieldValues, TName> {
   type: "id";
   options: SelectOption[];
+  fieldType?: "university" | "major"; // Optional for legacy ID mapping
 }
 
 // String-based select field (for yearOfStudy, parking)
@@ -96,7 +101,20 @@ export function SelectField<
   className,
   type,
   options,
+  ...props
 }: SelectFieldProps<TFieldValues, TName>) {
+  const fieldType = "fieldType" in props ? props.fieldType : undefined;
+  const getDisplayValue = (id: number): string => {
+    if (type === "id" && fieldType) {
+      if (fieldType === "university") {
+        return getUniversityDisplayValue(id);
+      } else if (fieldType === "major") {
+        return getMajorDisplayValue(id);
+      }
+    }
+    return "Unknown";
+  };
+
   const renderSelectContent = () => {
     switch (type) {
       case "id":
@@ -155,34 +173,46 @@ export function SelectField<
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          <FormLabel className="text-black">
-            {label}
-            {required && <span className="text-destructive ml-1">*</span>}
-          </FormLabel>
-          <Select
-            value={getValue(field.value)}
-            onValueChange={(value) => handleValueChange(value, field.onChange)}
-            disabled={disabled}
-          >
-            <FormControl>
-              <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent className="bg-white dark:bg-gray-800">
-              {renderSelectContent()}
-            </SelectContent>
-          </Select>
-          {description && (
-            <FormDescription className="text-sm text-muted-foreground">
-              {description}
-            </FormDescription>
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const currentValue = field.value;
+        const displayValue =
+          currentValue && type === "id" && fieldType
+            ? getDisplayValue(currentValue)
+            : undefined;
+
+        return (
+          <FormItem className={className}>
+            <FormLabel className="text-black">
+              {label}
+              {required && <span className="text-destructive ml-1">*</span>}
+            </FormLabel>
+            <Select
+              value={getValue(field.value)}
+              onValueChange={(value) =>
+                handleValueChange(value, field.onChange)
+              }
+              disabled={disabled}
+            >
+              <FormControl>
+                <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
+                  <SelectValue placeholder={placeholder}>
+                    {displayValue}
+                  </SelectValue>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="bg-white dark:bg-gray-800">
+                {renderSelectContent()}
+              </SelectContent>
+            </Select>
+            {description && (
+              <FormDescription className="text-sm text-muted-foreground">
+                {description}
+              </FormDescription>
+            )}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }
