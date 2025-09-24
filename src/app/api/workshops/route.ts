@@ -19,12 +19,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get workshops directly from the workshops table (NOT the view)
     const { data: workshops, error: workshopsError } = await supabase
       .from("workshops")
       .select("*")
-      .eq("event_name", "mruhacks2025")
-      .eq("is_active", true)
       .order("date", { ascending: true })
       .order("start_time", { ascending: true });
 
@@ -38,6 +35,7 @@ export async function GET(request: NextRequest) {
 
     // If no workshops exist, return empty array
     if (!workshops || workshops.length === 0) {
+      console.log("No workshops found");
       return NextResponse.json([]);
     }
 

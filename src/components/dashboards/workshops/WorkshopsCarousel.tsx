@@ -220,24 +220,6 @@ export default function WorkshopsCarousel() {
                       style={{ width: `${slideWidth}px` }}
                     >
                       <div className={`${styles.card} h-full`}>
-                        {/* Image Container */}
-                        {w.imageUrl ? (
-                          <div className={styles.imageContainer}>
-                            <Image
-                              src={w.imageUrl}
-                              alt={`${w.title} workshop`}
-                              className={styles.workshopImage}
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            />
-                          </div>
-                        ) : (
-                          <div className={styles.imageContainer}>
-                            <div className="flex items-center justify-center h-full text-gray-400">
-                              <span className="text-xs">Image coming soon</span>
-                            </div>
-                          </div>
-                        )}
                         <div className="space-y-2">
                           <div className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
                             {formatDate(w.date)} {formatTime(w.startTime)}–

@@ -124,7 +124,7 @@ export default function Workshops() {
             return (
               <div
                 key={w.id}
-                className="border rounded-xl p-4 md:p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between w-full"
+                className="border rounded-xl px-8 py-6 md:px-10 md:py-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between w-full"
               >
                 <div className="space-y-2 min-w-[280px] flex-1">
                   <div className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
