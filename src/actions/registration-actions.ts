@@ -15,6 +15,8 @@ import {
   BaseRegistrationInput,
   UserRegistration,
   validateFormData,
+  FormOptions,
+  ServiceResult,
 } from "@/types/registration";
 import { revalidatePath } from "next/cache";
 
@@ -180,7 +182,9 @@ export async function getRegistrationDataAction() {
  *
  * @returns Promise with success status and all form options data
  */
-export async function getFormOptionsAction() {
+export async function getFormOptionsAction(): Promise<
+  ServiceResult<FormOptions>
+> {
   try {
     const DietaryRestrictionOptions =
       await UserRegistrationDAL.getDietaryRestrictionOptions();
@@ -190,6 +194,44 @@ export async function getFormOptionsAction() {
     const MajorOptions = await UserRegistrationDAL.getMajorOptions();
     const UniversityOptions = await UserRegistrationDAL.getUniversityOptions();
     const GenderOptions = await UserRegistrationDAL.getGenderOptions();
+
+    // Check if any of the DAL calls failed
+    if (!GenderOptions.success || !GenderOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get gender options",
+      };
+    }
+    if (!UniversityOptions.success || !UniversityOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get university options",
+      };
+    }
+    if (!MajorOptions.success || !MajorOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get major options",
+      };
+    }
+    if (!InterestOptions.success || !InterestOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get interest options",
+      };
+    }
+    if (!DietaryRestrictionOptions.success || !DietaryRestrictionOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get dietary restriction options",
+      };
+    }
+    if (!MarketingTypeOptions.success || !MarketingTypeOptions.data) {
+      return {
+        success: false,
+        error: "Failed to get marketing type options",
+      };
+    }
 
     return {
       success: true,
