@@ -12,10 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ProgressBar from "@/components/Register/ProgressBar";
 import { ExternalLink, FileText, MessageSquare, Trophy } from "lucide-react";
-import { Registration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
 
 interface ParticipantDashboardProps {
-  user?: Registration;
+  user?: UserRegistration;
 }
 
 interface ChecklistState {
@@ -34,7 +34,7 @@ interface ChecklistItem {
   note: string | null;
 }
 
-const Checklist = ({ user }: { user?: Registration }) => {
+const Checklist = ({ user }: { user?: UserRegistration }) => {
   const [checklist, setChecklist] = useState<ChecklistState>({
     discordJoined: false,
     devpostSignup: false,

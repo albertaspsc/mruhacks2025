@@ -8,14 +8,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { createClient } from "@/utils/supabase/client";
-
-function validatePassword(password: string) {
-  if (!password) return "Password is required";
-  if (password.length < 8) return "At least 8 characters";
-  if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W)/.test(password))
-    return "Must include upper, lower, number & special";
-  return null;
-}
+import { useFormValidation } from "@/hooks";
 
 const requirements = [
   { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
@@ -63,6 +56,15 @@ const ResetPasswordPageContent = () => {
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { validatePassword } = useFormValidation({
+    password: {
+      minLength: 8,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumbers: true,
+      requireSpecialChars: true,
+    },
+  });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -149,9 +151,9 @@ const ResetPasswordPageContent = () => {
     setError("");
 
     // Validate password
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
+    const passwordResult = validatePassword(password);
+    if (!passwordResult.isValid) {
+      setError(passwordResult.errors[0] || "Invalid password");
       setLoading(false);
       return;
     }

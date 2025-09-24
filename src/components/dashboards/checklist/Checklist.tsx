@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Trophy, AlertCircle, Loader2 } from "lucide-react";
-import { Registration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
 import ProgressBar from "@/components/Register/ProgressBar";
 import ChecklistItem, {
   ChecklistItem as ChecklistItemType,
@@ -10,7 +10,7 @@ import ChecklistItem, {
 import { ChecklistState } from "./types";
 
 interface ChecklistProps {
-  user?: Registration;
+  user?: UserRegistration;
 }
 
 const Checklist: React.FC<ChecklistProps> = ({ user }) => {

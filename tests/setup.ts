@@ -1,5 +1,10 @@
 import "@testing-library/jest-dom";
 import puppeteer, { Browser, Page } from "puppeteer";
+import {
+  startTestServer,
+  stopTestServer,
+  getTestServer,
+} from "./helpers/testServer.cjs";
 
 // Mock Next.js navigation (consolidated)
 const mockPush = jest.fn();
@@ -44,35 +49,68 @@ jest.mock("@/utils/supabase/server", () => ({
     auth: {
       signInWithPassword: jest.fn(),
       signInWithOAuth: jest.fn(),
+      getUser: jest.fn(),
     },
   })),
-}));
-
-// Mock database functions
-jest.mock("@/db/registration", () => ({
-  getRegistration: jest.fn(),
 }));
 
 // E2E Test Setup
 let browser: Browser | null = null;
 
 export async function createPage(): Promise<Page> {
-  if (!browser) {
-    browser = await puppeteer.launch({
-      headless: process.env.CI === "true" ? true : false,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-        "--disable-gpu",
-      ],
-    });
+  // Always create a new browser instance for each test to avoid connection issues
+  if (browser) {
+    await browser.close();
   }
-  return await browser.newPage();
+
+  browser = await puppeteer.launch({
+    headless: process.env.CI === "true" ? true : false,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+      "--disable-web-security",
+      "--disable-features=VizDisplayCompositor",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+    ],
+    timeout: 30000,
+  });
+
+  const page = await browser.newPage();
+
+  // Set permissions for localStorage access
+  await page.evaluateOnNewDocument(() => {
+    // Store the original localStorage before overriding
+    const originalLocalStorage = window.localStorage;
+
+    // Grant permissions for localStorage
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: (key: string) => originalLocalStorage.getItem(key),
+        setItem: (key: string, value: string) =>
+          originalLocalStorage.setItem(key, value),
+        removeItem: (key: string) => originalLocalStorage.removeItem(key),
+        clear: () => originalLocalStorage.clear(),
+        get length() {
+          return originalLocalStorage.length;
+        },
+        key: (index: number) => originalLocalStorage.key(index),
+      },
+      writable: true,
+    });
+  });
+
+  // Set default timeout
+  page.setDefaultTimeout(30000);
+  page.setDefaultNavigationTimeout(30000);
+
+  return page;
 }
 
 export async function cleanupPage(page: Page): Promise<void> {
@@ -88,6 +126,8 @@ export async function cleanupBrowser(): Promise<void> {
   }
 }
 
+export { getTestServer } from "./helpers/testServer.cjs";
+
 // Global test setup
 beforeEach(() => {
   // Clear all mocks before each test
@@ -100,8 +140,30 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+// Global setup for E2E tests
+beforeAll(async () => {
+  // Start test server before running e2e tests
+  if (process.env.NODE_ENV !== "test" || process.env.TEST_TYPE === "e2e") {
+    try {
+      await startTestServer();
+      console.log("✅ Test server started successfully");
+    } catch (error) {
+      console.error("❌ Failed to start test server:", error);
+      throw error;
+    }
+  }
+});
+
 // Global teardown for E2E tests
 afterAll(async () => {
   // Clean up browser
   await cleanupBrowser();
+
+  // Stop test server after all tests
+  try {
+    await stopTestServer();
+    console.log("✅ Test server stopped successfully");
+  } catch (error) {
+    console.error("❌ Failed to stop test server:", error);
+  }
 });

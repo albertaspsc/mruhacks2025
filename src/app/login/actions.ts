@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { headers as getHeaders } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { z } from "zod";
-import { getRegistration } from "@/db/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
 
 export async function loginWithGoogle() {
   const headers = await getHeaders();
@@ -75,9 +75,14 @@ export async function login(formData: FormData) {
   // User signed in successfully
   revalidatePath("/user", "layout");
 
-  const { data: registration } = await getRegistration();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) {
+    redirect("/login?error=auth_failed");
+  }
 
-  if (registration) {
+  const result = await getRegistrationDataAction();
+
+  if (result.success && result.data) {
     redirect("/user/dashboard");
   } else {
     redirect("/register/step-1");

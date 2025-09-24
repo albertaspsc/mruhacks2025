@@ -8,20 +8,19 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { createClient } from "@/utils/supabase/client";
+import { useFormValidation } from "@/hooks";
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { validateEmail } = useFormValidation({
+    email: {},
+  });
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<null | "success" | "fail" | "loading">(
     null,
   );
   const [error, setError] = useState("");
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,15 +28,10 @@ export default function ForgotPasswordPage() {
     setError("");
 
     // Validate email
-    if (!email.trim()) {
+    const emailResult = validateEmail(email);
+    if (!emailResult.isValid) {
       setStatus("fail");
-      setError("Please enter your email address");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setStatus("fail");
-      setError("Please enter a valid email address");
+      setError(emailResult.error || "Please enter a valid email address");
       return;
     }
 

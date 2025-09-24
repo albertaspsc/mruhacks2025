@@ -1,33 +1,11 @@
 "use client";
-import { createSelectSchema } from "drizzle-zod";
 import React, { createContext, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import { parkingState, yearOfStudy } from "./../db/schema";
-import { z } from "zod";
-
-export const RegistrationSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  gender: z.string(),
-  university: z.string(),
-  previousAttendance: z.coerce.boolean(),
-  major: z.string(),
-  parking: createSelectSchema(parkingState),
-  email: z.string().email(),
-  yearOfStudy: createSelectSchema(yearOfStudy),
-  experience: z.string(),
-  accommodations: z.string(),
-  dietaryRestrictions: z.array(z.string()),
-  interests: z.array(z.string()),
-  marketing: z.string().min(1),
-  resume: z.string().optional(),
-});
-
-export type RegistrationInput = z.infer<typeof RegistrationSchema>;
+import { BaseRegistrationInput } from "@/types/registration";
 
 type ContextType = {
-  data: Partial<RegistrationInput>;
-  setValues: (vals: Partial<RegistrationInput>) => void;
+  data: Partial<BaseRegistrationInput>;
+  setValues: (vals: Partial<BaseRegistrationInput>) => void;
   goBack: () => void;
   clearFormData: () => void;
 };
@@ -41,11 +19,20 @@ const RegisterFormContext = createContext<ContextType>({
 });
 
 export function RegisterFormProvider({ children }: React.PropsWithChildren) {
-  const [data, setData] = useState<Partial<RegistrationInput>>({});
+  const [data, setData] = useState<Partial<BaseRegistrationInput>>({});
   const router = useRouter();
 
-  const setValues = (vals: Partial<RegistrationInput>) => {
-    setData((prev) => ({ ...prev, ...vals }));
+  const setValues = (vals: Partial<BaseRegistrationInput>) => {
+    // Ensure boolean values are properly converted
+    const processedVals = { ...vals };
+    if (processedVals.previousAttendance !== undefined) {
+      // Convert string "true"/"false" to boolean if needed
+      if (typeof processedVals.previousAttendance === "string") {
+        processedVals.previousAttendance =
+          processedVals.previousAttendance === "true";
+      }
+    }
+    setData((prev) => ({ ...prev, ...processedVals }));
   };
 
   const goBack = () => {
