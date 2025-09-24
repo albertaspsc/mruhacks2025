@@ -68,7 +68,6 @@ export async function updateUserProfileAction(
           error: emailResult.error,
         };
       }
-      // Don't update email in the database here - it will be updated after verification
     } else if (updates.email !== undefined) {
       // Direct email update without validation
       updateData.email = updates.email;
@@ -289,6 +288,8 @@ export async function updateUserEmailAction(newEmail: string) {
     }
 
     // Store pending email in our database for tracking
+    // Note: This uses try-catch for additional error handling beyond the main DAL operations
+    // This is intentional as pending email storage is not critical for the main email update flow
     try {
       const { error: pendingEmailError } = await supabase
         .from("users")

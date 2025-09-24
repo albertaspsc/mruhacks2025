@@ -47,7 +47,6 @@ export const passwordValidations = [
 // Email validation schema
 export const EmailSchema = z
   .string()
-  .min(1, "Please enter your email address")
   .email("Please enter a valid email address");
 
 // Base registration schema that can be reused across forms

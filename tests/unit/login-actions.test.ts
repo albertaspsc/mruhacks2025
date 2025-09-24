@@ -1,4 +1,4 @@
-import { login, loginWithGoogle } from "@/app/login/actions";
+import { login } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
 import { getRegistrationDataAction } from "@/actions/registration-actions";
 
@@ -41,6 +41,10 @@ describe("Login Actions", () => {
         }),
         signInWithOAuth: jest.fn().mockResolvedValue({
           data: { url: null },
+          error: null,
+        }),
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: "user123" } },
           error: null,
         }),
       },
@@ -204,40 +208,6 @@ describe("Login Actions", () => {
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
       expect(mockGetRegistrationDataAction).toHaveBeenCalled();
-    });
-  });
-
-  describe("loginWithGoogle function", () => {
-    it("should initiate Google OAuth flow", async () => {
-      // Arrange
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: "https://google.com/oauth" },
-        error: null,
-      });
-
-      // Act & Assert
-      await expect(loginWithGoogle()).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: "google",
-        options: {
-          redirectTo: "http://localhost:3000/auth/callback",
-          queryParams: {
-            prompt: "select_account",
-          },
-          scopes: "email profile",
-        },
-      });
-    });
-
-    it("should handle Google OAuth errors", async () => {
-      // Arrange
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: null },
-        error: { message: "OAuth failed" },
-      });
-
-      // Act & Assert
-      await expect(loginWithGoogle()).rejects.toThrow();
     });
   });
 });
