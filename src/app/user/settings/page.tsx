@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParkingState } from "@/types/registration";
 import {
   Card,
   CardContent,
@@ -48,33 +49,11 @@ import {
   getParkingPreference,
   getMarketingPreference,
 } from "@/db/settings";
-import { getRegistration, Registration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { updateUserEmailAction } from "@/actions/profile-actions";
 import { createClient } from "@/utils/supabase/client";
-
-// Password validation function
-function validatePassword(password: string): string | null {
-  if (!password) return "Password is required";
-  if (password.length < 8) return "Password must be at least 8 characters long";
-  if (!/(?=.*[a-z])/.test(password))
-    return "Password must contain at least one lowercase letter";
-  if (!/(?=.*[A-Z])/.test(password))
-    return "Password must contain at least one uppercase letter";
-  if (!/(?=.*\d)/.test(password))
-    return "Password must contain at least one number";
-  if (!/(?=.*\W)/.test(password))
-    return "Password must contain at least one special character";
-  return null;
-}
-
-// License plate validation
-function validateLicensePlate(plate: string): string | null {
-  if (!plate) return "License plate is required when parking is selected";
-  if (plate.length < 2 || plate.length > 10)
-    return "License plate must be between 2-10 characters";
-  if (!/^[A-Z0-9-\s]+$/.test(plate))
-    return "License plate can only contain letters, numbers, hyphens, and spaces";
-  return null;
-}
+import { useFormValidation } from "@/hooks";
 
 // Toast component for better UX
 type ToastType = "success" | "error" | "warning" | "info";
@@ -140,6 +119,10 @@ type EmailPreferencesValues = {
   marketingEmails: boolean;
 };
 
+type EmailChangeValues = {
+  newEmail: string;
+};
+
 type PasswordFormValues = {
   currentPassword: string;
   newPassword: string;
@@ -147,14 +130,24 @@ type PasswordFormValues = {
 };
 
 type ParkingPreferencesValues = {
-  parkingPreference: "Yes" | "No" | "Not sure";
+  parkingPreference: ParkingState;
   licensePlate: string;
 };
 
 export default function SettingsPage() {
   const supabase = createClient();
+  const { validatePassword, validateLicensePlate, validateEmail } =
+    useFormValidation({
+      password: {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+      },
+    });
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<Registration>();
+  const [user, setUser] = useState<UserRegistration>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toast, setToast] = useState<{
@@ -163,9 +156,11 @@ export default function SettingsPage() {
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState({
     email: false,
+    emailChange: false,
     parking: false,
     password: false,
   });
+  const [userId, setUserId] = useState<string>("");
 
   // Show toast function
   const showToast = (message: string, type: ToastType) => {
@@ -177,6 +172,14 @@ export default function SettingsPage() {
     defaultValues: {
       marketingEmails: false,
     },
+  });
+
+  // Email change form
+  const emailChangeForm = useForm<EmailChangeValues>({
+    defaultValues: {
+      newEmail: "",
+    },
+    mode: "onChange",
   });
 
   // Password form with validation
@@ -204,9 +207,14 @@ export default function SettingsPage() {
       setIsLoading(true);
       try {
         // Get user registration data
-        const { data: userData, error: userError } = await getRegistration();
-        if (userError) throw userError;
-        setUser(userData || undefined);
+        const supabase = createClient();
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) throw new Error("Not authenticated");
+        setUserId(auth.user.id);
+        const regResult = await getRegistrationDataAction();
+        if (!regResult.success)
+          throw new Error(regResult.error || "Failed to get user data");
+        setUser(regResult.data || undefined);
 
         // Get parking preferences
         const { data: parkingData, error: parkingError } =
@@ -297,7 +305,7 @@ export default function SettingsPage() {
     };
 
     loadData();
-  }, []);
+  }, [emailPreferencesForm, parkingPreferencesForm]);
 
   // Handle email preferences submission
   async function onEmailPreferencesSubmit(data: EmailPreferencesValues) {
@@ -318,14 +326,62 @@ export default function SettingsPage() {
     }
   }
 
+  // Handle email change submission
+  async function onEmailChangeSubmit(data: EmailChangeValues) {
+    // Validate email
+    const emailResult = validateEmail(data.newEmail);
+    if (!emailResult.isValid) {
+      emailChangeForm.setError("newEmail", {
+        message: emailResult.error || "Invalid email address",
+      });
+      return;
+    }
+
+    // Check if email is different from current
+    if (data.newEmail === user?.email) {
+      emailChangeForm.setError("newEmail", {
+        message: "This is already your current email address",
+      });
+      return;
+    }
+
+    setIsSubmitting((prev) => ({ ...prev, emailChange: true }));
+    try {
+      const result = await updateUserEmailAction(data.newEmail);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Reset form on success
+      emailChangeForm.reset({
+        newEmail: "",
+      });
+
+      showToast(
+        "Verification email sent! Please check your new email address to complete the change.",
+        "success",
+      );
+    } catch (error) {
+      console.error("Error updating email:", error);
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to update email. Please try again.",
+        "error",
+      );
+    } finally {
+      setIsSubmitting((prev) => ({ ...prev, emailChange: false }));
+    }
+  }
+
   // Handle parking preferences submission
   async function onParkingPreferencesSubmit(data: ParkingPreferencesValues) {
     // Validate license plate if parking is required
     if (data.parkingPreference === "Yes") {
-      const licenseError = validateLicensePlate(data.licensePlate);
-      if (licenseError) {
+      const licenseResult = validateLicensePlate(data.licensePlate);
+      if (!licenseResult.isValid) {
         parkingPreferencesForm.setError("licensePlate", {
-          message: licenseError,
+          message: licenseResult.error || "Invalid license plate",
         });
         return;
       }
@@ -351,9 +407,11 @@ export default function SettingsPage() {
   // Handle password submission with validation
   async function onPasswordSubmit(data: PasswordFormValues) {
     // Validate new password
-    const passwordError = validatePassword(data.newPassword);
-    if (passwordError) {
-      passwordForm.setError("newPassword", { message: passwordError });
+    const passwordResult = validatePassword(data.newPassword);
+    if (!passwordResult.isValid) {
+      passwordForm.setError("newPassword", {
+        message: passwordResult.errors[0] || "Invalid password",
+      });
       return;
     }
 
@@ -513,69 +571,142 @@ export default function SettingsPage() {
 
           {/* Email Preferences Tab */}
           <TabsContent value="email">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Email Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Mandatory Email Notice */}
-                <Alert className="mb-6">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Notice</AlertTitle>
-                  <AlertDescription>
-                    All confirmed participants will receive mandatory logistics
-                    emails with essential event information and updates. These
-                    emails cannot be opted out of to ensure you don&apos;t miss
-                    critical details for your MRUHacks experience.
-                  </AlertDescription>
-                </Alert>
-
-                <Form {...emailPreferencesForm}>
-                  <form
-                    onSubmit={emailPreferencesForm.handleSubmit(
-                      onEmailPreferencesSubmit,
-                    )}
-                    className="space-y-6"
-                  >
-                    <FormField
-                      control={emailPreferencesForm.control}
-                      name="marketingEmails"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Marketing Emails</FormLabel>
-                            <FormDescription>
-                              Receive emails about our services, partners, and
-                              other opportunities.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
+            <div className="space-y-6">
+              {/* Email Change Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Change Email Address
+                  </CardTitle>
+                  <CardDescription>
+                    Update your email address. You&apos;ll receive a
+                    verification email to confirm the change.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...emailChangeForm}>
+                    <form
+                      onSubmit={emailChangeForm.handleSubmit(
+                        onEmailChangeSubmit,
                       )}
-                    />
-
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting.email}
-                      className="w-full sm:w-auto"
+                      className="space-y-6"
                     >
-                      {isSubmitting.email && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <div className="space-y-2">
+                        <FormLabel>Current Email</FormLabel>
+                        <Input
+                          value={user?.email || ""}
+                          disabled
+                          className="bg-gray-50"
+                        />
+                        <FormDescription>
+                          Your current email address
+                        </FormDescription>
+                      </div>
+
+                      <FormField
+                        control={emailChangeForm.control}
+                        name="newEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Email Address</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your new email address"
+                                type="email"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter the new email address you want to use for
+                              your account.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting.emailChange}
+                        className="w-full sm:w-auto"
+                      >
+                        {isSubmitting.emailChange && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Send Verification Email
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+
+              {/* Email Preferences Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Email Preferences
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Mandatory Email Notice */}
+                  <Alert className="mb-6">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Notice</AlertTitle>
+                    <AlertDescription>
+                      All confirmed participants will receive mandatory
+                      logistics emails with essential event information and
+                      updates. These emails cannot be opted out of to ensure you
+                      don&apos;t miss critical details for your MRUHacks
+                      experience.
+                    </AlertDescription>
+                  </Alert>
+
+                  <Form {...emailPreferencesForm}>
+                    <form
+                      onSubmit={emailPreferencesForm.handleSubmit(
+                        onEmailPreferencesSubmit,
                       )}
-                      Save Preferences
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                      className="space-y-6"
+                    >
+                      <FormField
+                        control={emailPreferencesForm.control}
+                        name="marketingEmails"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Marketing Emails</FormLabel>
+                              <FormDescription>
+                                Receive emails about our services, partners, and
+                                other opportunities.
+                              </FormDescription>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting.email}
+                        className="w-full sm:w-auto"
+                      >
+                        {isSubmitting.email && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Save Preferences
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Parking Preferences Tab */}

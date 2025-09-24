@@ -5,50 +5,50 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/PersonalDetailsSection";
+import { useRegisterForm } from "@/context/RegisterFormContext";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+  formOptionTransformers,
+  mergeFormData,
+  commonFieldMappings,
+} from "@/utils/formDataTransformers";
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { useRegisterForm } from "@/context/RegisterFormContext"; // keep your context for cross-step persistence
-import { RegistrationSchema } from "@/context/RegisterFormContext"; // uses your existing enum for yearOfStudy
+  PersonalDetailsSchema,
+  GenderOption,
+  UniversityOption,
+  MajorOption,
+} from "@/types/registration";
 
+/**
+ * Props for the PersonalDetailsForm component
+ */
 type Props = {
-  initial: { email: string; firstName: string; lastName: string };
-  genders: { id: number; label: string }[];
-  majors: string[];
-  universities: string[];
+  /** Initial form values containing first and last name */
+  initial: { firstName: string; lastName: string; email: string };
+  genders: GenderOption[];
+  majors: MajorOption[];
+  universities: UniversityOption[];
 };
 
-// Schema (client-side)
-const PersonalSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  previousAttendance: z.enum(["true", "false"], {
-    required_error: "Please answer this question",
-  }),
-  gender: z.string().min(1, "Please select gender"),
-  university: z.string().min(1, "Institution is required"),
-  major: z.string().min(1, "Major is required"),
-  yearOfStudy: RegistrationSchema.shape.yearOfStudy, // reuse your enum
-});
+/** Type representing the personal details form data structure */
+type PersonalForm = z.infer<typeof PersonalDetailsSchema>;
 
-type PersonalForm = z.infer<typeof PersonalSchema>;
-
+/**
+ * PersonalDetailsForm component for the first step of user registration.
+ *
+ * This form collects personal information including name, gender, university,
+ * major, year of study, and previous attendance. It integrates with the
+ * registration context to maintain state across multiple registration steps.
+ *
+ * @param props - Component props
+ * @param props.initial - Initial form values with first and last name
+ * @param props.genders - Available gender options for selection
+ * @param props.majors - Available major options for selection
+ * @param props.universities - Available university options for selection
+ * @returns JSX element representing the personal details form
+ */
 export default function PersonalDetailsForm({
   initial,
   genders,
@@ -58,42 +58,39 @@ export default function PersonalDetailsForm({
   const router = useRouter();
   const { setValues, data } = useRegisterForm();
 
-  // Merge SSR initial with any saved context values (context has priority if populated)
-  const defaults: Partial<PersonalForm> = {
-    email: data.email || initial.email || "",
-    firstName: data.firstName || initial.firstName || "",
-    lastName: data.lastName || initial.lastName || "",
-    previousAttendance:
-      data.previousAttendance === true
-        ? "true"
-        : data.previousAttendance === false
-          ? "false"
-          : ("" as any),
-    gender: (data.gender ? String(data.gender) : "") as string,
-    university: data.university || "",
-    major: data.major || "",
-    yearOfStudy: (data.yearOfStudy as PersonalForm["yearOfStudy"]) || undefined,
-  };
+  /**
+   * Merged default values combining SSR initial data with saved context values.
+   * Context values take priority if they exist, otherwise falls back to initial values.
+   */
+  const defaults = mergeFormData(
+    data as Partial<PersonalForm>,
+    initial as Partial<PersonalForm>,
+    commonFieldMappings,
+  );
 
+  /** React Hook Form instance with validation and default values */
   const form = useForm<PersonalForm>({
-    resolver: zodResolver(PersonalSchema),
+    resolver: zodResolver(PersonalDetailsSchema),
     defaultValues: defaults,
     mode: "onBlur",
   });
 
-  // Keep context in sync on change (cheap & robust for multipage flows)
+  /**
+   * Effect to keep registration context in sync with form changes.
+   * This ensures data persistence across multiple registration steps.
+   */
   React.useEffect(() => {
     const sub = form.watch((v) => {
       const current = v as Partial<PersonalForm>;
       setValues({
         ...data,
-        email: current.email ?? "",
+        email: initial.email, // Include email from initial data
         firstName: current.firstName ?? "",
         lastName: current.lastName ?? "",
-        previousAttendance: current.previousAttendance === "true",
-        gender: current.gender || undefined,
-        university: current.university ?? "",
-        major: current.major ?? "",
+        previousAttendance: current.previousAttendance,
+        gender: current.gender || 0,
+        university: current.university || 0,
+        major: current.major || 0,
         yearOfStudy: current.yearOfStudy,
       });
     });
@@ -101,191 +98,37 @@ export default function PersonalDetailsForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch]);
 
+  /**
+   * Handles form submission by saving values to context and navigating to next step.
+   *
+   * @param values - Validated form data from the personal details form
+   */
   const onSubmit = (values: PersonalForm) => {
     // Save once more to be explicit
     setValues({
       ...data,
+      email: initial.email, // Include email from initial data
       ...values,
-      previousAttendance: values.previousAttendance === "true",
-      gender: values.gender || undefined,
+      previousAttendance: values.previousAttendance,
+      gender: values.gender || 0,
     });
     router.push("/register/step-2");
   };
 
+  /** Transform raw option data into format expected by form components */
+  const transformedGenders = formOptionTransformers.genders(genders);
+  const transformedUniversities =
+    formOptionTransformers.universities(universities);
+  const transformedMajors = formOptionTransformers.majors(majors);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
-        {/* Hidden email */}
-        <FormField
+        <PersonalDetailsSectionWithDefaults
           control={form.control}
-          name="email"
-          render={({ field }) => <input type="hidden" {...field} />}
-        />
-
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                First Name <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="John"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                Last Name <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Doe"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="previousAttendance"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                Have you attended MRUHacks before?{" "}
-                <span className="text-destructive">*</span>
-              </FormLabel>
-              <Select
-                value={field.value}
-                onValueChange={(v) => field.onChange(v)}
-              >
-                <FormControl>
-                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="true">Yes</SelectItem>
-                  <SelectItem value="false">No</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="gender"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                Gender <span className="text-destructive">*</span>
-              </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {genders.map((g) => (
-                    <SelectItem key={g.id} value={g.label}>
-                      {g.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="university"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                University / Institution{" "}
-                <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your institution"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="major"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                Major / Program <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your major"
-                  {...field}
-                  className="mt-1 pr-10 text-black"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="yearOfStudy"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-black">
-                What year will you be in as of Fall?{" "}
-                <span className="text-destructive">*</span>
-              </FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger className="mt-1 pr-10 text-black border-gray-300 focus:outline-none focus:ring-2 focus:ring-black">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Object.values(RegistrationSchema.shape.yearOfStudy.enum).map(
-                    (x) => (
-                      <SelectItem key={x} value={x}>
-                        {x}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          genders={transformedGenders}
+          universities={transformedUniversities}
+          majors={transformedMajors}
         />
 
         <div className="flex gap-4">

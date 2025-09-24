@@ -1,6 +1,9 @@
+
 import React, { Suspense, use } from "react";
 import {} from "@/components/ui/loading-spinner";
-import { Registration, getRegistration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
+import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { createClient } from "@/utils/supabase/server";
 import StatusBanner, {
   RegistrationStatus,
 } from "@/components/dashboards/common/StatusBanner";
@@ -14,8 +17,16 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Rsvp from "./rsvp";
 
-export default function DashboardPage() {
-  const { data: user } = use(getRegistration());
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+
+  if (!auth.user) {
+    redirect("/login");
+  }
+
+  const result = await getRegistrationDataAction();
+  const user = result.success ? result.data : null;
 
   if (!user) {
     redirect("/register");
