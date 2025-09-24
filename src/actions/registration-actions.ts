@@ -176,55 +176,30 @@ export async function getRegistrationDataAction() {
  *
  * Retrieves all the dropdown/select options needed for the registration form.
  * This includes genders, universities, majors, interests, dietary restrictions,
- * and marketing types. All options are fetched in parallel for optimal performance.
+ * and marketing types.
  *
  * @returns Promise with success status and all form options data
  */
 export async function getFormOptionsAction() {
   try {
-    // Split queries into smaller batches to prevent timeout issues
-    const [gendersResult, marketingTypesResult] = await Promise.all([
-      UserRegistrationDAL.getGenderOptions(),
-      UserRegistrationDAL.getMarketingTypeOptions(),
-    ]);
-
-    // Second batch: larger lookup tables
-    const [universitiesResult, majorsResult] = await Promise.all([
-      UserRegistrationDAL.getUniversityOptions(),
-      UserRegistrationDAL.getMajorOptions(),
-    ]);
-
-    // Third batch: interest-related tables
-    const [interestsResult, dietaryRestrictionsResult] = await Promise.all([
-      UserRegistrationDAL.getInterestOptions(),
-      UserRegistrationDAL.getDietaryRestrictionOptions(),
-    ]);
-
-    const errors = [
-      gendersResult,
-      universitiesResult,
-      majorsResult,
-      interestsResult,
-      dietaryRestrictionsResult,
-      marketingTypesResult,
-    ].filter((result) => !result.success);
-
-    if (errors.length > 0) {
-      return {
-        success: false,
-        error: `Failed to load form options: ${errors.map((e) => e.error).join(", ")}`,
-      };
-    }
+    const DietaryRestrictionOptions =
+      await UserRegistrationDAL.getDietaryRestrictionOptions();
+    const InterestOptions = await UserRegistrationDAL.getInterestOptions();
+    const MarketingTypeOptions =
+      await UserRegistrationDAL.getMarketingTypeOptions();
+    const MajorOptions = await UserRegistrationDAL.getMajorOptions();
+    const UniversityOptions = await UserRegistrationDAL.getUniversityOptions();
+    const GenderOptions = await UserRegistrationDAL.getGenderOptions();
 
     return {
       success: true,
       data: {
-        genders: gendersResult.data!,
-        universities: universitiesResult.data!,
-        majors: majorsResult.data!,
-        interests: interestsResult.data!,
-        dietaryRestrictions: dietaryRestrictionsResult.data!,
-        marketingTypes: marketingTypesResult.data!,
+        genders: GenderOptions.data,
+        universities: UniversityOptions.data,
+        majors: MajorOptions.data,
+        interests: InterestOptions.data,
+        dietaryRestrictions: DietaryRestrictionOptions.data,
+        marketingTypes: MarketingTypeOptions.data,
       },
     };
   } catch (error) {

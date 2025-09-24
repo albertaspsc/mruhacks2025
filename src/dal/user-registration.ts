@@ -13,12 +13,8 @@ import {
 import { db } from "@/db/drizzle";
 import {
   users,
-  gender as genderTable,
-  universities as universitiesTable,
-  majors as majorsTable,
   interests as interestsTable,
   dietaryRestrictions as dietaryRestrictionsTable,
-  marketingTypes as marketingTypesTable,
   userInterests as userInterestsTable,
   userDietRestrictions as userDietRestrictionsTable,
 } from "@/db/schema";
@@ -169,18 +165,15 @@ export async function deleteUser(userId: string): Promise<ServiceResult<void>> {
 // Lookup table operations
 
 /**
- * Retrieves all available gender options from the database.
+ * Retrieves all available gender options from static data.
  * @returns A service result containing an array of gender options
  */
 export async function getGenderOptions(): Promise<
   ServiceResult<GenderOption[]>
 > {
   try {
-    const rows = await db
-      .select({ id: genderTable.id, gender: genderTable.gender })
-      .from(genderTable)
-      .orderBy(genderTable.id);
-    return { success: true, data: rows as GenderOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.genders] };
   } catch (error) {
     return {
       success: false,
@@ -191,18 +184,15 @@ export async function getGenderOptions(): Promise<
 }
 
 /**
- * Retrieves all available university options from the database.
+ * Retrieves all available university options from static data.
  * @returns A service result containing an array of university options
  */
 export async function getUniversityOptions(): Promise<
   ServiceResult<UniversityOption[]>
 > {
   try {
-    const rows = await db
-      .select({ id: universitiesTable.id, uni: universitiesTable.uni })
-      .from(universitiesTable)
-      .orderBy(universitiesTable.uni);
-    return { success: true, data: rows as UniversityOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.universities] };
   } catch (error) {
     return {
       success: false,
@@ -215,16 +205,13 @@ export async function getUniversityOptions(): Promise<
 }
 
 /**
- * Retrieves all available major options from the database.
+ * Retrieves all available major options from static data.
  * @returns A service result containing an array of major options
  */
 export async function getMajorOptions(): Promise<ServiceResult<MajorOption[]>> {
   try {
-    const rows = await db
-      .select({ id: majorsTable.id, major: majorsTable.major })
-      .from(majorsTable)
-      .orderBy(majorsTable.major);
-    return { success: true, data: rows as MajorOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.majors] };
   } catch (error) {
     return {
       success: false,
@@ -235,18 +222,15 @@ export async function getMajorOptions(): Promise<ServiceResult<MajorOption[]>> {
 }
 
 /**
- * Retrieves all available interest options from the database.
+ * Retrieves all available interest options from static data.
  * @returns A service result containing an array of interest options
  */
 export async function getInterestOptions(): Promise<
   ServiceResult<InterestOption[]>
 > {
   try {
-    const rows = await db
-      .select({ id: interestsTable.id, interest: interestsTable.interest })
-      .from(interestsTable)
-      .orderBy(interestsTable.interest);
-    return { success: true, data: rows as InterestOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.interests] };
   } catch (error) {
     return {
       success: false,
@@ -259,21 +243,15 @@ export async function getInterestOptions(): Promise<
 }
 
 /**
- * Retrieves all available dietary restriction options from the database.
+ * Retrieves all available dietary restriction options from static data.
  * @returns A service result containing an array of dietary restriction options
  */
 export async function getDietaryRestrictionOptions(): Promise<
   ServiceResult<DietaryRestrictionOption[]>
 > {
   try {
-    const rows = await db
-      .select({
-        id: dietaryRestrictionsTable.id,
-        restriction: dietaryRestrictionsTable.restriction,
-      })
-      .from(dietaryRestrictionsTable)
-      .orderBy(dietaryRestrictionsTable.restriction);
-    return { success: true, data: rows as DietaryRestrictionOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.dietaryRestrictions] };
   } catch (error) {
     return {
       success: false,
@@ -286,21 +264,15 @@ export async function getDietaryRestrictionOptions(): Promise<
 }
 
 /**
- * Retrieves all available marketing type options from the database.
+ * Retrieves all available marketing type options from static data.
  * @returns A service result containing an array of marketing type options
  */
 export async function getMarketingTypeOptions(): Promise<
   ServiceResult<MarketingTypeOption[]>
 > {
   try {
-    const rows = await db
-      .select({
-        id: marketingTypesTable.id,
-        marketing: marketingTypesTable.marketing,
-      })
-      .from(marketingTypesTable)
-      .orderBy(marketingTypesTable.marketing);
-    return { success: true, data: rows as MarketingTypeOption[] };
+    const { lookupTables } = await import("@/data/lookup-tables");
+    return { success: true, data: [...lookupTables.marketingTypes] };
   } catch (error) {
     return {
       success: false,
