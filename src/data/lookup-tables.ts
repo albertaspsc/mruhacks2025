@@ -23,8 +23,15 @@ export const universityMappings = {
   2: "University of Calgary", // U of C
   30: "University of British Columbia", // UBC
   32: "Mount Royal University", // Mount Royal University
+  33: "Mount Royal University", // Mount Royal University (with trailing space)
+  38: "University of Calgary", // University of Calgary (with trailing space)
+  41: "Mount Royal University", // Mount royal university (lowercase)
   45: "Mount Royal University", // Mount Royal
+  46: "Mount Royal University", // Mount Royal university (with trailing space)
+  47: "Mount Royal University", // Mount royal (lowercase)
   48: "Mount Royal University", // MountRoyalUniversity
+  49: "Mount Royal University", // mount royal (lowercase)
+  50: "Mount Royal University", // Mount Royal (with trailing space)
 } as const;
 
 export const majorMappings = {
@@ -63,6 +70,7 @@ export const majorMappings = {
   62: "Computer Information Systems", // Computer information systems
   63: "Computer Information Systems", // B.Sc. Computer info systems
   65: "Computer Science", // Computer Science (with space)
+  70: "Information Design", // Information Design
   71: "Computer Science", // Computer science- Bsc
   72: "Computer Science", // computer science (with space)
   73: "Computer Science", // CS
@@ -72,6 +80,7 @@ export const majorMappings = {
   79: "Mechanical Engineering", // Mechanical engineering
   80: "Computer Information Systems", // Bachelor of Computer information systems
   81: "Computer Science", // Batchlor of science, Computer science
+  82: "Computer Science", // Computer scoencw (typo)
   83: "University Entrance Option", // University Entrance Option
   84: "Computer Science", // computer science
 } as const;
