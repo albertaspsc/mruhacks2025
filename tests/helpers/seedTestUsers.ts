@@ -210,13 +210,148 @@ export async function cleanupTestUsers() {
   console.log("🎉 Test user cleanup complete!");
 }
 
+export async function seedTestWorkshops() {
+  console.log("🌱 Seeding test workshops...");
+
+  const supabase = getSupabaseClient();
+
+  const testWorkshops = [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      title: "Introduction to Web Development",
+      description:
+        "Learn the basics of HTML, CSS, and JavaScript to build your first website.",
+      event_name: "MRUHacks 2025",
+      date: "2025-01-15",
+      start_time: "09:00:00",
+      end_time: "10:30:00",
+      location: "Room 101",
+      max_capacity: 30,
+      is_active: true,
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      title: "Mobile App Development with React Native",
+      description:
+        "Build cross-platform mobile applications using React Native.",
+      event_name: "MRUHacks 2025",
+      date: "2025-01-15",
+      start_time: "11:00:00",
+      end_time: "12:30:00",
+      location: "Room 102",
+      max_capacity: 25,
+      is_active: true,
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      title: "Data Science and Machine Learning",
+      description:
+        "Introduction to data analysis and machine learning concepts.",
+      event_name: "MRUHacks 2025",
+      date: "2025-01-15",
+      start_time: "13:30:00",
+      end_time: "15:00:00",
+      location: "Room 103",
+      max_capacity: 20,
+      is_active: true,
+    },
+  ];
+
+  for (const workshop of testWorkshops) {
+    try {
+      // Check if workshop already exists
+      const { data: existingWorkshop } = await supabase
+        .from("workshops")
+        .select("id")
+        .eq("id", workshop.id)
+        .maybeSingle();
+
+      if (existingWorkshop) {
+        console.log(
+          `⚠️  Workshop ${workshop.title} already exists, skipping...`,
+        );
+        continue;
+      }
+
+      // Create workshop
+      const { error: workshopError } = await supabase
+        .from("workshops")
+        .insert(workshop);
+
+      if (workshopError) {
+        console.error(
+          `❌ Failed to create workshop ${workshop.title}:`,
+          workshopError,
+        );
+      } else {
+        console.log(`✅ Created workshop: ${workshop.title}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error creating workshop ${workshop.title}:`, error);
+    }
+  }
+
+  console.log("🎉 Test workshop seeding complete!");
+}
+
+export async function cleanupTestWorkshops() {
+  console.log("🧹 Cleaning up test workshops...");
+
+  const supabase = getSupabaseClient();
+
+  const testWorkshopIds = [
+    "550e8400-e29b-41d4-a716-446655440001",
+    "550e8400-e29b-41d4-a716-446655440002",
+    "550e8400-e29b-41d4-a716-446655440003",
+  ];
+
+  for (const workshopId of testWorkshopIds) {
+    try {
+      // Delete workshop registrations first
+      const { error: regError } = await supabase
+        .from("workshop_registrations")
+        .delete()
+        .eq("workshop_id", workshopId);
+
+      if (regError) {
+        console.error(
+          `❌ Failed to delete registrations for workshop ${workshopId}:`,
+          regError,
+        );
+      }
+
+      // Delete workshop
+      const { error: workshopError } = await supabase
+        .from("workshops")
+        .delete()
+        .eq("id", workshopId);
+
+      if (workshopError) {
+        console.error(
+          `❌ Failed to delete workshop ${workshopId}:`,
+          workshopError,
+        );
+      } else {
+        console.log(`✅ Deleted workshop: ${workshopId}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error deleting workshop ${workshopId}:`, error);
+    }
+  }
+
+  console.log("🎉 Test workshop cleanup complete!");
+}
+
 export async function resetTestDatabase() {
   console.log("🔄 Resetting test database...");
 
   const supabase = getSupabaseClient();
 
   try {
-    // Clean up test users first
+    // Clean up test workshops first
+    await cleanupTestWorkshops();
+
+    // Clean up test users
     await cleanupTestUsers();
 
     // Clear any remaining test data

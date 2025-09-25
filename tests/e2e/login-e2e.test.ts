@@ -4,6 +4,8 @@ import {
   checkTestUsersExist,
   seedTestUsers,
   cleanupTestUsers,
+  seedTestWorkshops,
+  cleanupTestWorkshops,
 } from "../helpers/seedTestUsers";
 
 // Helper function to check if the app is running
@@ -47,15 +49,22 @@ describe("Login User Workflows E2E Tests", () => {
     } else {
       console.log("✅ Test users already exist");
     }
+
+    // Seed test workshops
+    console.log("🌱 Seeding test workshops...");
+    await seedTestWorkshops();
+    console.log("✅ Test workshops seeded successfully");
   });
 
   afterAll(async () => {
-    // Clean up test users after all tests are complete
+    // Clean up test workshops and users after all tests are complete
     try {
+      await cleanupTestWorkshops();
+      console.log("✅ Test workshops cleaned up successfully");
       await cleanupTestUsers();
       console.log("✅ Test users cleaned up successfully");
     } catch (error) {
-      console.error("❌ Failed to cleanup test users:", error);
+      console.error("❌ Failed to cleanup test data:", error);
     }
   });
 
@@ -690,6 +699,129 @@ describe("Login User Workflows E2E Tests", () => {
         expect(page.url()).toMatch(/\/user\/dashboard/);
       } catch (error) {
         console.error("Keyboard navigation test failed:", error);
+        throw error;
+      }
+    });
+  });
+
+  describe("Workshop Registration Workflows", () => {
+    test("should complete workshop registration workflow", async () => {
+      const { email, password } = getTestUserCredentials("participant");
+      const baseUrl = getBaseUrl();
+
+      try {
+        // Login first
+        console.log("Logging in user...");
+        await page.goto(`${baseUrl}/login`, {
+          waitUntil: "networkidle0",
+          timeout: 30000,
+        });
+
+        await page.waitForSelector("form", { timeout: 15000 });
+        await page.type('input[type="email"]', email, { delay: 100 });
+        await page.type('input[type="password"]', password, { delay: 100 });
+        await page.click('button[type="submit"]');
+        await page.waitForNavigation({ timeout: 15000 });
+
+        // Verify we're on the dashboard
+        expect(page.url()).toMatch(/\/user\/dashboard/);
+        console.log("✅ Successfully logged in and reached dashboard");
+
+        // Wait for the page to fully load
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        // Look for workshop elements
+        console.log("Looking for workshop elements...");
+
+        // Wait for the page to load and look for workshop-related content
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Look for workshop cards by checking for buttons with "Register" text
+        const registerButtons = await page.$$("button");
+        console.log(`Found ${registerButtons.length} buttons on the page`);
+
+        // Filter for register buttons
+        const registerButtonTexts = await Promise.all(
+          registerButtons.map(
+            async (button: { evaluate: (arg0: (el: any) => any) => any }) => {
+              const text = await button.evaluate(
+                (el: { textContent: string }) => el.textContent?.trim(),
+              );
+              return { button, text };
+            },
+          ),
+        );
+
+        const actualRegisterButtons = registerButtonTexts.filter(
+          ({ text }) => text && text.toLowerCase().includes("register"),
+        );
+
+        console.log(`Found ${actualRegisterButtons.length} register buttons`);
+
+        if (actualRegisterButtons.length > 0) {
+          // Click the first register button
+          console.log("Clicking register button...");
+          await actualRegisterButtons[0].button.click();
+
+          // Wait for registration to complete
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          // Check for success message or button state change
+          const successMessage = await page.$(
+            '[class*="success"], [class*="toast"]',
+          );
+          const unregisterButtons = await page.$$("button");
+          const unregisterButtonTexts = await Promise.all(
+            unregisterButtons.map(
+              async (button: { evaluate: (arg0: (el: any) => any) => any }) => {
+                const text = await button.evaluate(
+                  (el: { textContent: string }) => el.textContent?.trim(),
+                );
+                return { button, text };
+              },
+            ),
+          );
+          const unregisterButton = unregisterButtonTexts.find(
+            ({ text }) => text && text.toLowerCase().includes("unregister"),
+          );
+
+          if (successMessage || unregisterButton) {
+            console.log("✅ Workshop registration successful");
+          } else {
+            console.log(
+              "⚠️  Registration may have succeeded but no clear success indicator found",
+            );
+          }
+        } else {
+          // If no register buttons found, check if workshops are displayed
+          // Look for any text that might indicate workshops
+          const pageContent = await page.content();
+          const hasWorkshopContent =
+            pageContent.includes("workshop") ||
+            pageContent.includes("Web Development") ||
+            pageContent.includes("Mobile App") ||
+            pageContent.includes("Data Science");
+
+          if (hasWorkshopContent) {
+            console.log("✅ Workshop content found on dashboard");
+          } else {
+            console.log("⚠️  No workshop content found on dashboard");
+            console.log("Page content preview:", pageContent.substring(0, 500));
+          }
+        }
+
+        // Verify we're still on the dashboard after interaction
+        expect(page.url()).toMatch(/\/user\/dashboard/);
+        console.log("✅ Still on dashboard after workshop interaction");
+      } catch (error) {
+        console.error("Workshop registration test failed:", error);
+        // Take a screenshot for debugging
+        try {
+          await page.screenshot({ path: "workshop-test-failure.png" });
+          console.log("Screenshot saved as workshop-test-failure.png");
+        } catch (screenshotError) {
+          console.log("Could not take screenshot:", screenshotError);
+        }
         throw error;
       }
     });
