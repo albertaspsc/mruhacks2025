@@ -4,7 +4,7 @@ import { getRegistrationDataAction } from "@/actions/registrationActions";
 
 // Mock dependencies
 jest.mock("@/utils/supabase/server");
-jest.mock("@/actions/registration-actions");
+jest.mock("@/actions/registrationActions");
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
