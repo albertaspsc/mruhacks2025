@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { createClient } from "@/utils/supabase/client";
-import { useFormValidation } from "@/hooks";
+import { useFormValidation } from "@/components/hooks";
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();

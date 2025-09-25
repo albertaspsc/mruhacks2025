@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { getFormOptionsAction } from "@/actions/registration-actions";
+import { getFormOptionsAction } from "@/actions/registrationActions";
 import PersonalDetailsForm from "./PersonalDetailsForm";
 
 export default async function Step1Page() {

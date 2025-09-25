@@ -13,13 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
-import { updateUserProfileAction } from "@/actions/profile-actions";
+import { updateUserProfileAction } from "@/actions/profileActions";
 import { ToastBanner } from "@/components/dashboards/toast/Toast";
 import { ProfileUpdateSchema, FormOptions } from "@/types/registration";
 import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/PersonalDetailsSection";
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
-import { useFormState, useResumeUpload } from "@/hooks";
+import { useFormState, useResumeUpload } from "@/components/hooks";
 import {
   formOptionTransformers,
   mergeFormData,

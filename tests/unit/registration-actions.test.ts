@@ -20,7 +20,7 @@ import {
   registerUserAction,
   getRegistrationDataAction,
   getFormOptionsAction,
-} from "@/actions/registration-actions";
+} from "@/actions/registrationActions";
 import { createClient } from "@/utils/supabase/server";
 import * as UserRegistrationDAL from "@/dal/user-registration";
 import { revalidatePath } from "next/cache";

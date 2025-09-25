@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { RegisterFormProvider } from "@/context/RegisterFormContext";
 import { createClient } from "@/utils/supabase/server";
-import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
 import { AuthRegistrationProvider } from "@/context/AuthRegistrationContext";
 import { RegisterOptionsProvider } from "@/context/RegisterOptionsContext";
 import RegisterLayoutInner from "./RegisterLayoutInner";

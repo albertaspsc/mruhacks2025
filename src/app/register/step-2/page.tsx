@@ -1,6 +1,6 @@
 // app/register/step-2/page.tsx
 import { createClient } from "@/utils/supabase/server";
-import { getFormOptionsAction } from "@/actions/registration-actions";
+import { getFormOptionsAction } from "@/actions/registrationActions";
 import FinalQuestionsForm from "./FinalQuestionsForm";
 
 export default async function Step2Page() {

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/file-upload";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Loader2 } from "lucide-react";
-import { useFormValidation } from "@/hooks";
+import { useFormValidation } from "@/components/hooks";
 
 interface FileUploadFieldProps<
   TFieldValues extends FieldValues = FieldValues,

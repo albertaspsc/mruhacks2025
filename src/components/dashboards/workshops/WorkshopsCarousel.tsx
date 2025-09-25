@@ -1,290 +1,124 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/hooks/use-toast";
-import useCarousel from "embla-carousel-react";
-import { MapPin } from "lucide-react";
-import Image from "next/image";
-import { usePrevNextButtons } from "@/components/landing-page/team/carousel/CarouselArrowButtons";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  WorkshopPrevButton as PrevButton,
-  WorkshopNextButton as NextButton,
-} from "./WorkshopButtons";
-import carouselStyles from "@/components/landing-page/team/carousel/carousel.module.css";
-import styles from "./workshopsCarousel.module.css";
-
-type Workshop = {
-  id: string;
-  title: string;
-  description?: string | null;
-  date: string | Date;
-  startTime: string;
-  endTime: string;
-  location?: string | null;
-  maxCapacity: number | null;
-  currentRegistrations: number;
-  isRegistered: boolean;
-  isFull: boolean;
-  imageUrl?: string | null;
-};
-
-function formatDate(date: string | Date) {
-  let d: Date;
-
-  if (typeof date === "string") {
-    const [year, month, day] = date.split("T")[0].split("-").map(Number);
-    d = new Date(year, month - 1, day);
-  } else {
-    d = date;
-  }
-
-  return d.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function formatTime(time: string) {
-  if (!time) return "";
-  const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-  if (!match) return time;
-  let hour = parseInt(match[1], 10);
-  const minute = match[2];
-  const suffix = hour >= 12 ? "PM" : "AM";
-  hour = ((hour + 11) % 12) + 1; // 0 or 12 -> 12, 13 -> 1, etc.
-  return `${hour}:${minute} ${suffix}`;
-}
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useToast } from "@/components/hooks/use-toast";
+import { Workshop } from "@/types/workshop";
+import {
+  getWorkshopsAction,
+  registerForWorkshopAction,
+  unregisterFromWorkshopAction,
+} from "@/actions/workshopActions";
+import WorkshopCard from "./WorkshopCard";
 
 export default function WorkshopsCarousel() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [slideWidth, setSlideWidth] = useState(300); // Default width
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [carouselRef, carouselApi] = useCarousel({
-    loop: false,
-    align: "start",
-    containScroll: "keepSnaps",
-    dragFree: true,
-  });
-
-  const {
-    prevBtnDisabled,
-    nextBtnDisabled,
-    onPrevButtonClick,
-    onNextButtonClick,
-  } = usePrevNextButtons(carouselApi, () => {});
-
-  // Calculate slide width based on container width to show only full cards
-  useEffect(() => {
-    const calculateSlideWidth = () => {
-      if (!containerRef.current) return;
-
-      const containerWidth = containerRef.current.clientWidth;
-      // Fixed card width with extra padding to prevent cut-offs
-      const minCardWidth = 300;
-      const cardGap = 24; // Increased gap between cards
-      const visibleCardsCount = Math.max(
-        1,
-        Math.floor((containerWidth - 40) / (minCardWidth + cardGap)),
-      );
-
-      // Ensure we have enough space to display the cards without cutting them off
-      // Subtracting extra margin to ensure complete cards
-      const newSlideWidth = Math.floor(
-        (containerWidth - 40 - (visibleCardsCount - 1) * cardGap) /
-          visibleCardsCount,
-      );
-
-      setSlideWidth(newSlideWidth);
-
-      // Re-initialize carousel after calculation
-      if (carouselApi) {
-        setTimeout(() => carouselApi.reInit(), 0);
-      }
-    };
-
-    calculateSlideWidth();
-    window.addEventListener("resize", calculateSlideWidth);
-
-    return () => window.removeEventListener("resize", calculateSlideWidth);
-  }, [carouselApi]);
-
-  const fetchWorkshops = React.useCallback(async () => {
+  const fetchWorkshops = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/workshops", { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to load workshops");
-      const data = await res.json();
-      setWorkshops(data);
-    } catch (e) {
-      toast({ title: "Failed to load workshops", variant: "destructive" });
+      const result = await getWorkshopsAction();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to load workshops");
+      }
+      setWorkshops(result.data || []);
+    } catch (e: any) {
+      toast({
+        title: e.message || "Failed to load workshops",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
-      // ensure carousel recalculates sizes
-      if (carouselApi) {
-        setTimeout(() => carouselApi.reInit(), 0);
-      }
     }
-  }, [toast, carouselApi]);
+  }, [toast]);
 
-  React.useEffect(() => {
+  const handleRegister = useCallback(
+    async (id: string) => {
+      try {
+        const result = await registerForWorkshopAction(id);
+        if (!result.success) {
+          throw new Error(result.error || "Registration failed");
+        }
+        toast({ title: "Registered for workshop" });
+        await fetchWorkshops();
+      } catch (e: any) {
+        toast({
+          title: e.message || "Registration failed",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, fetchWorkshops],
+  );
+
+  const handleUnregister = useCallback(
+    async (id: string) => {
+      try {
+        const result = await unregisterFromWorkshopAction(id);
+        if (!result.success) {
+          throw new Error(result.error || "Unregister failed");
+        }
+        toast({ title: "Unregistered from workshop" });
+        await fetchWorkshops();
+      } catch (e: any) {
+        toast({
+          title: e.message || "Unregister failed",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, fetchWorkshops],
+  );
+
+  useEffect(() => {
     fetchWorkshops();
   }, [fetchWorkshops]);
 
-  const handleRegister = async (id: string) => {
-    try {
-      const res = await fetch(`/api/workshops/${id}/register`, {
-        method: "POST",
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "Registration failed");
-      toast({ title: "Registered for workshop" });
-      await fetchWorkshops();
-    } catch (e: any) {
-      toast({
-        title: e.message || "Registration failed",
-        variant: "destructive",
-      });
-    }
-  };
+  if (loading) {
+    return (
+      <div className="text-sm text-muted-foreground p-4">
+        Loading workshops…
+      </div>
+    );
+  }
 
-  const handleUnregister = async (id: string) => {
-    try {
-      const res = await fetch(`/api/workshops/${id}/register`, {
-        method: "DELETE",
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "Unregister failed");
-      toast({ title: "Unregistered from workshop" });
-      await fetchWorkshops();
-    } catch (e: any) {
-      toast({
-        title: e.message || "Unregister failed",
-        variant: "destructive",
-      });
-    }
-  };
+  if (workshops.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground p-4">
+        No workshops available right now.
+      </div>
+    );
+  }
 
   return (
-    <div className="h-auto">
-      <div ref={containerRef} className="overflow-hidden">
-        {loading && (
-          <div className="text-sm text-muted-foreground p-4">
-            Loading workshops…
-          </div>
-        )}
-        {!loading && workshops.length === 0 && (
-          <div className="text-sm text-muted-foreground p-4">
-            No workshops available right now.
-          </div>
-        )}
-
-        {workshops.length > 0 && (
-          <div
-            className={`${carouselStyles.carousel__wrapper}`}
-            style={{ height: "auto" }}
-          >
-            <div
-              className={`${carouselStyles.carousel__button_left} ${styles.buttonLeft}`}
-            >
-              <PrevButton
-                onClick={onPrevButtonClick}
-                disabled={prevBtnDisabled}
-              />
-            </div>
-
-            <div
-              className={`${carouselStyles.carousel__viewport} ${carouselStyles.fullWidthViewport}`}
-              ref={carouselRef}
-              style={{
-                overflow: "hidden",
-                position: "relative",
-                height: "auto",
-              }}
-            >
-              <div className={`${carouselStyles.carousel__container} flex`}>
-                {workshops.map((w) => {
-                  const capacityLabel =
-                    w.maxCapacity && w.maxCapacity > 0
-                      ? `${w.currentRegistrations}/${w.maxCapacity}`
-                      : `${w.currentRegistrations}`;
-                  return (
-                    <div
-                      className={`${carouselStyles.carousel__slide} ${styles.slide}`}
-                      key={w.id}
-                      style={{ width: `${slideWidth}px` }}
-                    >
-                      <div className={`${styles.card} h-full`}>
-                        <div className="space-y-2">
-                          <div className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
-                            {formatDate(w.date)} {formatTime(w.startTime)}–
-                            {formatTime(w.endTime)}
-                          </div>
-                          <div>
-                            <span className="font-medium text-base">
-                              {w.title}
-                            </span>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            <span>{capacityLabel} participants</span>
-                            {w.isFull && (
-                              <span className="text-red-500 ml-1">(Full)</span>
-                            )}
-                          </div>
-                          {w.location && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3.5 w-3.5" />
-                              <span>{w.location}</span>
-                            </div>
-                          )}
-                          {w.description && (
-                            <div className="text-sm text-muted-foreground line-clamp-2">
-                              {w.description}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-3">
-                          {w.isRegistered ? (
-                            <Button
-                              variant="secondary"
-                              className="rounded-xl"
-                              onClick={() => handleUnregister(w.id)}
-                            >
-                              Unregister
-                            </Button>
-                          ) : (
-                            <Button
-                              className="rounded-xl"
-                              onClick={() => handleRegister(w.id)}
-                              disabled={w.isFull}
-                            >
-                              {w.isFull ? "Full" : "Register"}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div
-              className={`${carouselStyles.carousel__button_right} ${styles.buttonRight}`}
-            >
-              <NextButton
-                onClick={onNextButtonClick}
-                disabled={nextBtnDisabled}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <Carousel
+      opts={{
+        align: "start",
+        loop: false,
+      }}
+      className="w-full"
+    >
+      <CarouselContent className="m-2 md:m-4 ">
+        {workshops.map((workshop: Workshop) => (
+          <CarouselItem key={workshop.id} className="basis-1/2 ">
+            <WorkshopCard
+              workshop={workshop}
+              onRegister={handleRegister}
+              onUnregister={handleUnregister}
+            />
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious className="left-2 text-black bg-white border border-gray-200 " />
+      <CarouselNext className="right-2 text-black bg-white border border-gray-200 " />
+    </Carousel>
   );
 }

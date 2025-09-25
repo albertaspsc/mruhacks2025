@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
-import { useResumeUpload, useFormState } from "@/hooks";
+import { useResumeUpload, useFormState } from "@/components/hooks";
 import { useRegisterForm } from "@/context/RegisterFormContext";
 import { ToastBanner } from "@/components/dashboards/toast/Toast";
 import {
@@ -29,7 +29,7 @@ import {
   DietaryRestrictionOption,
   MarketingTypeOption,
 } from "@/types/registration";
-import { registerUserAction } from "@/actions/registration-actions";
+import { registerUserAction } from "@/actions/registrationActions";
 
 type Props = {
   /** Initial form values from server-side data */
