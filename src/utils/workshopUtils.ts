@@ -24,7 +24,11 @@ export function formatTime(time: string): string {
   const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (!match) return time;
 
-  // Create a date object with today's date and the parsed time
+  // Create a date object with today's date and the parsed time.
+  // We store the start_time and end_time as  .
+  // So we have a 24 hour format from the db and need to convert to 12 hour time.
+  // So we create a date object with today's date and the parsed time from the db.
+  // Feels bad but it works.
   const [hours, minutes] = match.slice(1, 3).map(Number);
   const date = new Date();
   date.setHours(hours, minutes, 0, 0);
