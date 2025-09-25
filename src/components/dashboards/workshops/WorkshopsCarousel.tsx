@@ -85,7 +85,7 @@ export default function WorkshopsCarousel() {
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground p-4">
-        Loading workshops…
+        Loading workshops...
       </div>
     );
   }

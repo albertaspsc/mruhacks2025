@@ -43,28 +43,28 @@ describe("Login User Workflows E2E Tests", () => {
     // Check if test users exist, and seed them if they don't
     const usersExist = await checkTestUsersExist();
     if (!usersExist) {
-      console.log("🌱 Test users not found, seeding them now...");
+      console.log("Test users not found, seeding them now...");
       await seedTestUsers();
-      console.log("✅ Test users seeded successfully");
+      console.log("SUCCESS: Test users seeded successfully");
     } else {
-      console.log("✅ Test users already exist");
+      console.log("SUCCESS: Test users already exist");
     }
 
     // Seed test workshops
-    console.log("🌱 Seeding test workshops...");
+    console.log("Seeding test workshops...");
     await seedTestWorkshops();
-    console.log("✅ Test workshops seeded successfully");
+    console.log("SUCCESS: Test workshops seeded successfully");
   });
 
   afterAll(async () => {
     // Clean up test workshops and users after all tests are complete
     try {
       await cleanupTestWorkshops();
-      console.log("✅ Test workshops cleaned up successfully");
+      console.log("SUCCESS: Test workshops cleaned up successfully");
       await cleanupTestUsers();
-      console.log("✅ Test users cleaned up successfully");
+      console.log("SUCCESS: Test users cleaned up successfully");
     } catch (error) {
-      console.error("❌ Failed to cleanup test data:", error);
+      console.error("ERROR: Failed to cleanup test data:", error);
     }
   });
 
@@ -725,7 +725,7 @@ describe("Login User Workflows E2E Tests", () => {
 
         // Verify we're on the dashboard
         expect(page.url()).toMatch(/\/user\/dashboard/);
-        console.log("✅ Successfully logged in and reached dashboard");
+        console.log("SUCCESS: Successfully logged in and reached dashboard");
 
         // Wait for the page to fully load
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -786,10 +786,10 @@ describe("Login User Workflows E2E Tests", () => {
           );
 
           if (successMessage || unregisterButton) {
-            console.log("✅ Workshop registration successful");
+            console.log("SUCCESS: Workshop registration successful");
           } else {
             console.log(
-              "⚠️  Registration may have succeeded but no clear success indicator found",
+              "WARNING: Registration may have succeeded but no clear success indicator found",
             );
           }
         } else {
@@ -803,16 +803,16 @@ describe("Login User Workflows E2E Tests", () => {
             pageContent.includes("Data Science");
 
           if (hasWorkshopContent) {
-            console.log("✅ Workshop content found on dashboard");
+            console.log("SUCCESS: Workshop content found on dashboard");
           } else {
-            console.log("⚠️  No workshop content found on dashboard");
+            console.log("WARNING: No workshop content found on dashboard");
             console.log("Page content preview:", pageContent.substring(0, 500));
           }
         }
 
         // Verify we're still on the dashboard after interaction
         expect(page.url()).toMatch(/\/user\/dashboard/);
-        console.log("✅ Still on dashboard after workshop interaction");
+        console.log("SUCCESS: Still on dashboard after workshop interaction");
       } catch (error) {
         console.error("Workshop registration test failed:", error);
         // Take a screenshot for debugging

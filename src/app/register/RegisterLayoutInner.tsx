@@ -12,7 +12,7 @@ export default function RegisterLayoutInner({
   children: ReactNode;
 }) {
   const path = usePathname() ?? "";
-  // Deterministic route → step mapping for the registration flow
+  // Deterministic route -> step mapping for the registration flow
   // Account = 1, Personal = 2, Final = 3
   const ROUTE_STEP: Array<[RegExp, number]> = [
     [/^\/register\/?$/, 1],

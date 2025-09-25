@@ -39,7 +39,7 @@ export default function WorkshopCard({
     >
       <div className="space-y-2">
         <div className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
-          {formatDate(workshop.date)} {formatTime(workshop.startTime)}–
+          {formatDate(workshop.date)} {formatTime(workshop.startTime)}-
           {formatTime(workshop.endTime)}
         </div>
         <div>
@@ -77,8 +77,8 @@ export default function WorkshopCard({
               <AlertDialogDescription asChild>
                 <div className="space-y-4 text-base">
                   <div className="text-lg text-muted-foreground">
-                    {formatDate(workshop.date)} •{" "}
-                    {formatTime(workshop.startTime)} –{" "}
+                    {formatDate(workshop.date)} *{" "}
+                    {formatTime(workshop.startTime)} -{" "}
                     {formatTime(workshop.endTime)}
                   </div>
 

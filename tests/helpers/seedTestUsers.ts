@@ -67,7 +67,7 @@ export const testUsers: TestUser[] = [
 ];
 
 export async function seedTestUsers() {
-  console.log("🌱 Seeding test users...");
+  console.log("Seeding test users...");
 
   const supabase = getSupabaseClient();
 
@@ -80,7 +80,7 @@ export async function seedTestUsers() {
       );
 
       if (existingUser) {
-        console.log(`⚠️  User ${user.email} already exists, skipping...`);
+        console.log(`WARNING: User ${user.email} already exists, skipping...`);
         continue;
       }
 
@@ -98,13 +98,13 @@ export async function seedTestUsers() {
 
       if (authError) {
         console.error(
-          `❌ Failed to create auth user ${user.email}:`,
+          `ERROR: Failed to create auth user ${user.email}:`,
           authError,
         );
         continue;
       }
 
-      console.log(`✅ Created auth user: ${user.email}`);
+      console.log(`SUCCESS: Created auth user: ${user.email}`);
 
       // Create public.users record for participants
       if (user.userType === "participant") {
@@ -128,11 +128,11 @@ export async function seedTestUsers() {
 
         if (userError) {
           console.error(
-            `❌ Failed to create public user ${user.email}:`,
+            `ERROR: Failed to create public user ${user.email}:`,
             userError,
           );
         } else {
-          console.log(`✅ Created public user: ${user.email}`);
+          console.log(`SUCCESS: Created public user: ${user.email}`);
         }
 
         // Create marketing preferences
@@ -145,7 +145,7 @@ export async function seedTestUsers() {
 
         if (mktgError) {
           console.error(
-            `❌ Failed to create marketing preferences for ${user.email}:`,
+            `ERROR: Failed to create marketing preferences for ${user.email}:`,
             mktgError,
           );
         }
@@ -164,23 +164,23 @@ export async function seedTestUsers() {
 
         if (adminError) {
           console.error(
-            `❌ Failed to create admin user ${user.email}:`,
+            `ERROR: Failed to create admin user ${user.email}:`,
             adminError,
           );
         } else {
-          console.log(`✅ Created admin user: ${user.email}`);
+          console.log(`SUCCESS: Created admin user: ${user.email}`);
         }
       }
     } catch (error) {
-      console.error(`❌ Error creating user ${user.email}:`, error);
+      console.error(`ERROR: Error creating user ${user.email}:`, error);
     }
   }
 
-  console.log("🎉 Test user seeding complete!");
+  console.log("SUCCESS: Test user seeding complete!");
 }
 
 export async function cleanupTestUsers() {
-  console.log("🧹 Cleaning up test users...");
+  console.log("Cleaning up test users...");
 
   const supabase = getSupabaseClient();
 
@@ -195,23 +195,25 @@ export async function cleanupTestUsers() {
         const { error } = await supabase.auth.admin.deleteUser(testUser.id);
 
         if (error) {
-          console.error(`❌ Failed to delete user ${user.email}:`, error);
+          console.error(`ERROR: Failed to delete user ${user.email}:`, error);
         } else {
-          console.log(`✅ Deleted user: ${user.email}`);
+          console.log(`SUCCESS: Deleted user: ${user.email}`);
         }
       } else {
-        console.log(`⚠️  User ${user.email} not found, skipping deletion...`);
+        console.log(
+          `WARNING: User ${user.email} not found, skipping deletion...`,
+        );
       }
     } catch (error) {
-      console.error(`❌ Error deleting user ${user.email}:`, error);
+      console.error(`ERROR: Error deleting user ${user.email}:`, error);
     }
   }
 
-  console.log("🎉 Test user cleanup complete!");
+  console.log("SUCCESS: Test user cleanup complete!");
 }
 
 export async function seedTestWorkshops() {
-  console.log("🌱 Seeding test workshops...");
+  console.log("Seeding test workshops...");
 
   const supabase = getSupabaseClient();
 
@@ -268,7 +270,7 @@ export async function seedTestWorkshops() {
 
       if (existingWorkshop) {
         console.log(
-          `⚠️  Workshop ${workshop.title} already exists, skipping...`,
+          `WARNING: Workshop ${workshop.title} already exists, skipping...`,
         );
         continue;
       }
@@ -280,22 +282,22 @@ export async function seedTestWorkshops() {
 
       if (workshopError) {
         console.error(
-          `❌ Failed to create workshop ${workshop.title}:`,
+          `ERROR: Failed to create workshop ${workshop.title}:`,
           workshopError,
         );
       } else {
-        console.log(`✅ Created workshop: ${workshop.title}`);
+        console.log(`SUCCESS: Created workshop: ${workshop.title}`);
       }
     } catch (error) {
-      console.error(`❌ Error creating workshop ${workshop.title}:`, error);
+      console.error(`ERROR: Error creating workshop ${workshop.title}:`, error);
     }
   }
 
-  console.log("🎉 Test workshop seeding complete!");
+  console.log("SUCCESS: Test workshop seeding complete!");
 }
 
 export async function cleanupTestWorkshops() {
-  console.log("🧹 Cleaning up test workshops...");
+  console.log("Cleaning up test workshops...");
 
   const supabase = getSupabaseClient();
 
@@ -315,7 +317,7 @@ export async function cleanupTestWorkshops() {
 
       if (regError) {
         console.error(
-          `❌ Failed to delete registrations for workshop ${workshopId}:`,
+          `ERROR: Failed to delete registrations for workshop ${workshopId}:`,
           regError,
         );
       }
@@ -328,22 +330,22 @@ export async function cleanupTestWorkshops() {
 
       if (workshopError) {
         console.error(
-          `❌ Failed to delete workshop ${workshopId}:`,
+          `ERROR: Failed to delete workshop ${workshopId}:`,
           workshopError,
         );
       } else {
-        console.log(`✅ Deleted workshop: ${workshopId}`);
+        console.log(`SUCCESS: Deleted workshop: ${workshopId}`);
       }
     } catch (error) {
-      console.error(`❌ Error deleting workshop ${workshopId}:`, error);
+      console.error(`ERROR: Error deleting workshop ${workshopId}:`, error);
     }
   }
 
-  console.log("🎉 Test workshop cleanup complete!");
+  console.log("SUCCESS: Test workshop cleanup complete!");
 }
 
 export async function resetTestDatabase() {
-  console.log("🔄 Resetting test database...");
+  console.log("Resetting test database...");
 
   const supabase = getSupabaseClient();
 
@@ -362,7 +364,7 @@ export async function resetTestDatabase() {
 
     if (workshopRegError) {
       console.error(
-        "❌ Failed to clear workshop registrations:",
+        "ERROR: Failed to clear workshop registrations:",
         workshopRegError,
       );
     }
@@ -373,7 +375,10 @@ export async function resetTestDatabase() {
       .like("id", "%test%");
 
     if (userInterestsError) {
-      console.error("❌ Failed to clear user interests:", userInterestsError);
+      console.error(
+        "ERROR: Failed to clear user interests:",
+        userInterestsError,
+      );
     }
 
     const { error: userDietError } = await supabase
@@ -383,14 +388,14 @@ export async function resetTestDatabase() {
 
     if (userDietError) {
       console.error(
-        "❌ Failed to clear user diet restrictions:",
+        "ERROR: Failed to clear user diet restrictions:",
         userDietError,
       );
     }
 
-    console.log("✅ Test database reset complete!");
+    console.log("SUCCESS: Test database reset complete!");
   } catch (error) {
-    console.error("❌ Error resetting test database:", error);
+    console.error("ERROR: Error resetting test database:", error);
   }
 }
 
@@ -421,7 +426,7 @@ export async function checkTestUsersExist(): Promise<boolean> {
     );
     return existingTestUsers.length === testUsers.length;
   } catch (error) {
-    console.error("❌ Error checking test users:", error);
+    console.error("ERROR: Error checking test users:", error);
     return false;
   }
 }

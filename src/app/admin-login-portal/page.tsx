@@ -158,7 +158,7 @@ export default function AdminLoginPage() {
             href="/"
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors underline"
           >
-            ← Back to main site
+            &lt;- Back to main site
           </Link>
         </div>
 

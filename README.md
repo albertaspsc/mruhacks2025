@@ -8,7 +8,7 @@ This repo is home to the MRUHacks 2025 website.
 
 1. Install dependencies: `npm install`
 2. Create `.env.local` (see `docs/ENV_SETUP.md`)
-3. Run dev server: `npm run dev` → http://localhost:3000
+3. Run dev server: `npm run dev` -> http://localhost:3000
 
 ### Scripts
 

@@ -23,11 +23,17 @@ export function formatTime(time: string): string {
   if (!time) return "";
   const match = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (!match) return time;
-  let hour = parseInt(match[1], 10);
-  const minute = match[2];
-  const suffix = hour >= 12 ? "PM" : "AM";
-  hour = ((hour + 11) % 12) + 1; // convert 0/12->12, 13->1, etc.
-  return `${hour}:${minute} ${suffix}`;
+
+  // Create a date object with today's date and the parsed time
+  const [hours, minutes] = match.slice(1, 3).map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+
+  return date.toLocaleString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 /**

@@ -1,5 +1,5 @@
 export interface ProgressBarProps {
-  step: number; // 1‑based current step
+  step: number; // 1-based current step
   totalSteps: number; // total number of steps
 }
 

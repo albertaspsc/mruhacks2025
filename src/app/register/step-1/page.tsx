@@ -11,7 +11,7 @@ export default async function Step1Page() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    // Keep it simple—render a server fallback. You can style with shadcn if you prefer.
+    // Keep it simple - render a server fallback. You can style with shadcn if you prefer.
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="space-y-2 text-center">

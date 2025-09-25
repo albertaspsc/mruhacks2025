@@ -92,7 +92,7 @@ export function AccommodationsTextareaField<
     <TextareaField
       {...props}
       rows={6}
-      placeholder="If yes, please specify…"
+      placeholder="If yes, please specify..."
       maxLength={500}
     />
   );
