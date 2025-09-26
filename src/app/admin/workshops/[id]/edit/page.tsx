@@ -10,17 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-
-interface WorkshopFormData {
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  maxCapacity: number;
-  isActive: boolean;
-}
+import { AdminWorkshopFormData } from "@/types/admin";
 
 export default function EditWorkshopPage() {
   const router = useRouter();
@@ -30,7 +20,7 @@ export default function EditWorkshopPage() {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<WorkshopFormData>({
+  const [formData, setFormData] = useState<AdminWorkshopFormData>({
     title: "",
     description: "",
     date: "",

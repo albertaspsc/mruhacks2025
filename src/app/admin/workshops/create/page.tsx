@@ -10,22 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-
-interface WorkshopFormData {
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  maxCapacity: number;
-}
+import { AdminWorkshopFormData } from "@/types/admin";
 
 export default function CreateWorkshopPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<WorkshopFormData>({
+  const [formData, setFormData] = useState<AdminWorkshopFormData>({
     title: "",
     description: "",
     date: "",
@@ -33,6 +24,7 @@ export default function CreateWorkshopPage() {
     endTime: "",
     location: "",
     maxCapacity: 30,
+    isActive: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

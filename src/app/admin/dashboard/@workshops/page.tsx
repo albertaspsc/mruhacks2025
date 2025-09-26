@@ -26,26 +26,14 @@ import {
   exportToCSV,
   generateFilename,
 } from "@/components/dashboards/shared/utils/ExportUtils";
+import { AdminWorkshop } from "@/types/admin";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
 }
 
-interface Workshop {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  maxCapacity: number;
-  isActive: boolean;
-  currentRegistrations?: number;
-}
-
 export default function WorkshopsSlot({ searchParams }: PageProps) {
-  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [workshops, setWorkshops] = useState<AdminWorkshop[]>([]);
   const [loading, setLoading] = useState(true);
   const resolvedSearchParams = use(searchParams);
   const isActive = resolvedSearchParams.tab === "workshops";

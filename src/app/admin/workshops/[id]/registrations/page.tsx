@@ -24,29 +24,12 @@ import {
   generateFilename,
 } from "@/components/dashboards/shared/utils/ExportUtils";
 import { AdminPageLayout } from "@/components/dashboards/admin/shared/AdminPageLayout";
+import { WorkshopWithRegistrations } from "@/types/admin";
 
-interface Participant {
-  id: string;
-  registeredAt: string;
-  participant: {
-    firstName: string;
-    lastName: string;
-    fullName: string;
-    yearOfStudy: string;
-    gender: string;
-    major: string;
-  };
-}
-
-interface WorkshopData {
-  id: string;
-  title: string;
-  maxCapacity: number;
-  currentRegistrations: number;
-}
+type Participant = NonNullable<WorkshopWithRegistrations["registrations"]>[0];
 
 interface RegistrationData {
-  workshop: WorkshopData;
+  workshop: WorkshopWithRegistrations;
   registrations: Participant[];
 }
 
@@ -257,20 +240,24 @@ export default function WorkshopRegistrationsPage() {
   const stats = [
     {
       title: "Total Registrations",
-      value: data.registrations.length,
+      value: data.registrations?.length || 0,
       icon: Users,
     },
     {
       title: "Capacity Used",
-      value: `${Math.round((data.workshop.currentRegistrations / data.workshop.maxCapacity) * 100)}%`,
+      value: data.workshop.maxCapacity
+        ? `${Math.round((data.workshop.currentRegistrations / data.workshop.maxCapacity) * 100)}%`
+        : "0%",
       icon: Users,
     },
     {
       title: "Available Spots",
-      value: Math.max(
-        0,
-        data.workshop.maxCapacity - data.workshop.currentRegistrations,
-      ),
+      value: data.workshop.maxCapacity
+        ? Math.max(
+            0,
+            data.workshop.maxCapacity - data.workshop.currentRegistrations,
+          )
+        : 0,
       icon: Users,
     },
   ];
@@ -292,17 +279,19 @@ export default function WorkshopRegistrationsPage() {
             <span>{data.workshop.currentRegistrations} registered</span>
           </div>
           <div>
-            <span>Capacity: {data.workshop.maxCapacity}</span>
+            <span>Capacity: {data.workshop.maxCapacity || "Unlimited"}</span>
           </div>
           <div>
             <Badge
               variant={
+                data.workshop.maxCapacity &&
                 data.workshop.currentRegistrations >= data.workshop.maxCapacity
                   ? "destructive"
                   : "default"
               }
             >
-              {data.workshop.currentRegistrations >= data.workshop.maxCapacity
+              {data.workshop.maxCapacity &&
+              data.workshop.currentRegistrations >= data.workshop.maxCapacity
                 ? "Full"
                 : "Available"}
             </Badge>
@@ -312,7 +301,7 @@ export default function WorkshopRegistrationsPage() {
 
       {/* Advanced Data Table */}
       <AdvancedDataTable
-        data={data.registrations}
+        data={data.registrations || []}
         columns={columns}
         loading={loading}
         emptyMessage="No registrations yet"
