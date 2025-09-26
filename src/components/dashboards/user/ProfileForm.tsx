@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { updateUserProfileAction } from "@/actions/profileActions";
-import { ToastBanner } from "@/components/dashboards/toast/Toast";
+import { ToastBanner } from "@/components/dashboards/shared/toast/Toast";
 import { ProfileUpdateSchema, FormOptions } from "@/types/registration";
 import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/PersonalDetailsSection";
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";

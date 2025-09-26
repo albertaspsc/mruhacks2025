@@ -1,6 +1,6 @@
 "use client";
 import { use, useState } from "react";
-import { BindInput } from "@/components/BindInput/BindInput";
+import { BindInput } from "@/components/forms/BindInput";
 import { changeEmail } from "./actions";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";

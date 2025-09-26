@@ -62,7 +62,8 @@ export default function WorkshopRegistrationsPage() {
   const columns = useMemo<ColumnDef<Participant>[]>(
     () => [
       {
-        accessorKey: "participant.fullName",
+        id: "participant.fullName",
+        accessorFn: (row) => row.participant.fullName,
         header: ({ column }) => (
           <SortableHeader column={column}>Name</SortableHeader>
         ),
@@ -72,19 +73,22 @@ export default function WorkshopRegistrationsPage() {
         },
       },
       {
-        accessorKey: "participant.yearOfStudy",
+        id: "participant.yearOfStudy",
+        accessorFn: (row) => row.participant.yearOfStudy,
         header: ({ column }) => (
           <SortableHeader column={column}>Year of Study</SortableHeader>
         ),
         cell: ({ row }) => row.original.participant.yearOfStudy,
       },
       {
-        accessorKey: "participant.major",
+        id: "participant.major",
+        accessorFn: (row) => row.participant.major,
         header: "Major",
         cell: ({ row }) => row.original.participant.major,
       },
       {
-        accessorKey: "participant.gender",
+        id: "participant.gender",
+        accessorFn: (row) => row.participant.gender,
         header: ({ column }) => (
           <SortableHeader column={column}>Gender</SortableHeader>
         ),

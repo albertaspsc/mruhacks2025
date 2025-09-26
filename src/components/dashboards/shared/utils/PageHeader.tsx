@@ -43,24 +43,21 @@ export function ActionButton({
   variant = "default",
   className = "",
 }: ActionButtonProps) {
-  const buttonContent = (
-    <Button variant={variant} className={className}>
-      <Icon className="w-4 h-4 mr-2" />
-      {children}
-    </Button>
-  );
-
   if (href) {
     return (
       <a href={href} className="inline-block">
-        {buttonContent}
+        <Button variant={variant} className={className}>
+          <Icon className="w-4 h-4 mr-2" />
+          {children}
+        </Button>
       </a>
     );
   }
 
   return (
-    <button onClick={onClick} className="inline-block">
-      {buttonContent}
-    </button>
+    <Button onClick={onClick} variant={variant} className={className}>
+      <Icon className="w-4 h-4 mr-2" />
+      {children}
+    </Button>
   );
 }

@@ -14,7 +14,7 @@ import { PreferencesSection } from "@/components/forms/sections/PreferencesSecti
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
 import { useResumeUpload, useFormState } from "@/components/hooks";
 import { useRegisterForm } from "@/context/RegisterFormContext";
-import { ToastBanner } from "@/components/dashboards/toast/Toast";
+import { ToastBanner } from "@/components/dashboards/shared/toast/Toast";
 import {
   formOptionTransformers,
   mergeFormData,
