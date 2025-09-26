@@ -1,17 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   Users,
   Calendar,
@@ -23,6 +14,18 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { StatsCard } from "@/components/dashboards/shared/ui/StatsCard";
+import {
+  PageHeader,
+  ActionButton,
+} from "@/components/dashboards/shared/utils/PageHeader";
+import { DataTable } from "@/components/dashboards/shared/ui/DataTable";
+import { SortableHeader } from "@/components/dashboards/shared/utils/SortableHeader";
+import { generateFilters } from "@/components/dashboards/shared/utils/FilterUtils";
+import {
+  exportToCSV,
+  generateFilename,
+} from "@/components/dashboards/shared/utils/ExportUtils";
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -88,7 +91,7 @@ export default function WorkshopsSlot({ searchParams }: PageProps) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "workshop-registrations-mruhacks2025.csv";
+        a.download = generateFilename("workshop-registrations-mruhacks2025");
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -134,201 +137,161 @@ export default function WorkshopsSlot({ searchParams }: PageProps) {
     return null;
   }
 
+  const pageActions = (
+    <>
+      <ActionButton onClick={handleExportWorkshops} icon={Download}>
+        Export Registrations
+      </ActionButton>
+      <ActionButton href="/admin/workshops/create" icon={Plus}>
+        Create Workshop
+      </ActionButton>
+    </>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Workshop Management Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Workshop Management
-          </h3>
-          <p className="text-gray-600">
-            Create, edit, and manage workshops for MRUHacks 2025
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <Button onClick={handleExportWorkshops}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Registrations
-          </Button>
-          <Link href="/admin/workshops/create">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Workshop
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Workshop Management"
+        description="Create, edit, and manage workshops for MRUHacks 2025"
+        actions={pageActions}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Workshops
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{workshops.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Registrations
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {workshops.reduce(
-                (total, w) => total + (w.currentRegistrations || 0),
-                0,
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Capacity
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {workshops.length > 0
-                ? Math.round(
-                    workshops.reduce((total, w) => {
-                      const percentage =
-                        w.maxCapacity > 0
-                          ? ((w.currentRegistrations || 0) / w.maxCapacity) *
-                            100
-                          : 0;
-                      return total + percentage;
-                    }, 0) / workshops.length,
-                  )
-                : 0}
-              %
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Total Workshops"
+          value={workshops.length}
+          icon={Calendar}
+        />
+        <StatsCard
+          title="Total Registrations"
+          value={workshops.reduce(
+            (total, w) => total + (w.currentRegistrations || 0),
+            0,
+          )}
+          icon={Users}
+        />
+        <StatsCard
+          title="Average Capacity"
+          value={`${
+            workshops.length > 0
+              ? Math.round(
+                  workshops.reduce((total, w) => {
+                    const percentage =
+                      w.maxCapacity > 0
+                        ? ((w.currentRegistrations || 0) / w.maxCapacity) * 100
+                        : 0;
+                    return total + percentage;
+                  }, 0) / workshops.length,
+                )
+              : 0
+          }%`}
+          icon={Users}
+        />
       </div>
 
       {/* Workshops Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Workshops</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">Loading workshops...</div>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Workshop</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Capacity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workshops.map((workshop) => (
-                  <TableRow key={workshop.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{workshop.title}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {workshop.description}
-                        </div>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {new Date(workshop.date).toLocaleDateString("en-US", {
-                            timeZone: "UTC",
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-1 text-sm text-gray-500">
-                        <Clock className="w-4 h-4" />
-                        <span>
-                          {workshop.startTime} - {workshop.endTime}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex items-center space-x-1 text-sm">
-                        <MapPin className="w-4 h-4" />
-                        <span>{workshop.location}</span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium">
-                          {workshop.currentRegistrations || 0}/
-                          {workshop.maxCapacity}
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{
-                              width: `${Math.min(100, workshop.maxCapacity > 0 ? ((workshop.currentRegistrations || 0) / workshop.maxCapacity) * 100 : 0)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <Badge
-                        variant={workshop.isActive ? "default" : "secondary"}
-                      >
-                        {workshop.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Link href={`/admin/workshops/${workshop.id}/edit`}>
-                          <Button>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                        <Link
-                          href={`/admin/workshops/${workshop.id}/registrations`}
-                        >
-                          <Button>
-                            <Users className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                        <Button
-                          onClick={() => handleDeleteWorkshop(workshop.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DataTable
+        data={workshops}
+        columns={[
+          {
+            key: "title",
+            header: "Workshop",
+            render: (workshop) => (
+              <div>
+                <div className="font-medium">{workshop.title}</div>
+                <div className="text-sm text-gray-500 truncate max-w-xs">
+                  {workshop.description}
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "date",
+            header: "Date & Time",
+            render: (workshop) => (
+              <div>
+                <div className="flex items-center space-x-1 text-sm">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {new Date(workshop.date).toLocaleDateString("en-US", {
+                      timeZone: "UTC",
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1 text-sm text-gray-500">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    {workshop.startTime} - {workshop.endTime}
+                  </span>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "location",
+            header: "Location",
+            render: (workshop) => (
+              <div className="flex items-center space-x-1 text-sm">
+                <MapPin className="w-4 h-4" />
+                <span>{workshop.location}</span>
+              </div>
+            ),
+          },
+          {
+            key: "capacity",
+            header: "Capacity",
+            render: (workshop) => (
+              <div className="text-sm">
+                <div className="font-medium">
+                  {workshop.currentRegistrations || 0}/{workshop.maxCapacity}
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full"
+                    style={{
+                      width: `${Math.min(100, workshop.maxCapacity > 0 ? ((workshop.currentRegistrations || 0) / workshop.maxCapacity) * 100 : 0)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "status",
+            header: "Status",
+            render: (workshop) => (
+              <Badge variant={workshop.isActive ? "default" : "secondary"}>
+                {workshop.isActive ? "Active" : "Inactive"}
+              </Badge>
+            ),
+          },
+          {
+            key: "actions",
+            header: "Actions",
+            render: (workshop) => (
+              <div className="flex space-x-2">
+                <Link href={`/admin/workshops/${workshop.id}/edit`}>
+                  <Button>
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href={`/admin/workshops/${workshop.id}/registrations`}>
+                  <Button>
+                    <Users className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Button onClick={() => handleDeleteWorkshop(workshop.id)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+        title="All Workshops"
+        loading={loading}
+        emptyMessage="No workshops found."
+      />
     </div>
   );
 }

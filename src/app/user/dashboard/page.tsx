@@ -5,11 +5,11 @@ import { getRegistrationDataAction } from "@/actions/registrationActions";
 import { createClient } from "@/utils/supabase/server";
 import StatusBanner, {
   RegistrationStatus,
-} from "@/components/dashboards/common/StatusBanner";
-import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
-import DashboardItem from "@/components/dashboards/common/DashboardItem";
-import Checklist from "@/components/dashboards/checklist/Checklist";
-import InfoCard from "@/components/dashboards/common/InfoCard";
+} from "@/components/dashboards/shared/ui/StatusBanner";
+import WorkshopsCarousel from "@/components/dashboards/user/workshops/WorkshopsCarousel";
+import DashboardItem from "@/components/dashboards/shared/ui/DashboardItem";
+import Checklist from "@/components/dashboards/user/checklist/Checklist";
+import InfoCard from "@/components/dashboards/shared/ui/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";

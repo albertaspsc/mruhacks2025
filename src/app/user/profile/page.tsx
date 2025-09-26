@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { getUserProfileAction } from "@/actions/profileActions";
 import { getFormOptionsAction } from "@/actions/registrationActions";
-import ProfileForm from "@/components/dashboards/ProfileForm";
+import ProfileForm from "@/components/dashboards/user/ProfileForm";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {

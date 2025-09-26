@@ -1,9 +1,9 @@
 "use server";
 
-import DashboardItem from "@/components/dashboards/common/DashboardItem";
+import DashboardItem from "@/components/dashboards/shared/ui/DashboardItem";
 import { createClient } from "@/utils/supabase/server";
 import RSVPButton, { ConfirmDecline } from "./confirm_button";
-import { RegistrationStatus } from "@/components/dashboards/common/StatusBanner";
+import { RegistrationStatus } from "@/components/dashboards/shared/ui/StatusBanner";
 
 export default async function Rsvp() {
   const client = await createClient();

@@ -1,4 +1,4 @@
-import { ParticipantManagement } from "@/components/Admin/ParticipantManagement";
+import { ParticipantManagement } from "@/components/dashboards/admin/ParticipantManagement";
 import { use } from "react";
 
 interface PageProps {
