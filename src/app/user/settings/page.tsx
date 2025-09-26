@@ -50,10 +50,10 @@ import {
   getMarketingPreference,
 } from "@/db/settings";
 import { UserRegistration } from "@/types/registration";
-import { getRegistrationDataAction } from "@/actions/registration-actions";
-import { updateUserEmailAction } from "@/actions/profile-actions";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
+import { updateUserEmailAction } from "@/actions/profileActions";
 import { createClient } from "@/utils/supabase/client";
-import { useFormValidation } from "@/hooks";
+import { useFormValidation } from "@/components/hooks";
 
 // Toast component for better UX
 type ToastType = "success" | "error" | "warning" | "info";

@@ -2,7 +2,7 @@ import {
   updateUserProfileAction,
   getUserProfileAction,
   updateUserEmailAction,
-} from "@/actions/profile-actions";
+} from "@/actions/profileActions";
 import { createClient } from "@/utils/supabase/server";
 import * as UserRegistrationDAL from "@/dal/user-registration";
 import { revalidatePath } from "next/cache";

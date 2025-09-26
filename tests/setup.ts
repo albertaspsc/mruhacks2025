@@ -146,9 +146,9 @@ beforeAll(async () => {
   if (process.env.NODE_ENV !== "test" || process.env.TEST_TYPE === "e2e") {
     try {
       await startTestServer();
-      console.log("✅ Test server started successfully");
+      console.log("SUCCESS: Test server started successfully");
     } catch (error) {
-      console.error("❌ Failed to start test server:", error);
+      console.error("ERROR: Failed to start test server:", error);
       throw error;
     }
   }
@@ -162,8 +162,8 @@ afterAll(async () => {
   // Stop test server after all tests
   try {
     await stopTestServer();
-    console.log("✅ Test server stopped successfully");
+    console.log("SUCCESS: Test server stopped successfully");
   } catch (error) {
-    console.error("❌ Failed to stop test server:", error);
+    console.error("ERROR: Failed to stop test server:", error);
   }
 });

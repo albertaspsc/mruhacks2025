@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { getUserProfileAction } from "@/actions/profile-actions";
-import { getFormOptionsAction } from "@/actions/registration-actions";
+import { getUserProfileAction } from "@/actions/profileActions";
+import { getFormOptionsAction } from "@/actions/registrationActions";
 import ProfileForm from "@/components/dashboards/ProfileForm";
 import { redirect } from "next/navigation";
 

@@ -17,7 +17,7 @@ class TestServer {
       return;
     }
 
-    console.log("🚀 Starting Next.js development server...");
+    console.log("Starting Next.js development server...");
 
     // Load environment variables for the test
     const { config } = require("dotenv");
@@ -36,7 +36,7 @@ class TestServer {
     this.server.stdout?.on("data", (data) => {
       const output = data.toString();
       if (output.includes("Ready") || output.includes("started server")) {
-        console.log("✅ Next.js server started");
+        console.log("SUCCESS: Next.js server started");
       }
     });
 
@@ -68,11 +68,11 @@ class TestServer {
       return;
     }
 
-    console.log("🛑 Stopping Next.js development server...");
+    console.log("Stopping Next.js development server...");
 
     return new Promise((resolve) => {
       this.server.on("close", () => {
-        console.log("✅ Next.js server stopped");
+        console.log("SUCCESS: Next.js server stopped");
         this.server = null;
         resolve();
       });
@@ -101,14 +101,14 @@ class TestServer {
         });
 
         if (response.ok || response.status < 500) {
-          console.log(`✅ Server is ready at ${url}`);
+          console.log(`SUCCESS: Server is ready at ${url}`);
           return;
         }
       } catch (error) {
         // Server not ready yet, continue waiting
       }
 
-      console.log(`⏳ Waiting for server... (${i + 1}/${this.maxRetries})`);
+      console.log(`Waiting for server... (${i + 1}/${this.maxRetries})`);
       await sleep(this.retryDelay);
     }
 

@@ -40,7 +40,7 @@ export default function Sponsor() {
       <div className={styles["become-sponsor-container"]}>
         <a href={sponsorFormLink} target="_blank" rel="noopener noreferrer">
           <span>Become a sponsor</span>
-          <span style={{ marginLeft: "8px" }}>→</span>
+          <span style={{ marginLeft: "8px" }}>-&gt;</span>
         </a>
         <div className="crt">
           <Image src={crt2} alt="CRT tv mascot" />

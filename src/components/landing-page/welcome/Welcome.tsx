@@ -39,7 +39,7 @@ const Welcome = () => {
             Connect with experienced software engineers serving as industry
             mentors, dive into engaging hands-on workshops, and enjoy
             complimentary food throughout the event. Your experience comes first
-            at MRUHacks–exciting activities, workshops, and plenty of
+            at MRUHacks - exciting activities, workshops, and plenty of
             opportunities to network with companies and other hackers.
           </p>
         </div>

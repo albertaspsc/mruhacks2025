@@ -1,8 +1,7 @@
-
 import React, { Suspense, use } from "react";
 import {} from "@/components/ui/loading-spinner";
 import { UserRegistration } from "@/types/registration";
-import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
 import { createClient } from "@/utils/supabase/server";
 import StatusBanner, {
   RegistrationStatus,

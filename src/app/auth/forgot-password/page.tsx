@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { createClient } from "@/utils/supabase/client";
-import { useFormValidation } from "@/hooks";
+import { useFormValidation } from "@/components/hooks";
 
 export default function ForgotPasswordPage() {
   const supabase = createClient();
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
           href="/login"
           className="w-full mt-2 py-2 rounded-xl border border-gray-300 text-black font-semibold bg-white hover:bg-gray-100 text-center transition-all duration-150 block"
         >
-          ← Back to Login
+          &lt;- Back to Login
         </a>
 
         {/* Mascot */}

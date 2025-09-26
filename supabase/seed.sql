@@ -251,7 +251,7 @@ WHERE u.email LIKE 'participant%'
 
 -------------------------------------------------------
 -- User Interests
--- Each participant gets 1–3 random interests (no duplicates)
+-- Each participant gets 1-3 random interests (no duplicates)
 -------------------------------------------------------
 -- First interest (everyone gets at least one)
 INSERT INTO "public"."user_interests" ("id", "interest")
@@ -304,7 +304,7 @@ WHERE rn = 1;
 
 -------------------------------------------------------
 -- User Dietary Restrictions
--- Most participants have none, but some get 1–2 restrictions (no duplicates)
+-- Most participants have none, but some get 1-2 restrictions (no duplicates)
 -------------------------------------------------------
 
 -- First restriction (~30% of users)
@@ -340,7 +340,7 @@ WHERE rn = 1;
 
 -------------------------------------------------------
 -- Workshop Registrations
--- Each participant may register for 0–3 random workshops (no duplicates)
+-- Each participant may register for 0-3 random workshops (no duplicates)
 -------------------------------------------------------
 
 -- First registration (~70% of users)

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { headers as getHeaders } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { z } from "zod";
-import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
 
 export async function loginWithGoogle() {
   const headers = await getHeaders();

@@ -1,10 +1,10 @@
 import { login } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
-import { getRegistrationDataAction } from "@/actions/registration-actions";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
 
 // Mock dependencies
 jest.mock("@/utils/supabase/server");
-jest.mock("@/actions/registration-actions");
+jest.mock("@/actions/registrationActions");
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
