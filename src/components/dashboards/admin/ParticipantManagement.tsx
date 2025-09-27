@@ -10,6 +10,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  UserPlus,
+  UserMinus,
 } from "lucide-react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,8 @@ import {
   generateFilename,
 } from "@/components/dashboards/shared/utils/ExportUtils";
 import { AdminErrorHandler } from "@/utils/admin/errorHandler";
+import { AdminPromotionModal, AdminPromotionData } from "./AdminPromotionModal";
+import { AdminRemovalModal } from "./AdminRemovalModal";
 
 interface Participant {
   id: string;
@@ -45,6 +49,9 @@ interface Participant {
   university?: string;
   gender?: string;
   timestamp?: string;
+  isAdmin?: boolean;
+  adminRole?: "admin" | "super_admin" | "volunteer";
+  adminStatus?: "active" | "inactive" | "suspended";
 }
 
 const columnHelper = createColumnHelper<Participant>();
@@ -63,6 +70,11 @@ export function ParticipantManagement({
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [promotionModalOpen, setPromotionModalOpen] = useState(false);
+  const [removalModalOpen, setRemovalModalOpen] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] =
+    useState<Participant | null>(null);
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
 
   // Role-based permissions
   const isVolunteer = userRole === "volunteer";
@@ -77,6 +89,8 @@ export function ParticipantManagement({
       canExport: !isVolunteer || isSuperAdmin, // Volunteers cannot export, unless super admin
       canCheckIn: true, // All roles can check people in
       canChangeStatus: !readOnly && !isVolunteer, // Only admins+ can change status
+      canPromoteToAdmin: !readOnly && isAdmin, // Only admins can promote users to admin
+      canRemoveAdmin: !readOnly && (isAdmin || isSuperAdmin), // Admins+ can remove admin privileges
     }),
     [readOnly, isVolunteer, isAdmin, isSuperAdmin],
   );
@@ -162,6 +176,157 @@ export function ParticipantManagement({
     [permissions.canCheckIn, participants],
   );
 
+  // Promote user to admin (admin+ only)
+  const promoteToAdmin = useCallback(
+    async (participantId: string, adminData: AdminPromotionData) => {
+      if (!permissions.canPromoteToAdmin) {
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to promote users to admin",
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/admin/promote-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId,
+            adminData,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `HTTP error! status: ${response.status}`,
+          );
+        }
+
+        const result = await response.json();
+        AdminErrorHandler.showSuccessToast(
+          `Successfully promoted ${adminData.fName} ${adminData.lName} to ${adminData.role}`,
+        );
+      } catch (error) {
+        console.error("Error promoting user to admin:", error);
+        const errorMessage = AdminErrorHandler.handleApiError(error);
+        AdminErrorHandler.showErrorToast(errorMessage);
+        throw error; // Re-throw to let the modal handle it
+      }
+    },
+    [permissions.canPromoteToAdmin],
+  );
+
+  // Handle opening promotion modal
+  const handlePromoteClick = useCallback(
+    (participant: Participant) => {
+      if (!permissions.canPromoteToAdmin) {
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to promote users to admin",
+        );
+        return;
+      }
+      setSelectedParticipant(participant);
+      setPromotionModalOpen(true);
+    },
+    [permissions.canPromoteToAdmin],
+  );
+
+  // Remove admin privileges (admin+ only)
+  const removeAdmin = useCallback(
+    async (participantId: string) => {
+      if (!permissions.canRemoveAdmin) {
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to remove admin privileges",
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/admin/remove-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `HTTP error! status: ${response.status}`,
+          );
+        }
+
+        const result = await response.json();
+        AdminErrorHandler.showSuccessToast(
+          "Admin privileges removed successfully",
+        );
+
+        // Update participant data to reflect admin status change
+        setParticipants((prev) =>
+          prev.map((p) =>
+            p.id === participantId
+              ? {
+                  ...p,
+                  isAdmin: false,
+                  adminRole: undefined,
+                  adminStatus: undefined,
+                }
+              : p,
+          ),
+        );
+      } catch (error) {
+        console.error("Error removing admin privileges:", error);
+        const errorMessage = AdminErrorHandler.handleApiError(error);
+        AdminErrorHandler.showErrorToast(errorMessage);
+        throw error; // Re-throw to let the modal handle it
+      }
+    },
+    [permissions.canRemoveAdmin],
+  );
+
+  // Handle opening removal modal
+  const handleRemoveClick = useCallback(
+    (participant: Participant) => {
+      if (!permissions.canRemoveAdmin) {
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to remove admin privileges",
+        );
+        return;
+      }
+      setSelectedParticipant(participant);
+      setRemovalModalOpen(true);
+    },
+    [permissions.canRemoveAdmin],
+  );
+
+  // Handle dropdown toggle
+  const toggleDropdown = useCallback((participantId: string) => {
+    setOpenDropdowns((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(participantId)) {
+        newSet.delete(participantId);
+      } else {
+        newSet.add(participantId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Handle status change and close dropdown
+  const handleStatusChange = useCallback(
+    (participantId: string, newStatus: string) => {
+      updateStatus(participantId, newStatus);
+      setOpenDropdowns((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(participantId);
+        return newSet;
+      });
+    },
+    [updateStatus],
+  );
+
   // Column definitions for AdvancedDataTable
   const columns = useMemo<ColumnDef<Participant>[]>(
     () => [
@@ -175,8 +340,18 @@ export function ParticipantManagement({
           const participant = row.original;
           return (
             <div>
-              <div className="font-medium">
-                {participant.f_name} {participant.l_name}
+              <div className="font-medium flex items-center space-x-2">
+                <span>
+                  {participant.f_name} {participant.l_name}
+                </span>
+                {participant.isAdmin && (
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-100 text-blue-800 border-blue-200 text-xs rounded-full"
+                  >
+                    Admin
+                  </Badge>
+                )}
               </div>
               <div className="text-sm text-muted-foreground">
                 {participant.email}
@@ -245,14 +420,14 @@ export function ParticipantManagement({
               size="sm"
               onClick={() => toggleCheckIn(row.original.id)}
               disabled={!permissions.canCheckIn}
-              className={`rounded-xl ${checkedIn ? "bg-green-600 hover:bg-green-700" : ""}`}
+              className={`rounded-full ${checkedIn ? "bg-green-600 hover:bg-green-700" : ""}`}
             >
               {checkedIn ? "Checked In" : "Check In"}
             </Button>
           );
         },
       },
-      ...(permissions.canChangeStatus
+      ...(permissions.canChangeStatus || permissions.canPromoteToAdmin
         ? [
             {
               id: "actions",
@@ -260,31 +435,114 @@ export function ParticipantManagement({
               cell: ({ row }) => {
                 const participant = row.original;
                 return (
-                  <Select
-                    value={participant.status || "pending"}
-                    onValueChange={(value) =>
-                      updateStatus(participant.id, value)
-                    }
-                    disabled={!permissions.canChangeStatus}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="waitlisted">Waitlisted</SelectItem>
-                      <SelectItem value="declined">Declined</SelectItem>
-                      <SelectItem value="denied">Denied</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center space-x-2">
+                    {permissions.canChangeStatus && (
+                      <div className="relative status-dropdown-container">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleDropdown(participant.id)}
+                          className="w-36 h-8 text-sm rounded-full"
+                        >
+                          Change Status
+                        </Button>
+                        {openDropdowns.has(participant.id) && (
+                          <div className="absolute top-full left-0 mt-1 w-36 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                            <div className="py-1">
+                              <button
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                                onClick={() =>
+                                  handleStatusChange(participant.id, "pending")
+                                }
+                              >
+                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <span>Pending</span>
+                              </button>
+                              <button
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    participant.id,
+                                    "confirmed",
+                                  )
+                                }
+                              >
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span>Confirmed</span>
+                              </button>
+                              <button
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    participant.id,
+                                    "waitlisted",
+                                  )
+                                }
+                              >
+                                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                                <span>Waitlisted</span>
+                              </button>
+                              <button
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                                onClick={() =>
+                                  handleStatusChange(participant.id, "declined")
+                                }
+                              >
+                                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                <span>Declined</span>
+                              </button>
+                              <button
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2"
+                                onClick={() =>
+                                  handleStatusChange(participant.id, "denied")
+                                }
+                              >
+                                <div className="w-2 h-2 rounded-full bg-red-600"></div>
+                                <span>Denied</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {permissions.canPromoteToAdmin && !participant.isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePromoteClick(participant)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full"
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Promote
+                      </Button>
+                    )}
+                    {permissions.canRemoveAdmin && participant.isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveClick(participant)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                      >
+                        <UserMinus className="h-4 w-4 mr-1" />
+                        Remove Admin
+                      </Button>
+                    )}
+                  </div>
                 );
               },
             } as ColumnDef<Participant>,
           ]
         : []),
     ],
-    [permissions, toggleCheckIn, updateStatus],
+    [
+      permissions,
+      toggleCheckIn,
+      handlePromoteClick,
+      handleRemoveClick,
+      toggleDropdown,
+      handleStatusChange,
+      openDropdowns,
+    ],
   );
 
   // Fetch participants
@@ -301,18 +559,19 @@ export function ParticipantManagement({
       const data = await response.json();
 
       // Ensure data is an array
+      let participantsData: Participant[] = [];
       if (Array.isArray(data)) {
-        setParticipants(data);
+        participantsData = data;
       } else if (data && Array.isArray(data.participants)) {
         // If the API returns an object with a participants array
-        setParticipants(data.participants);
+        participantsData = data.participants;
       } else if (data && typeof data === "object") {
         // If it's an object, try to extract an array
         const possibleArray = Object.values(data).find((value) =>
           Array.isArray(value),
         );
         if (possibleArray) {
-          setParticipants(possibleArray as Participant[]);
+          participantsData = possibleArray as Participant[];
         } else {
           throw new Error(
             "API response does not contain a valid participants array",
@@ -321,6 +580,38 @@ export function ParticipantManagement({
       } else {
         throw new Error("Invalid data format received from API");
       }
+
+      // Check admin status for all participants
+      if (participantsData.length > 0) {
+        try {
+          const adminResponse = await fetch("/api/admin/check-admin-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              participantIds: participantsData.map((p) => p.id),
+            }),
+          });
+
+          if (adminResponse.ok) {
+            const adminData = await adminResponse.json();
+            const adminMap = new Map();
+            adminData.adminStatuses.forEach((status: any) => {
+              adminMap.set(status.participantId, status);
+            });
+
+            // Merge admin status with participant data
+            participantsData = participantsData.map((participant) => ({
+              ...participant,
+              ...adminMap.get(participant.id),
+            }));
+          }
+        } catch (adminError) {
+          console.warn("Failed to fetch admin status:", adminError);
+          // Continue without admin status if it fails
+        }
+      }
+
+      setParticipants(participantsData);
     } catch (error) {
       console.error("Error fetching participants:", error);
       setError(
@@ -472,6 +763,21 @@ export function ParticipantManagement({
     fetchParticipants();
   }, []);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".status-dropdown-container")) {
+        setOpenDropdowns(new Set());
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Prepare bulk actions for AdvancedDataTable
   const bulkActions = permissions.canBulkEdit
     ? [
@@ -535,7 +841,7 @@ export function ParticipantManagement({
           </div>
           <button
             onClick={fetchParticipants}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
           >
             Try Again
           </button>
@@ -561,7 +867,7 @@ export function ParticipantManagement({
                 ? "You can view participant information and check people in/out."
                 : readOnly
                   ? "Read-only access to participant management."
-                  : "Full participant management access including status changes and bulk operations."}
+                  : "Full participant management access including status changes, bulk operations, and admin promotion."}
             </p>
           </div>
         </div>
@@ -595,6 +901,28 @@ export function ParticipantManagement({
         enableSelection={permissions.canBulkEdit}
         enablePagination={true}
         pageSizeOptions={[10, 20, 30, 40, 50]}
+      />
+
+      {/* Admin Promotion Modal */}
+      <AdminPromotionModal
+        isOpen={promotionModalOpen}
+        onClose={() => {
+          setPromotionModalOpen(false);
+          setSelectedParticipant(null);
+        }}
+        participant={selectedParticipant}
+        onPromote={promoteToAdmin}
+      />
+
+      {/* Admin Removal Modal */}
+      <AdminRemovalModal
+        isOpen={removalModalOpen}
+        onClose={() => {
+          setRemovalModalOpen(false);
+          setSelectedParticipant(null);
+        }}
+        participant={selectedParticipant}
+        onRemove={removeAdmin}
       />
     </div>
   );

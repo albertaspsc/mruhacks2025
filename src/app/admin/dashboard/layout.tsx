@@ -4,6 +4,7 @@ import TabNavigation from "./TabNavigation";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   participants: React.ReactNode;
+  admins: React.ReactNode;
   workshops: React.ReactNode;
   stats: React.ReactNode;
 }
@@ -11,6 +12,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({
   children,
   participants,
+  admins,
   workshops,
   stats,
 }: DashboardLayoutProps) {
@@ -23,6 +25,7 @@ export default function DashboardLayout({
 
             <Suspense fallback={<div>Loading...</div>}>
               {participants}
+              {admins}
               {workshops}
               {stats}
             </Suspense>

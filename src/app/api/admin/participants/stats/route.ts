@@ -14,7 +14,8 @@ import {
   userInterests,
   admins,
 } from "@/db/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, isNull } from "drizzle-orm";
+import { lookupTables } from "@/data/lookup-tables";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,10 +49,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if there are any participants
+    // Check if there are any participants (excluding admin users)
     const participantCount = await db
       .select({ count: sql<number>`count(*)`.as("count") })
-      .from(users);
+      .from(users)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id));
 
     if (participantCount[0].count === 0) {
       return NextResponse.json({
@@ -74,7 +77,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Calculate basic statistics using Drizzle
+    // Calculate basic statistics using Drizzle (excluding admin users)
     const basicStats = await db
       .select({
         totalParticipants: sql<number>`count(*)`.as("totalParticipants"),
@@ -99,7 +102,9 @@ export async function GET(request: NextRequest) {
             "previousAttendance",
           ),
       })
-      .from(users);
+      .from(users)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id));
 
     const {
       totalParticipants,
@@ -110,64 +115,84 @@ export async function GET(request: NextRequest) {
       previousAttendance: attendedCount,
     } = basicStats[0];
 
-    // Gender distribution using Drizzle
+    // Gender distribution using Drizzle (excluding admin users)
     const genderDistributionData = await db
       .select({
-        gender: gender.gender,
+        genderId: users.gender,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .leftJoin(gender, eq(users.gender, gender.id))
-      .groupBy(gender.gender)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
+      .groupBy(users.gender)
       .orderBy(desc(sql`count(*)`));
 
-    const genderDistribution = genderDistributionData.map((item) => ({
-      gender: item.gender || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const genderDistribution = genderDistributionData.map((item) => {
+      const genderOption = lookupTables.genders.find(
+        (g) => g.id === item.genderId,
+      );
+      return {
+        gender: genderOption?.gender || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
-    // University distribution using Drizzle
+    // University distribution using Drizzle (excluding admin users)
     const universityDistributionData = await db
       .select({
-        university: universities.uni,
+        universityId: users.university,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .leftJoin(universities, eq(users.university, universities.id))
-      .groupBy(universities.uni)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
+      .groupBy(users.university)
       .orderBy(desc(sql`count(*)`));
 
-    const universityDistribution = universityDistributionData.map((item) => ({
-      university: item.university || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const universityDistribution = universityDistributionData.map((item) => {
+      const universityOption = lookupTables.universities.find(
+        (u) => u.id === item.universityId,
+      );
+      return {
+        university: universityOption?.uni || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
-    // Major distribution using Drizzle
+    // Major distribution using Drizzle (excluding admin users)
     const majorDistributionData = await db
       .select({
-        major: majors.major,
+        majorId: users.major,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .leftJoin(majors, eq(users.major, majors.id))
-      .groupBy(majors.major)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
+      .groupBy(users.major)
       .orderBy(desc(sql`count(*)`));
 
-    const majorDistribution = majorDistributionData.map((item) => ({
-      major: item.major || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const majorDistribution = majorDistributionData.map((item) => {
+      const majorOption = lookupTables.majors.find(
+        (m) => m.id === item.majorId,
+      );
+      return {
+        major: majorOption?.major || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
-    // Year of study distribution using Drizzle
+    // Year of study distribution using Drizzle (excluding admin users)
     const yearOfStudyDistributionData = await db
       .select({
         year: users.yearOfStudy,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
       .groupBy(users.yearOfStudy)
       .orderBy(desc(sql`count(*)`));
 
@@ -177,78 +202,95 @@ export async function GET(request: NextRequest) {
       percentage: (item.count / totalParticipants) * 100,
     }));
 
-    // Experience level distribution using Drizzle
+    // Experience level distribution using Drizzle (excluding admin users)
     const experienceDistributionData = await db
       .select({
-        experience: experienceTypes.experience,
+        experienceId: users.experience,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .leftJoin(experienceTypes, eq(users.experience, experienceTypes.id))
-      .groupBy(experienceTypes.experience)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
+      .groupBy(users.experience)
       .orderBy(desc(sql`count(*)`));
 
-    const experienceDistribution = experienceDistributionData.map((item) => ({
-      experience: item.experience || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const experienceDistribution = experienceDistributionData.map((item) => {
+      const experienceOption = lookupTables.experienceTypes.find(
+        (e) => e.id === item.experienceId,
+      );
+      return {
+        experience: experienceOption?.experience || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
-    // Marketing distribution using Drizzle
+    // Marketing distribution using Drizzle (excluding admin users)
     const marketingDistributionData = await db
       .select({
-        marketing: marketingTypes.marketing,
+        marketingId: users.marketing,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .leftJoin(marketingTypes, eq(users.marketing, marketingTypes.id))
-      .groupBy(marketingTypes.marketing)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
+      .groupBy(users.marketing)
       .orderBy(desc(sql`count(*)`));
 
-    const marketingDistribution = marketingDistributionData.map((item) => ({
-      marketing: item.marketing || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const marketingDistribution = marketingDistributionData.map((item) => {
+      const marketingOption = lookupTables.marketingTypes.find(
+        (m) => m.id === item.marketingId,
+      );
+      return {
+        marketing: marketingOption?.marketing || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
     // Dietary restrictions distribution
     const dietaryRestrictionsData = await db
       .select({
-        restriction: dietaryRestrictions.restriction,
+        restrictionId: userDietRestrictions.restriction,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(userDietRestrictions)
-      .leftJoin(
-        dietaryRestrictions,
-        eq(userDietRestrictions.restriction, dietaryRestrictions.id),
-      )
-      .groupBy(dietaryRestrictions.restriction)
+      .groupBy(userDietRestrictions.restriction)
       .orderBy(desc(sql`count(*)`));
 
     const dietaryRestrictionsDistribution = dietaryRestrictionsData.map(
-      (item) => ({
-        restriction: item.restriction || "Unknown",
-        count: item.count,
-        percentage: (item.count / totalParticipants) * 100,
-      }),
+      (item) => {
+        const restrictionOption = lookupTables.dietaryRestrictions.find(
+          (d) => d.id === item.restrictionId,
+        );
+        return {
+          restriction: restrictionOption?.restriction || "Unknown",
+          count: item.count,
+          percentage: (item.count / totalParticipants) * 100,
+        };
+      },
     );
 
     // Interests distribution
     const interestsData = await db
       .select({
-        interest: interests.interest,
+        interestId: userInterests.interest,
         count: sql<number>`count(*)`.as("count"),
       })
       .from(userInterests)
-      .leftJoin(interests, eq(userInterests.interest, interests.id))
-      .groupBy(interests.interest)
+      .groupBy(userInterests.interest)
       .orderBy(desc(sql`count(*)`));
 
-    const interestsDistribution = interestsData.map((item) => ({
-      interest: item.interest || "Unknown",
-      count: item.count,
-      percentage: (item.count / totalParticipants) * 100,
-    }));
+    const interestsDistribution = interestsData.map((item) => {
+      const interestOption = lookupTables.interests.find(
+        (i) => i.id === item.interestId,
+      );
+      return {
+        interest: interestOption?.interest || "Unknown",
+        count: item.count,
+        percentage: (item.count / totalParticipants) * 100,
+      };
+    });
 
     // Previous attendance calculated from basic stats
     const previousAttendance = {
@@ -266,7 +308,13 @@ export async function GET(request: NextRequest) {
         count: sql<number>`count(*)`.as("count"),
       })
       .from(users)
-      .where(sql`${users.timestamp} >= ${thirtyDaysAgo.toISOString()}`)
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(
+        and(
+          sql`${users.timestamp} >= ${thirtyDaysAgo.toISOString()}`,
+          isNull(admins.id),
+        ),
+      )
       .groupBy(sql`date(${users.timestamp})`)
       .orderBy(sql`date(${users.timestamp})`);
 
@@ -275,7 +323,7 @@ export async function GET(request: NextRequest) {
       count: item.count,
     }));
 
-    // Calculate average registration time using Drizzle
+    // Calculate average registration time using Drizzle (excluding admin users)
     const averageRegistrationTimeData = await db
       .select({
         avgDays:
@@ -284,7 +332,8 @@ export async function GET(request: NextRequest) {
           ),
       })
       .from(users)
-      .where(sql`${users.timestamp} is not null`);
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(and(sql`${users.timestamp} is not null`, isNull(admins.id)));
 
     const averageRegistrationTime = averageRegistrationTimeData[0]?.avgDays
       ? `${Math.round(averageRegistrationTimeData[0].avgDays)} days ago`

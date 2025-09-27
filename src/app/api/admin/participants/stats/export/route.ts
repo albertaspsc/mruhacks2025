@@ -8,8 +8,9 @@ import {
   majors,
   experienceTypes,
   marketingTypes,
+  admins,
 } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all participants
+    // Fetch all participants (excluding admin users)
     const participants = await db
       .select({
         id: users.id,
@@ -64,6 +65,8 @@ export async function GET(request: NextRequest) {
       .leftJoin(majors, eq(users.major, majors.id))
       .leftJoin(experienceTypes, eq(users.experience, experienceTypes.id))
       .leftJoin(marketingTypes, eq(users.marketing, marketingTypes.id))
+      .leftJoin(admins, eq(users.id, admins.id))
+      .where(isNull(admins.id))
       .orderBy(desc(users.timestamp));
 
     if (!participants || participants.length === 0) {

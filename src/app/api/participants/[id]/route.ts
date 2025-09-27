@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
-import { users, universities, gender } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { users, universities, gender, admins } from "@/db/schema";
+import { eq, isNull, and } from "drizzle-orm";
 import { verifyApiAuth } from "@/app/auth/api-auth";
 
 // PATCH - Update participant status and/or checkedIn status
@@ -183,7 +183,8 @@ export async function GET(
         .from(users)
         .leftJoin(universities, eq(users.university, universities.id))
         .leftJoin(gender, eq(users.gender, gender.id))
-        .where(eq(users.id, id))
+        .leftJoin(admins, eq(users.id, admins.id))
+        .where(and(eq(users.id, id), isNull(admins.id)))
         .limit(1);
 
       if (!participant) {
@@ -219,7 +220,8 @@ export async function GET(
         })
         .from(users)
         .leftJoin(universities, eq(users.university, universities.id))
-        .where(eq(users.id, id))
+        .leftJoin(admins, eq(users.id, admins.id))
+        .where(and(eq(users.id, id), isNull(admins.id)))
         .limit(1);
 
       if (!participant) {

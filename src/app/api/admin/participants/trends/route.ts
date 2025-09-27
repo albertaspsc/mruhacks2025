@@ -8,8 +8,10 @@ import {
   majors,
   experienceTypes,
   marketingTypes,
+  admins,
 } from "@/db/schema";
-import { eq, desc, and, gte } from "drizzle-orm";
+import { eq, desc, and, gte, isNull } from "drizzle-orm";
+import { lookupTables } from "@/data/lookup-tables";
 
 export async function GET(request: NextRequest) {
   try {
@@ -116,7 +118,10 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
     conditions.push(gte(users.timestamp, startDate.toISOString()));
 
-    // Fetch filtered participants
+    // Add admin exclusion filter
+    conditions.push(isNull(admins.id));
+
+    // Fetch filtered participants (excluding admin users)
     const participants = await db
       .select({
         id: users.id,
@@ -140,6 +145,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(majors, eq(users.major, majors.id))
       .leftJoin(experienceTypes, eq(users.experience, experienceTypes.id))
       .leftJoin(marketingTypes, eq(users.marketing, marketingTypes.id))
+      .leftJoin(admins, eq(users.id, admins.id))
       .where(and(...conditions))
       .orderBy(desc(users.timestamp));
 
@@ -172,32 +178,27 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get filter options for the UI
-    const [
-      marketingOptions,
-      experienceOptions,
-      majorOptions,
-      genderOptions,
-      universityOptions,
-    ] = await Promise.all([
-      db
-        .select({
-          value: marketingTypes.marketing,
-          label: marketingTypes.marketing,
-        })
-        .from(marketingTypes),
-      db
-        .select({
-          value: experienceTypes.experience,
-          label: experienceTypes.experience,
-        })
-        .from(experienceTypes),
-      db.select({ value: majors.major, label: majors.major }).from(majors),
-      db.select({ value: gender.gender, label: gender.gender }).from(gender),
-      db
-        .select({ value: universities.uni, label: universities.uni })
-        .from(universities),
-    ]);
+    // Get filter options for the UI from hardcoded lookup tables
+    const marketingOptions = lookupTables.marketingTypes.map((item) => ({
+      value: item.marketing,
+      label: item.marketing,
+    }));
+    const experienceOptions = lookupTables.experienceTypes.map((item) => ({
+      value: item.experience,
+      label: item.experience,
+    }));
+    const majorOptions = lookupTables.majors.map((item) => ({
+      value: item.major,
+      label: item.major,
+    }));
+    const genderOptions = lookupTables.genders.map((item) => ({
+      value: item.gender,
+      label: item.gender,
+    }));
+    const universityOptions = lookupTables.universities.map((item) => ({
+      value: item.uni,
+      label: item.uni,
+    }));
 
     const response = {
       trends,

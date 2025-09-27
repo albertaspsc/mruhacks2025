@@ -154,6 +154,12 @@ export const lookupTables = {
     { id: 5, marketing: "Attended the event before" },
     { id: 6, marketing: "Other" },
   ],
+  experienceTypes: [
+    { id: 1, experience: "Beginner" },
+    { id: 2, experience: "Intermediate" },
+    { id: 3, experience: "Advanced" },
+    { id: 4, experience: "Expert" },
+  ],
 } as const;
 
 // Type definitions for the lookup tables
@@ -164,6 +170,8 @@ export type InterestOption = (typeof lookupTables.interests)[number];
 export type DietaryRestrictionOption =
   (typeof lookupTables.dietaryRestrictions)[number];
 export type MarketingTypeOption = (typeof lookupTables.marketingTypes)[number];
+export type ExperienceTypeOption =
+  (typeof lookupTables.experienceTypes)[number];
 
 export type AllLookupOptions = {
   genders: GenderOption[];
@@ -172,4 +180,5 @@ export type AllLookupOptions = {
   interests: InterestOption[];
   dietaryRestrictions: DietaryRestrictionOption[];
   marketingTypes: MarketingTypeOption[];
+  experienceTypes: ExperienceTypeOption[];
 };

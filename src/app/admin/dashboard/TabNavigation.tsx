@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, BarChart3 } from "lucide-react";
+import { Users, Calendar, BarChart3, Shield } from "lucide-react";
 
 export default function TabNavigation() {
   const searchParams = useSearchParams();
@@ -24,10 +24,14 @@ export default function TabNavigation() {
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="participants" className="flex items-center gap-2">
           <Users className="w-4 h-4" />
           Participants
+        </TabsTrigger>
+        <TabsTrigger value="admins" className="flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          Admins
         </TabsTrigger>
         <TabsTrigger value="workshops" className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />

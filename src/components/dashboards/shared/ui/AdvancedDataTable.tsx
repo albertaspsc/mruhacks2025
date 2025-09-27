@@ -147,13 +147,18 @@ export function AdvancedDataTable<T extends Record<string, any>>({
           {title && <h3 className="text-lg font-medium">{title}</h3>}
           <div className="flex space-x-2">
             {onExport && (
-              <Button onClick={onExport} size="sm">
+              <Button onClick={onExport} size="sm" className="rounded-full">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             )}
             {onRefresh && (
-              <Button onClick={onRefresh} variant="outline" size="sm">
+              <Button
+                onClick={onRefresh}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -312,7 +317,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
+                className="hidden h-8 w-8 p-0 lg:flex rounded-full"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -321,7 +326,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-full"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -330,7 +335,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 rounded-full"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
@@ -339,7 +344,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
               </Button>
               <Button
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
+                className="hidden h-8 w-8 p-0 lg:flex rounded-full"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >
@@ -364,7 +369,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
                 onClick={() => action.onClick(selectedRows)}
                 size="sm"
                 variant={action.variant || "default"}
-                className={action.className}
+                className={`${action.className} rounded-full`}
               >
                 {action.label}
               </Button>
@@ -373,6 +378,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
               onClick={() => table.resetRowSelection()}
               size="sm"
               variant="outline"
+              className="rounded-full"
             >
               Clear
             </Button>
