@@ -286,16 +286,10 @@ export function AdminManagement({
           const admin = row.original;
           return (
             <div>
-              <div className="font-medium flex items-center space-x-2">
+              <div className="font-medium">
                 <span>
                   {admin.firstName} {admin.lastName}
                 </span>
-                <Badge
-                  variant="outline"
-                  className="bg-blue-100 text-blue-800 border-blue-200 text-xs rounded-full"
-                >
-                  {admin.role === "super_admin" ? "Super Admin" : admin.role}
-                </Badge>
               </div>
               <div className="text-sm text-muted-foreground">{admin.email}</div>
             </div>
