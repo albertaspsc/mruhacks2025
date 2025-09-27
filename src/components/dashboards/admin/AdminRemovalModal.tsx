@@ -17,10 +17,27 @@ interface Participant {
   timestamp?: string;
 }
 
+interface AdminUser {
+  id: string;
+  email: string;
+  role: "admin" | "super_admin" | "volunteer";
+  status: "active" | "inactive" | "suspended";
+  firstName?: string;
+  lastName?: string;
+  isAdminOnly?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  lastSignInAt?: string;
+  emailConfirmedAt?: string;
+}
+
+// Union type that can handle both Participant and AdminUser
+type UserForRemoval = Participant | AdminUser;
+
 interface AdminRemovalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  participant: Participant | null;
+  participant: UserForRemoval | null;
   onRemove: (participantId: string) => Promise<void>;
 }
 
@@ -101,7 +118,9 @@ export function AdminRemovalModal({
                 <p>
                   This will remove admin privileges from{" "}
                   <span className="font-semibold">
-                    {participant.f_name} {participant.l_name}
+                    {"role" in participant
+                      ? `${participant.firstName || ""} ${participant.lastName || ""}`.trim()
+                      : `${participant.f_name || ""} ${participant.l_name || ""}`.trim()}
                   </span>
                   . They will no longer have access to admin features.
                 </p>
@@ -109,19 +128,27 @@ export function AdminRemovalModal({
             </div>
           </div>
 
-          {/* Participant Info */}
+          {/* User Info */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-2">
               Admin to Remove
             </h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p>
-                <span className="font-medium">Name:</span> {participant.f_name}{" "}
-                {participant.l_name}
+                <span className="font-medium">Name:</span>{" "}
+                {"role" in participant
+                  ? `${participant.firstName || ""} ${participant.lastName || ""}`.trim()
+                  : `${participant.f_name || ""} ${participant.l_name || ""}`.trim()}
               </p>
               <p>
                 <span className="font-medium">Email:</span> {participant.email}
               </p>
+              {"role" in participant && (
+                <p>
+                  <span className="font-medium">Current Role:</span>{" "}
+                  {participant.role}
+                </p>
+              )}
             </div>
           </div>
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function AdminDashboardPage() {
+function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -14,4 +14,12 @@ export default function AdminDashboardPage() {
   }, [searchParams, router]);
 
   return null; // Parallel routes handle content
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading dashboard...</div>}>
+      <AdminDashboardContent />
+    </Suspense>
+  );
 }

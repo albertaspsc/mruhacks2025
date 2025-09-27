@@ -21,7 +21,9 @@ export default function DashboardLayout({
       <main className="max-w-7xl mx-auto py-3 sm:px-6 lg:px-8">
         <div className="px-4 py-3 sm:px-0">
           <div className="space-y-3">
-            <TabNavigation />
+            <Suspense fallback={<div>Loading navigation...</div>}>
+              <TabNavigation />
+            </Suspense>
 
             <Suspense fallback={<div>Loading...</div>}>
               {participants}

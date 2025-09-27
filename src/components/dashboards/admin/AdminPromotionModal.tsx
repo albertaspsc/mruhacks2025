@@ -26,10 +26,27 @@ interface Participant {
   timestamp?: string;
 }
 
+interface AdminUser {
+  id: string;
+  email: string;
+  role: "admin" | "super_admin" | "volunteer";
+  status: "active" | "inactive" | "suspended";
+  firstName?: string;
+  lastName?: string;
+  isAdminOnly?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  lastSignInAt?: string;
+  emailConfirmedAt?: string;
+}
+
+// Union type that can handle both Participant and AdminUser
+type UserForPromotion = Participant | AdminUser;
+
 interface AdminPromotionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  participant: Participant | null;
+  participant: UserForPromotion | null;
   onPromote: (
     participantId: string,
     adminData: AdminPromotionData,
@@ -63,11 +80,21 @@ export function AdminPromotionModal({
   // Reset form when modal opens/closes or participant changes
   React.useEffect(() => {
     if (isOpen && participant) {
+      // Handle both Participant and AdminUser types
+      const isAdminUser = "role" in participant;
       setFormData({
-        role: "admin",
-        status: "active",
-        fName: participant.f_name || "",
-        lName: participant.l_name || "",
+        role: isAdminUser ? participant.role : "admin",
+        status: isAdminUser
+          ? participant.status === "suspended"
+            ? "inactive"
+            : participant.status
+          : "active",
+        fName: isAdminUser
+          ? participant.firstName || ""
+          : participant.f_name || "",
+        lName: isAdminUser
+          ? participant.lastName || ""
+          : participant.l_name || "",
         email: participant.email || "",
       });
       setConfirmText("");
@@ -145,7 +172,9 @@ export function AdminPromotionModal({
                 <p>
                   This will grant admin privileges to{" "}
                   <span className="font-semibold">
-                    {participant.f_name} {participant.l_name}
+                    {"role" in participant
+                      ? `${participant.firstName || ""} ${participant.lastName || ""}`.trim()
+                      : `${participant.f_name || ""} ${participant.l_name || ""}`.trim()}
                   </span>
                   . This action cannot be undone.
                 </p>
@@ -153,15 +182,17 @@ export function AdminPromotionModal({
             </div>
           </div>
 
-          {/* Participant Info */}
+          {/* User Info */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-2">
-              Current Participant Information
+              Current User Information
             </h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p>
-                <span className="font-medium">Name:</span> {participant.f_name}{" "}
-                {participant.l_name}
+                <span className="font-medium">Name:</span>{" "}
+                {"role" in participant
+                  ? `${participant.firstName || ""} ${participant.lastName || ""}`.trim()
+                  : `${participant.f_name || ""} ${participant.l_name || ""}`.trim()}
               </p>
               <p>
                 <span className="font-medium">Email:</span> {participant.email}
@@ -170,6 +201,12 @@ export function AdminPromotionModal({
                 <span className="font-medium">Status:</span>{" "}
                 {participant.status}
               </p>
+              {"role" in participant && (
+                <p>
+                  <span className="font-medium">Current Role:</span>{" "}
+                  {participant.role}
+                </p>
+              )}
             </div>
           </div>
 
