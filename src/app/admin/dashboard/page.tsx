@@ -9,7 +9,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!searchParams.get("tab")) {
-      router.replace("/admin/dashboard?tab=participants");
+      router.replace("/admin/dashboard?tab=stats");
     }
   }, [searchParams, router]);
 

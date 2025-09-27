@@ -33,6 +33,7 @@ import {
   exportToCSV,
   generateFilename,
 } from "@/components/dashboards/shared/utils/ExportUtils";
+import { AdminErrorHandler } from "@/utils/admin/errorHandler";
 
 interface Participant {
   id: string;
@@ -84,7 +85,9 @@ export function ParticipantManagement({
   const updateStatus = useCallback(
     async (id: string, newStatus: string) => {
       if (!permissions.canChangeStatus) {
-        alert("You don't have permission to change participant status");
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to change participant status",
+        );
         return;
       }
 
@@ -104,9 +107,14 @@ export function ParticipantManagement({
             p.id === id ? { ...p, status: newStatus as any } : p,
           ),
         );
+
+        AdminErrorHandler.showSuccessToast(
+          `Participant status updated to ${newStatus}`,
+        );
       } catch (error) {
         console.error("Error updating status:", error);
-        alert("Failed to update participant status");
+        const errorMessage = AdminErrorHandler.handleApiError(error);
+        AdminErrorHandler.showErrorToast(errorMessage);
       }
     },
     [permissions.canChangeStatus],
@@ -116,7 +124,9 @@ export function ParticipantManagement({
   const toggleCheckIn = useCallback(
     async (id: string) => {
       if (!permissions.canCheckIn) {
-        alert("You don't have permission to check in participants");
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to check in participants",
+        );
         return;
       }
 
@@ -139,9 +149,14 @@ export function ParticipantManagement({
             p.id === id ? { ...p, checked_in: newCheckedIn } : p,
           ),
         );
+
+        AdminErrorHandler.showSuccessToast(
+          `Participant ${newCheckedIn ? "checked in" : "checked out"} successfully`,
+        );
       } catch (error) {
         console.error("Error updating check-in:", error);
-        alert("Failed to update check-in status");
+        const errorMessage = AdminErrorHandler.handleApiError(error);
+        AdminErrorHandler.showErrorToast(errorMessage);
       }
     },
     [permissions.canCheckIn, participants],
@@ -151,7 +166,8 @@ export function ParticipantManagement({
   const columns = useMemo<ColumnDef<Participant>[]>(
     () => [
       {
-        accessorKey: "name",
+        id: "name",
+        accessorFn: (row) => `${row.f_name || ""} ${row.l_name || ""}`.trim(),
         header: ({ column }) => (
           <SortableHeader column={column}>Participant</SortableHeader>
         ),
@@ -167,21 +183,6 @@ export function ParticipantManagement({
               </div>
             </div>
           );
-        },
-      },
-      {
-        accessorKey: "university",
-        header: "University",
-        cell: ({ row }) => row.getValue("university") || "N/A",
-      },
-      {
-        accessorKey: "gender",
-        header: "Gender",
-        cell: ({ row }) => {
-          const gender = row.getValue("gender") as string;
-          return gender
-            ? gender.charAt(0).toUpperCase() + gender.slice(1)
-            : "Not specified";
         },
       },
       {
@@ -203,8 +204,29 @@ export function ParticipantManagement({
                 return "outline";
             }
           };
+
+          const getStatusColor = (status: string) => {
+            switch (status) {
+              case "confirmed":
+                return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
+              case "pending":
+                return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200";
+              case "waitlisted":
+                return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200";
+              case "declined":
+                return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
+              case "denied":
+                return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
+              default:
+                return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
+            }
+          };
+
           return (
-            <Badge variant={getStatusVariant(status)}>
+            <Badge
+              variant="outline"
+              className={`rounded-xl ${getStatusColor(status)}`}
+            >
               {status || "pending"}
             </Badge>
           );
@@ -212,7 +234,9 @@ export function ParticipantManagement({
       },
       {
         accessorKey: "checked_in",
-        header: "Check-in",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Check-in</SortableHeader>
+        ),
         cell: ({ row }) => {
           const checkedIn = row.getValue("checked_in") as boolean;
           return (
@@ -221,7 +245,7 @@ export function ParticipantManagement({
               size="sm"
               onClick={() => toggleCheckIn(row.original.id)}
               disabled={!permissions.canCheckIn}
-              className={checkedIn ? "bg-green-600 hover:bg-green-700" : ""}
+              className={`rounded-xl ${checkedIn ? "bg-green-600 hover:bg-green-700" : ""}`}
             >
               {checkedIn ? "Checked In" : "Check In"}
             </Button>
@@ -262,19 +286,6 @@ export function ParticipantManagement({
     ],
     [permissions, toggleCheckIn, updateStatus],
   );
-
-  // Get unique gender values for filter dropdown
-  const availableGenders = useMemo(() => {
-    if (!Array.isArray(participants)) return [];
-
-    const genders = participants
-      .map((p) => p.gender)
-      .filter(Boolean) // Remove null/undefined values
-      .filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
-      .sort(); // Sort alphabetically
-
-    return genders;
-  }, [participants]);
 
   // Fetch participants
   const fetchParticipants = async () => {
@@ -327,7 +338,9 @@ export function ParticipantManagement({
     newStatus: string,
   ) => {
     if (!permissions.canBulkEdit) {
-      alert("You don't have permission to bulk update participants");
+      AdminErrorHandler.showErrorToast(
+        "You don't have permission to bulk update participants",
+      );
       return;
     }
 
@@ -356,60 +369,65 @@ export function ParticipantManagement({
             : p,
         ),
       );
+
+      AdminErrorHandler.showSuccessToast(
+        `Successfully updated ${selectedParticipants.length} participant(s) to ${newStatus} status`,
+      );
     } catch (error) {
       console.error("Error bulk updating:", error);
-      alert("Failed to bulk update participants");
+      const errorMessage = AdminErrorHandler.handleApiError(error);
+      AdminErrorHandler.showErrorToast(errorMessage);
     }
   };
 
   // Export data (admin+ only)
   const exportData = () => {
     if (!permissions.canExport) {
-      alert("You don't have permission to export data");
+      AdminErrorHandler.showErrorToast(
+        "You don't have permission to export data",
+      );
       return;
     }
 
-    const columns = [
-      {
-        key: "name",
-        header: "Name",
-        getValue: (p: Participant) =>
-          `${p.f_name || ""} ${p.l_name || ""}`.trim(),
-      },
-      {
-        key: "email",
-        header: "Email",
-        getValue: (p: Participant) => p.email || "",
-      },
-      {
-        key: "university",
-        header: "University",
-        getValue: (p: Participant) => p.university || "N/A",
-      },
-      {
-        key: "gender",
-        header: "Gender",
-        getValue: (p: Participant) => p.gender || "Not specified",
-      },
-      {
-        key: "status",
-        header: "Status",
-        getValue: (p: Participant) => p.status || "pending",
-      },
-      {
-        key: "checked_in",
-        header: "Checked In",
-        getValue: (p: Participant) => (p.checked_in ? "Yes" : "No"),
-      },
-      {
-        key: "timestamp",
-        header: "Registration Date",
-        getValue: (p: Participant) =>
-          p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "N/A",
-      },
-    ];
+    try {
+      const columns = [
+        {
+          key: "name",
+          header: "Name",
+          getValue: (p: Participant) =>
+            `${p.f_name || ""} ${p.l_name || ""}`.trim(),
+        },
+        {
+          key: "email",
+          header: "Email",
+          getValue: (p: Participant) => p.email || "",
+        },
+        {
+          key: "status",
+          header: "Status",
+          getValue: (p: Participant) => p.status || "pending",
+        },
+        {
+          key: "checked_in",
+          header: "Checked In",
+          getValue: (p: Participant) => (p.checked_in ? "Yes" : "No"),
+        },
+        {
+          key: "timestamp",
+          header: "Registration Date",
+          getValue: (p: Participant) =>
+            p.timestamp ? new Date(p.timestamp).toLocaleDateString() : "N/A",
+        },
+      ];
 
-    exportToCSV(participants, columns, generateFilename("participants"));
+      exportToCSV(participants, columns, generateFilename("participants"));
+      AdminErrorHandler.showSuccessToast(
+        "Participants data exported successfully",
+      );
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      AdminErrorHandler.showErrorToast("Failed to export participants data");
+    }
   };
 
   // Statistics - ensure participants is always an array
@@ -421,7 +439,6 @@ export function ParticipantManagement({
         pending: 0,
         waitlisted: 0,
         checkedIn: 0,
-        genderStats: {},
       };
     }
 
@@ -435,17 +452,7 @@ export function ParticipantManagement({
     ).length;
     const checkedIn = participants.filter((p) => p.checked_in).length;
 
-    // Calculate gender statistics
-    const genderStats = participants.reduce(
-      (acc, participant) => {
-        const gender = participant.gender || "Not specified";
-        acc[gender] = (acc[gender] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    return { total, confirmed, pending, waitlisted, checkedIn, genderStats };
+    return { total, confirmed, pending, waitlisted, checkedIn };
   }, [participants]);
 
   const getRoleDisplay = () => {
@@ -498,10 +505,11 @@ export function ParticipantManagement({
         placeholder: "All Status",
       },
       {
-        column: "gender",
-        getValue: (p) => p.gender,
-        getLabel: (value) => value.charAt(0).toUpperCase() + value.slice(1),
-        placeholder: "All Genders",
+        column: "checked_in",
+        getValue: (p) => (p.checked_in ? "checked_in" : "not_checked_in"),
+        getLabel: (value) =>
+          value === "checked_in" ? "Checked In" : "Not Checked In",
+        placeholder: "Check-in Status",
       },
     ]);
   }, [participants]);
@@ -527,7 +535,7 @@ export function ParticipantManagement({
           </div>
           <button
             onClick={fetchParticipants}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
           >
             Try Again
           </button>
@@ -539,7 +547,7 @@ export function ParticipantManagement({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Role-based access indicator */}
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl">
         <div className="flex items-center">
           {isVolunteer ? (
             <Eye className="h-5 w-5 text-blue-400" />
@@ -571,25 +579,6 @@ export function ParticipantManagement({
           icon={UserCheck}
         />
       </div>
-
-      {/* Gender Statistics */}
-      {Object.keys(stats.genderStats).length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">
-            Gender Distribution
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {Object.entries(stats.genderStats).map(([gender, count]) => (
-              <div key={gender} className="text-center">
-                <p className="text-sm font-medium text-gray-600 capitalize">
-                  {gender}
-                </p>
-                <p className="text-lg font-bold text-gray-900">{count}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Advanced Data Table */}
       <AdvancedDataTable

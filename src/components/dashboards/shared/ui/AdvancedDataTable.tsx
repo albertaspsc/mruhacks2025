@@ -209,11 +209,11 @@ export function AdvancedDataTable<T extends Record<string, any>>({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-xl border overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-gray-50/50">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
@@ -243,10 +243,13 @@ export function AdvancedDataTable<T extends Record<string, any>>({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, index) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={`hover:bg-gray-50/30 transition-colors ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50/20"
+                  }`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -350,7 +353,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
 
       {/* Bulk Actions */}
       {bulkActions.length > 0 && selectedRows.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border p-4 z-50">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border p-4 z-50">
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-700">
               {selectedRows.length} selected

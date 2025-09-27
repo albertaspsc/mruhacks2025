@@ -11,7 +11,7 @@ export const AdminWorkshopFormSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   location: z.string().min(1, "Location is required"),
   maxCapacity: z.number().min(1, "Capacity must be at least 1"),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 export type AdminWorkshopFormData = z.infer<typeof AdminWorkshopFormSchema>;

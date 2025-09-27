@@ -16,15 +16,15 @@ import {
 import Link from "next/link";
 import { type ColumnDef } from "@tanstack/react-table";
 import { AdvancedDataTable } from "@/components/dashboards/shared/ui/AdvancedDataTable";
-import { StatsCard } from "@/components/dashboards/shared/ui/StatsCard";
 import { SortableHeader } from "@/components/dashboards/shared/utils/SortableHeader";
 import { generateFilters } from "@/components/dashboards/shared/utils/FilterUtils";
-import {
-  exportToCSV,
-  generateFilename,
-} from "@/components/dashboards/shared/utils/ExportUtils";
+import { generateFilename } from "@/components/dashboards/shared/utils/ExportUtils";
 import { AdminPageLayout } from "@/components/dashboards/admin/shared/AdminPageLayout";
 import { WorkshopWithRegistrations } from "@/types/admin";
+import {
+  getWorkshopAction,
+  getWorkshopRegistrationsAction,
+} from "@/actions/adminActions";
 
 type Participant = NonNullable<WorkshopWithRegistrations["registrations"]>[0];
 
@@ -70,19 +70,6 @@ export default function WorkshopRegistrationsPage() {
         cell: ({ row }) => row.original.participant.major,
       },
       {
-        id: "participant.gender",
-        accessorFn: (row) => row.participant.gender,
-        header: ({ column }) => (
-          <SortableHeader column={column}>Gender</SortableHeader>
-        ),
-        cell: ({ row }) => {
-          const gender = row.original.participant.gender;
-          return gender
-            ? gender.charAt(0).toUpperCase() + gender.slice(1)
-            : "Not specified";
-        },
-      },
-      {
         accessorKey: "registeredAt",
         header: ({ column }) => (
           <SortableHeader column={column}>Registered At</SortableHeader>
@@ -105,25 +92,41 @@ export default function WorkshopRegistrationsPage() {
   const fetchRegistrations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/workshops/${workshopId}/registrations`,
-      );
 
-      console.log("Response status:", response.status);
-      console.log(
-        "Response headers:",
-        Object.fromEntries(response.headers.entries()),
-      );
+      // Fetch both workshop and registrations data
+      const [workshopResult, registrationsResult] = await Promise.all([
+        getWorkshopAction(workshopId),
+        getWorkshopRegistrationsAction(workshopId),
+      ]);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
+      if (!workshopResult.success) {
+        throw new Error(workshopResult.error || "Failed to fetch workshop");
+      }
+
+      if (!registrationsResult.success) {
         throw new Error(
-          `Failed to fetch registrations: ${response.status} - ${errorText}`,
+          registrationsResult.error || "Failed to fetch registrations",
         );
       }
 
-      const registrationData = await response.json();
+      // Transform data to match expected format
+      const workshopData = workshopResult.data!;
+      const registrationsData = registrationsResult.data || [];
+
+      const registrationData: RegistrationData = {
+        workshop: {
+          ...workshopData,
+          eventName: "mruhacks2025",
+          isRegistered: false,
+          isFull: workshopData.maxCapacity
+            ? registrationsData.length >= workshopData.maxCapacity
+            : false,
+          currentRegistrations: registrationsData.length,
+          registrations: registrationsData,
+        },
+        registrations: registrationsData,
+      };
+
       setData(registrationData);
     } catch (err) {
       setError(
@@ -181,12 +184,6 @@ export default function WorkshopRegistrationsPage() {
         column: "participant.major",
         getValue: (r) => r.participant.major,
         placeholder: "All Majors",
-      },
-      {
-        column: "participant.gender",
-        getValue: (r) => r.participant.gender,
-        getLabel: (value) => value.charAt(0).toUpperCase() + value.slice(1),
-        placeholder: "All Genders",
       },
     ]);
   }, [data?.registrations]);

@@ -5,8 +5,8 @@ import * as React from "react";
 
 import type { ToastActionElement, ToastProps } from "@components/ui/toast";
 
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_LIMIT = 5; // Allow up to 5 toasts on screen at once
+const TOAST_REMOVE_DELAY = 0; // No auto-dismiss - toasts stay until manually dismissed
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -60,15 +60,18 @@ const addToRemoveQueue = (toastId: string) => {
     return;
   }
 
-  const timeout = setTimeout(() => {
-    toastTimeouts.delete(toastId);
-    dispatch({
-      type: "REMOVE_TOAST",
-      toastId: toastId,
-    });
-  }, TOAST_REMOVE_DELAY);
+  // Only add to remove queue if TOAST_REMOVE_DELAY is greater than 0
+  if (TOAST_REMOVE_DELAY > 0) {
+    const timeout = setTimeout(() => {
+      toastTimeouts.delete(toastId);
+      dispatch({
+        type: "REMOVE_TOAST",
+        toastId: toastId,
+      });
+    }, TOAST_REMOVE_DELAY);
 
-  toastTimeouts.set(toastId, timeout);
+    toastTimeouts.set(toastId, timeout);
+  }
 };
 
 export const reducer = (state: State, action: Action): State => {
