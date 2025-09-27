@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
-import { useResumeUpload, useFormState } from "@/components/hooks";
+import { useFormState } from "@/hooks/useFormState";
+import { useResumeUpload } from "@/hooks/useFileUpload";
 import { useRegisterForm } from "@/context/RegisterFormContext";
 import { ToastBanner } from "@/components/dashboards/shared/toast/Toast";
 import {

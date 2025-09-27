@@ -53,7 +53,7 @@ import { UserRegistration } from "@/types/registration";
 import { getRegistrationDataAction } from "@/actions/registrationActions";
 import { updateUserEmailAction } from "@/actions/profileActions";
 import { createClient } from "@/utils/supabase/client";
-import { useFormValidation } from "@/components/hooks";
+import { useFormValidation } from "@/hooks/useFormValidation";
 
 // Toast component for better UX
 type ToastType = "success" | "error" | "warning" | "info";

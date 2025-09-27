@@ -8,7 +8,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useToast } from "@/components/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Workshop } from "@/types/workshop";
 import {
   getWorkshopsAction,

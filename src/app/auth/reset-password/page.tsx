@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import mascot from "@/assets/mascots/crt2.svg";
 import { createClient } from "@/utils/supabase/client";
-import { useFormValidation } from "@/components/hooks";
+import { useFormValidation } from "@/hooks/useFormValidation";
 
 const requirements = [
   { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },

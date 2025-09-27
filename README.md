@@ -33,7 +33,7 @@ supabase db reset
 
 ### Database
 
-- Migrations live in `utils/migrations/`
+- Migrations live in `src/utils/migrations/`
 - Supabase and Drizzle config in `supabase/` and `src/db/`
 - Supabase is the source of truth for db schema. Drizzle-kit pull is used to generate Drizzle schema and relations files.
 

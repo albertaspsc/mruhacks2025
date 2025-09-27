@@ -4,7 +4,7 @@
  * Provides consistent error handling and user feedback for admin operations
  */
 
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export class AdminErrorHandler {
   /**

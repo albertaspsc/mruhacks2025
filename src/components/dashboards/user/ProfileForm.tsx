@@ -19,7 +19,8 @@ import { ProfileUpdateSchema, FormOptions } from "@/types/registration";
 import { PersonalDetailsSectionWithDefaults } from "@/components/forms/sections/PersonalDetailsSection";
 import { PreferencesSection } from "@/components/forms/sections/PreferencesSection";
 import { EventDetailsSectionWithDefaults } from "@/components/forms/sections/EventDetailsSection";
-import { useFormState, useResumeUpload } from "@/components/hooks";
+import { useFormState } from "@/hooks/useFormState";
+import { useResumeUpload } from "@/hooks/useFileUpload";
 import {
   formOptionTransformers,
   mergeFormData,

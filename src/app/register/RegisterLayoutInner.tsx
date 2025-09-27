@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import ProgressBar from "@/components/Register/ProgressBar";
+import ProgressBar from "@/components/forms/register/ProgressBar";
 import logo from "@/assets/logos/color-logo.svg";
 
 export default function RegisterLayoutInner({

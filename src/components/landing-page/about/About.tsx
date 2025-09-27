@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import styles from "./About.module.css";
-import { usePrefersReducedMotion } from "@/components/hooks/use-prefers-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import background from "@/assets/backgrounds/background.webp";
 import aboutGraphic from "@/assets/graphics/about-component.webp";
 

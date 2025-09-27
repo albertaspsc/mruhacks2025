@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MessageSquare, Trophy, AlertCircle, Loader2 } from "lucide-react";
 import { UserRegistration } from "@/types/registration";
-import ProgressBar from "@/components/Register/ProgressBar";
+import ProgressBar from "@/components/forms/register/ProgressBar";
 import ChecklistItem, {
   ChecklistItem as ChecklistItemType,
 } from "./ChecklistItem";
