@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { WorkshopForm } from "@/components/admin/forms/WorkshopForm";
+import { WorkshopForm } from "@/components/dashboards/admin/WorkshopForm";
 import { AdminPageLayout } from "@/components/dashboards/admin/shared/AdminPageLayout";
 import { useWorkshops } from "@/hooks/admin/useWorkshops";
 import { AdminWorkshopFormData } from "@/types/admin";
