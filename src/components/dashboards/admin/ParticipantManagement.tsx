@@ -765,10 +765,17 @@ export function ParticipantManagement({
 
   // Close dropdowns when clicking outside
   useEffect(() => {
+    // Only attach the listener when any dropdown is open
+    if (openDropdowns.size === 0) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest(".status-dropdown-container")) {
-        setOpenDropdowns(new Set());
+        // Avoid unnecessary state updates/rerenders if already closed
+        setOpenDropdowns((prev) => {
+          if (prev.size === 0) return prev;
+          return new Set();
+        });
       }
     };
 
@@ -776,7 +783,7 @@ export function ParticipantManagement({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [openDropdowns]);
 
   // Prepare bulk actions for AdvancedDataTable
   const bulkActions = permissions.canBulkEdit

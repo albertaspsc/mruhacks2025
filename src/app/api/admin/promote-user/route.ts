@@ -51,10 +51,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body: PromoteUserRequest = await request.json();
+
     // Only super_admins can promote to super_admin
     if (currentAdmin.role !== "super_admin" && currentAdmin.role === "admin") {
       // Regular admins can only promote to volunteer or admin, not super_admin
-      const body: PromoteUserRequest = await request.json();
       if (body.adminData.role === "super_admin") {
         return NextResponse.json(
           { error: "Only super admins can promote users to super admin" },
@@ -62,8 +63,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
-    const body: PromoteUserRequest = await request.json();
     const { participantId, adminData } = body;
 
     // Validate required fields
