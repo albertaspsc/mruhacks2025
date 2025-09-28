@@ -6,9 +6,19 @@ module.exports = async function globalTeardown() {
   try {
     // Stop the test server
     await stopTestServer();
-    console.log("SUCCESS: Global test teardown completed");
+    console.log("SUCCESS: Test server stopped");
   } catch (error) {
-    console.error("ERROR: Global test teardown failed:", error);
-    // Don't throw error in teardown to avoid masking test failures
+    console.error("ERROR: Failed to stop test server:", error);
   }
+
+  // Force garbage collection to clean up any remaining references
+  if (global.gc) {
+    global.gc();
+    console.log("SUCCESS: Garbage collection triggered");
+  }
+
+  // Give a moment for cleanup to complete
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  console.log("SUCCESS: Global test teardown completed");
 };

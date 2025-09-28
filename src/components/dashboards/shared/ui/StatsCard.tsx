@@ -7,6 +7,7 @@ interface StatsCardProps {
   icon: React.ComponentType<{ className?: string }>;
   description?: string;
   className?: string;
+  "data-testid"?: string;
 }
 
 export function StatsCard({
@@ -15,9 +16,10 @@ export function StatsCard({
   icon: Icon,
   description,
   className = "",
+  "data-testid": dataTestId,
 }: StatsCardProps) {
   return (
-    <Card className={className}>
+    <Card className={className} data-testid={dataTestId}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-4 pt-4">
         <CardTitle className="text-xs font-medium">{title}</CardTitle>
         <Icon className="h-3 w-3 text-muted-foreground" />

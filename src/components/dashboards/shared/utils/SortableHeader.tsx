@@ -19,6 +19,7 @@ export function SortableHeader({
       variant="ghost"
       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       className={`h-8 px-2 lg:px-3 ${className}`}
+      data-testid="sortable-header"
     >
       {children}
       {column.getIsSorted() === "asc" ? (

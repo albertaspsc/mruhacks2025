@@ -140,14 +140,19 @@ export function AdvancedDataTable<T extends Record<string, any>>({
     .rows.map((row) => row.original);
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 ${className}`} data-testid="advanced-data-table">
       {/* Header with title and actions */}
       {(title || onRefresh || onExport) && (
         <div className="flex justify-between items-center">
           {title && <h3 className="text-lg font-medium">{title}</h3>}
           <div className="flex space-x-2">
             {onExport && (
-              <Button onClick={onExport} size="sm" className="rounded-full">
+              <Button
+                onClick={onExport}
+                size="sm"
+                className="rounded-full"
+                data-testid="export-button"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -158,6 +163,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
                 variant="outline"
                 size="sm"
                 className="rounded-full"
+                data-testid="refresh-button"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -181,6 +187,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
               table.getColumn(searchColumn)?.setFilterValue(event.target.value)
             }
             className="pl-10 max-w-sm"
+            data-testid="search-input"
           />
         </div>
 
@@ -215,7 +222,7 @@ export function AdvancedDataTable<T extends Record<string, any>>({
 
       {/* Table */}
       <div className="rounded-xl border overflow-hidden">
-        <Table>
+        <Table role="table">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-gray-50/50">

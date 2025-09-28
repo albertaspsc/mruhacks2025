@@ -142,7 +142,10 @@ export function AdminPromotionModal({
   if (!isOpen || !participant) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      data-testid="admin-promotion-modal"
+    >
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -226,6 +229,7 @@ export function AdminPromotionModal({
                     value: "admin" | "super_admin" | "volunteer",
                   ) => setFormData({ ...formData, role: value })}
                   disabled={isSubmitting}
+                  data-testid="role-select"
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -264,11 +268,13 @@ export function AdminPromotionModal({
               </Label>
               <Input
                 id="confirmText"
+                name="confirmText"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="Type PROMOTE to confirm"
                 required
                 disabled={isSubmitting}
+                data-testid="confirm-text-input"
               />
             </div>
           </div>
@@ -287,6 +293,7 @@ export function AdminPromotionModal({
               type="submit"
               disabled={isSubmitting || confirmText !== "PROMOTE"}
               className="bg-blue-600 hover:bg-blue-700"
+              data-testid="submit-button"
             >
               {isSubmitting ? "Promoting..." : "Promote to Admin"}
             </Button>
