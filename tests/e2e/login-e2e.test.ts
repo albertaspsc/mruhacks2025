@@ -32,7 +32,6 @@ async function checkAppRunning(page: any): Promise<boolean> {
 function getBaseUrl(): string {
   const testServer = getTestServer();
   const baseUrl = testServer ? testServer.getUrl() : "http://localhost:3001";
-  console.log("Using base URL:", baseUrl);
   return baseUrl;
 }
 

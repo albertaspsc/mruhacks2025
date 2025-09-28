@@ -60,8 +60,6 @@ export default async function DashboardPage() {
                     >
                       <WorkshopsCarousel />
                     </DashboardItem>
-
-                    {/* Discord Card */}
                   </div>
 
                   {/* Right Column - Checklist and Hackerpack */}
@@ -80,7 +78,7 @@ export default async function DashboardPage() {
                     <DashboardItem title="Hackerpack">
                       <InfoCard
                         description="The Hackerpack contains all the important information about MRUHacks, including rules, resources, and tips."
-                        linkUrl="/hackerpack"
+                        linkUrl="https://mruhacks.notion.site/"
                         linkText="View Hackerpack"
                         icon={<FileText className="h-5 w-5" />}
                       />

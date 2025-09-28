@@ -8,10 +8,13 @@ import ChecklistItem, {
   ChecklistItem as ChecklistItemType,
 } from "./ChecklistItem";
 import { ChecklistState } from "./types";
+import { setWithExpiry, getWithExpiry } from "@/utils/localStorage";
 
 interface ChecklistProps {
   user?: UserRegistration;
 }
+
+const CHECKLIST_STORAGE_KEY = "mruhacks_checklist_state";
 
 const Checklist: React.FC<ChecklistProps> = ({ user }) => {
   const [checklist, setChecklist] = useState<ChecklistState>({
@@ -21,17 +24,28 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Simulate loading checklist data
+  // Load checklist data from localStorage
   useEffect(() => {
     const loadChecklist = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // In a real app, we would load actual data from an API here
-        // For now, we'll just use the initial state
+        // Try to load from localStorage first
+        const savedChecklist = getWithExpiry<ChecklistState>(
+          CHECKLIST_STORAGE_KEY,
+        );
 
-        // Set loading to false immediately since we're not actually loading data
+        if (savedChecklist) {
+          setChecklist(savedChecklist);
+        } else {
+          // If no saved data, use default state
+          setChecklist({
+            discordJoined: false,
+            devpostSignup: false,
+          });
+        }
+
         setLoading(false);
       } catch (err) {
         setError("Failed to load checklist data");
@@ -46,17 +60,17 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
   const handleChecklistChange = async (item: keyof ChecklistState) => {
     try {
       // Optimistically update UI
-      setChecklist((prev) => ({
-        ...prev,
-        [item]: !prev[item],
-      }));
+      const newState = {
+        ...checklist,
+        [item]: !checklist[item],
+      };
 
-      // In a real app, we would make an API call here to persist the change
-      // await saveChecklistStatus(item, !checklist[item]);
+      setChecklist(newState);
 
-      // If there was an error with the API call, we could revert the UI change
+      // Save to localStorage with 7-day expiration
+      setWithExpiry(CHECKLIST_STORAGE_KEY, newState, 7 * 24 * 60 * 60 * 1000);
     } catch (err) {
-      // Revert the optimistic update if the API call fails
+      // Revert the optimistic update if the update fails
       setChecklist((prev) => ({
         ...prev,
         [item]: checklist[item],
@@ -83,7 +97,7 @@ const Checklist: React.FC<ChecklistProps> = ({ user }) => {
       title: "Sign up through DevPost",
       description: "Required for project submission and judging",
       icon: <Trophy className="w-4 h-4" />,
-      link: "https://devpost.com/mruhacks", // Replace with actual DevPost link
+      link: "https://mruhacks-2025.devpost.com/",
       linkText: "Go to DevPost",
       required: false,
       note:

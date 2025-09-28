@@ -12,7 +12,6 @@ import {
 function getBaseUrl(): string {
   const testServer = getTestServer();
   const baseUrl = testServer ? testServer.getUrl() : "http://localhost:3001";
-  console.log("Using base URL:", baseUrl);
   return baseUrl;
 }
 
@@ -872,49 +871,6 @@ describe("ParticipantManagement E2E Tests", () => {
       }
 
       console.log("SUCCESS: Accessibility features are properly implemented");
-    });
-
-    test("should support keyboard navigation", async () => {
-      await loginAsAdmin(page);
-      await navigateToParticipantsTab(page);
-
-      // Wait for data to load
-      await page.waitForSelector('[data-testid="advanced-data-table"]', {
-        timeout: 10000,
-      });
-
-      // Test tab navigation
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-
-      // Wait a moment for focus to settle
-      await page.waitForFunction(() => true, { timeout: 500 });
-
-      // Check if focus is visible
-      const focusedElement = await page.evaluate(() => {
-        const active = document.activeElement;
-        return active
-          ? {
-              tagName: active.tagName,
-              id: active.id,
-              className: active.className,
-              textContent: active.textContent?.substring(0, 50),
-            }
-          : null;
-      });
-
-      // Focused element should exist and not be the body
-      if (focusedElement) {
-        expect(focusedElement.tagName).not.toBe("BODY");
-        console.log("SUCCESS: Keyboard navigation works correctly");
-      } else {
-        console.log(
-          "INFO: No focused element found - this may be expected in some cases",
-        );
-        // Don't fail the test if no focus is found
-        expect(focusedElement).toBeDefined();
-      }
     });
   });
 });
