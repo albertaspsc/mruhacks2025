@@ -74,6 +74,10 @@ export function AdminManagement({
   const [removalModalOpen, setRemovalModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
+  const [roleModal, setRoleModal] = useState<{
+    open: boolean;
+    mode: "remove" | "role";
+  }>({ open: false, mode: "remove" });
 
   // Role-based permissions
   const isVolunteer = userRole === "volunteer";
@@ -231,6 +235,45 @@ export function AdminManagement({
     [permissions.canRemoveAdmin],
   );
 
+  // Change admin role (admin+ only)
+  const changeAdminRole = useCallback(
+    async (adminId: string, newRole: "admin" | "super_admin" | "volunteer") => {
+      if (!permissions.canRemoveAdmin) {
+        AdminErrorHandler.showErrorToast(
+          "You don't have permission to change admin role",
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/admins/${adminId}/role`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: newRole }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `HTTP error! status: ${response.status}`,
+          );
+        }
+
+        setAdminUsers((prev) =>
+          prev.map((a) => (a.id === adminId ? { ...a, role: newRole } : a)),
+        );
+
+        AdminErrorHandler.showSuccessToast(`Admin role updated to ${newRole}`);
+      } catch (error) {
+        console.error("Error updating admin role:", error);
+        const errorMessage = AdminErrorHandler.handleApiError(error);
+        AdminErrorHandler.showErrorToast(errorMessage);
+        throw error;
+      }
+    },
+    [permissions.canRemoveAdmin],
+  );
+
   // Handle opening removal modal
   const handleRemoveClick = useCallback(
     (admin: AdminUser) => {
@@ -241,7 +284,7 @@ export function AdminManagement({
         return;
       }
       setSelectedAdmin(admin);
-      setRemovalModalOpen(true);
+      setRoleModal({ open: true, mode: "role" });
     },
     [permissions.canRemoveAdmin],
   );
@@ -446,7 +489,7 @@ export function AdminManagement({
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
                       >
                         <UserMinus className="h-4 w-4 mr-1" />
-                        Remove Admin
+                        Change Role
                       </Button>
                     )}
                   </div>
@@ -598,6 +641,8 @@ export function AdminManagement({
 
   // Close dropdowns when clicking outside
   useEffect(() => {
+    // Only attach the listener when any dropdown is open
+    if (openDropdowns.size === 0) return;
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
       if (!target.closest(".status-dropdown-container")) {
@@ -609,7 +654,7 @@ export function AdminManagement({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [openDropdowns.size]);
 
   // Prepare filters for AdvancedDataTable
   const filters = useMemo(() => {
@@ -629,7 +674,7 @@ export function AdminManagement({
 
   if (loading) {
     return (
-      <div className={`${className}`}>
+      <div className={`${className}`} data-testid="loading">
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-500">Loading admin users...</span>
@@ -642,7 +687,7 @@ export function AdminManagement({
     return (
       <div className={`${className}`}>
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <div className="text-red-500 text-center">
+          <div className="text-red-500 text-center" data-testid="error-message">
             <p className="text-lg font-semibold">Error loading admin users</p>
             <p className="text-sm">{error}</p>
           </div>
@@ -658,22 +703,39 @@ export function AdminManagement({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 ${className}`} data-testid="admin-management">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <StatsCard title="Total" value={stats.total} icon={Shield} />
+        <StatsCard
+          title="Total"
+          value={stats.total}
+          icon={Shield}
+          data-testid="stats-card"
+        />
         <StatsCard
           title="Super Admins"
           value={stats.superAdmins}
           icon={Shield}
+          data-testid="stats-card"
         />
-        <StatsCard title="Admins" value={stats.admins} icon={Users} />
+        <StatsCard
+          title="Admins"
+          value={stats.admins}
+          icon={Users}
+          data-testid="stats-card"
+        />
         <StatsCard
           title="Volunteers"
           value={stats.volunteers}
           icon={UserCheck}
+          data-testid="stats-card"
         />
-        <StatsCard title="Active" value={stats.active} icon={UserCheck} />
+        <StatsCard
+          title="Active"
+          value={stats.active}
+          icon={UserCheck}
+          data-testid="stats-card"
+        />
       </div>
 
       {/* Advanced Data Table */}
@@ -705,13 +767,15 @@ export function AdminManagement({
 
       {/* Admin Removal Modal */}
       <AdminRemovalModal
-        isOpen={removalModalOpen}
+        isOpen={roleModal.open}
         onClose={() => {
-          setRemovalModalOpen(false);
+          setRoleModal({ open: false, mode: "role" });
           setSelectedAdmin(null);
         }}
         participant={selectedAdmin}
         onRemove={removeAdmin}
+        onChangeRole={changeAdminRole}
+        mode={roleModal.mode}
       />
     </div>
   );

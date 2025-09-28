@@ -34,14 +34,19 @@ async function validateAdminPermissions(
       };
     }
 
-    // Check admin status
+    // Check admin status and ensure user is not a volunteer
     const { data: adminData, error: adminError } = await supabase
       .from("admins")
       .select("id, role, status")
       .eq("id", auth.user.id)
       .single();
 
-    if (adminError || !adminData || adminData.status !== "active") {
+    if (
+      adminError ||
+      !adminData ||
+      adminData.status !== "active" ||
+      adminData.role === "volunteer"
+    ) {
       return {
         success: false,
         error: "Admin access required",

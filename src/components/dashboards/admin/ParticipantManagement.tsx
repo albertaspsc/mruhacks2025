@@ -829,7 +829,7 @@ export function ParticipantManagement({
 
   if (loading) {
     return (
-      <div className={`${className}`}>
+      <div className={`${className}`} data-testid="loading">
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-500">Loading participants...</span>
@@ -842,7 +842,7 @@ export function ParticipantManagement({
     return (
       <div className={`${className}`}>
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <div className="text-red-500 text-center">
+          <div className="text-red-500 text-center" data-testid="error-message">
             <p className="text-lg font-semibold">Error loading participants</p>
             <p className="text-sm">{error}</p>
           </div>
@@ -858,17 +858,41 @@ export function ParticipantManagement({
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div
+      className={`space-y-6 ${className}`}
+      data-testid="participant-management"
+    >
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <StatsCard title="Total" value={stats.total} icon={Users} />
-        <StatsCard title="Confirmed" value={stats.confirmed} icon={Users} />
-        <StatsCard title="Pending" value={stats.pending} icon={Users} />
-        <StatsCard title="Waitlisted" value={stats.waitlisted} icon={Users} />
+        <StatsCard
+          title="Total"
+          value={stats.total}
+          icon={Users}
+          data-testid="stats-card"
+        />
+        <StatsCard
+          title="Confirmed"
+          value={stats.confirmed}
+          icon={Users}
+          data-testid="stats-card"
+        />
+        <StatsCard
+          title="Pending"
+          value={stats.pending}
+          icon={Users}
+          data-testid="stats-card"
+        />
+        <StatsCard
+          title="Waitlisted"
+          value={stats.waitlisted}
+          icon={Users}
+          data-testid="stats-card"
+        />
         <StatsCard
           title="Checked In"
           value={stats.checkedIn}
           icon={UserCheck}
+          data-testid="stats-card"
         />
       </div>
 

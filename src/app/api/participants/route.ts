@@ -103,5 +103,5 @@ export const GET = withApiAuth(
       );
     }
   },
-  { requiredRoles: ["admin", "volunteer"] }, // Both roles can access, but get different data
+  { requiredRoles: ["admin", "super_admin", "volunteer"] }, // Allow super_admin as well
 );
