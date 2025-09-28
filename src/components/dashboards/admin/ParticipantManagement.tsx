@@ -852,27 +852,6 @@ export function ParticipantManagement({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Role-based access indicator */}
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl">
-        <div className="flex items-center">
-          {isVolunteer ? (
-            <Eye className="h-5 w-5 text-blue-400" />
-          ) : (
-            <Users className="h-5 w-5 text-blue-400" />
-          )}
-          <div className="ml-3">
-            <p className="text-sm text-blue-700">
-              <strong>{getRoleDisplay()} Access:</strong>{" "}
-              {isVolunteer
-                ? "You can view participant information and check people in/out."
-                : readOnly
-                  ? "Read-only access to participant management."
-                  : "Full participant management access including status changes, bulk operations, and admin promotion."}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <StatsCard title="Total" value={stats.total} icon={Users} />

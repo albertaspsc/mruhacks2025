@@ -659,27 +659,6 @@ export function AdminManagement({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Role-based access indicator */}
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl">
-        <div className="flex items-center">
-          {isVolunteer ? (
-            <Eye className="h-5 w-5 text-blue-400" />
-          ) : (
-            <Shield className="h-5 w-5 text-blue-400" />
-          )}
-          <div className="ml-3">
-            <p className="text-sm text-blue-700">
-              <strong>{getRoleDisplay()} Access:</strong>{" "}
-              {isVolunteer
-                ? "You can view admin user information."
-                : readOnly
-                  ? "Read-only access to admin management."
-                  : "Full admin management access including status changes and admin removal."}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <StatsCard title="Total" value={stats.total} icon={Shield} />
