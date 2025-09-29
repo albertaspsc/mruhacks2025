@@ -2,6 +2,15 @@ import { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
+  redirects: async () => {
+    return [
+      {
+        source: "/hackerpack",
+        destination: "https://mruhacks.notion.site/",
+        permanent: false, // Don't break this for next year I guess.
+      },
+    ];
+  },
   /**
    * Configure Next.js Image component for optimal performance
    */
