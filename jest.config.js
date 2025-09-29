@@ -11,6 +11,15 @@ export default {
   testTimeout: 60000, // Increased timeout for e2e tests
   maxWorkers: 1, // Run tests sequentially to avoid conflicts
   verbose: true,
+  // Force Jest to exit after tests complete
+  forceExit: true,
+  // Detect open handles to help debug cleanup issues
+  detectOpenHandles: true,
+  // Clear mocks and timers between tests
+  clearMocks: true,
+  restoreMocks: true,
+  // Environment variables for headless mode
+  setupFiles: ["<rootDir>/tests/helpers/setupEnv.js"],
   moduleNameMapper: {
     "^@/utils/(.*)$": "<rootDir>/src/utils/$1",
     "^@/db/(.*)$": "<rootDir>/src/db/$1",

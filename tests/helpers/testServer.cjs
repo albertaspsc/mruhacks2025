@@ -71,22 +71,42 @@ class TestServer {
     console.log("Stopping Next.js development server...");
 
     return new Promise((resolve) => {
-      this.server.on("close", () => {
-        console.log("SUCCESS: Next.js server stopped");
-        this.server = null;
-        resolve();
-      });
+      let resolved = false;
 
-      this.server.kill("SIGTERM");
-
-      // Force kill after 10 seconds
-      setTimeout(() => {
-        if (this.server) {
-          this.server.kill("SIGKILL");
+      const cleanup = () => {
+        if (!resolved) {
+          resolved = true;
           this.server = null;
           resolve();
         }
-      }, 10000);
+      };
+
+      this.server.on("close", () => {
+        console.log("SUCCESS: Next.js server stopped");
+        cleanup();
+      });
+
+      this.server.on("error", (error) => {
+        console.log("Server error during shutdown:", error.message);
+        cleanup();
+      });
+
+      // Try graceful shutdown first
+      this.server.kill("SIGTERM");
+
+      // Force kill after 5 seconds
+      setTimeout(() => {
+        if (this.server && !this.server.killed) {
+          console.log("Force killing server process...");
+          this.server.kill("SIGKILL");
+        }
+        cleanup();
+      }, 5000);
+
+      // Final cleanup after 8 seconds regardless
+      setTimeout(() => {
+        cleanup();
+      }, 8000);
     });
   }
 

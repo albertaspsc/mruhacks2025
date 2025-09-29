@@ -5,7 +5,7 @@ const envFile = existsSync(".env.local") ? ".env.local" : ".env";
 config({ path: envFile });
 export default defineConfig({
   schema: "./src/db/schema.ts",
-  out: "./utils/migrations",
+  out: "./src/utils/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,

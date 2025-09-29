@@ -116,6 +116,14 @@ export async function updateSession(request: NextRequest) {
         return createRedirectWithCookies(url);
       }
 
+      // Volunteers are not permitted to access admin routes
+      if (adminData.role === "volunteer") {
+        console.log("Volunteer blocked from admin route:", user.id);
+        url.pathname = "/unauthorized";
+        url.searchParams.set("reason", "insufficient_role");
+        return createRedirectWithCookies(url);
+      }
+
       if (adminData.status !== "active") {
         console.log(
           "Admin account is not active:",
@@ -156,7 +164,10 @@ export async function updateSession(request: NextRequest) {
         .single();
 
       if (adminData && adminData.status === "active") {
-        url.pathname = "/admin/dashboard";
+        url.pathname =
+          adminData.role === "volunteer"
+            ? "/volunteer/dashboard"
+            : "/admin/dashboard";
       } else {
         url.pathname = "/user/dashboard";
       }
@@ -179,7 +190,10 @@ export async function updateSession(request: NextRequest) {
         .single();
 
       if (adminData && adminData.status === "active") {
-        url.pathname = "/admin/dashboard";
+        url.pathname =
+          adminData.role === "volunteer"
+            ? "/volunteer/dashboard"
+            : "/admin/dashboard";
         return createRedirectWithCookies(url);
       }
     } catch (error) {

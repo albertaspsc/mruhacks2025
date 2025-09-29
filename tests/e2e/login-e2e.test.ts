@@ -32,7 +32,6 @@ async function checkAppRunning(page: any): Promise<boolean> {
 function getBaseUrl(): string {
   const testServer = getTestServer();
   const baseUrl = testServer ? testServer.getUrl() : "http://localhost:3001";
-  console.log("Using base URL:", baseUrl);
   return baseUrl;
 }
 
@@ -485,11 +484,11 @@ describe("Login User Workflows E2E Tests", () => {
 
         // Verify admin can access admin routes
         console.log("Testing admin route access...");
-        await page.goto(`${baseUrl}/admin/workshops`, {
+        await page.goto(`${baseUrl}/admin/dashboard?tab=workshops`, {
           waitUntil: "networkidle0",
         });
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        expect(page.url()).toMatch(/\/admin\//);
+        expect(page.url()).toMatch(/\/admin\/dashboard/);
       } catch (error) {
         console.error("Admin login test failed:", error);
         // Take a screenshot for debugging

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import styles from "./Welcome.module.css";
-import { usePrefersReducedMotion } from "@/components/hooks/use-prefers-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import welcomeImage from "@/assets/graphics/welcome-component.webp";
 
 const Welcome = () => {

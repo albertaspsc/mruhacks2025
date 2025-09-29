@@ -5,11 +5,11 @@ import { getRegistrationDataAction } from "@/actions/registrationActions";
 import { createClient } from "@/utils/supabase/server";
 import StatusBanner, {
   RegistrationStatus,
-} from "@/components/dashboards/common/StatusBanner";
-import WorkshopsCarousel from "@/components/dashboards/workshops/WorkshopsCarousel";
-import DashboardItem from "@/components/dashboards/common/DashboardItem";
-import Checklist from "@/components/dashboards/checklist/Checklist";
-import InfoCard from "@/components/dashboards/common/InfoCard";
+} from "@/components/dashboards/shared/ui/StatusBanner";
+import WorkshopsCarousel from "@/components/dashboards/user/workshops/WorkshopsCarousel";
+import DashboardItem from "@/components/dashboards/shared/ui/DashboardItem";
+import Checklist from "@/components/dashboards/user/checklist/Checklist";
+import InfoCard from "@/components/dashboards/shared/ui/InfoCard";
 import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -60,8 +60,6 @@ export default async function DashboardPage() {
                     >
                       <WorkshopsCarousel />
                     </DashboardItem>
-
-                    {/* Discord Card */}
                   </div>
 
                   {/* Right Column - Checklist and Hackerpack */}
@@ -80,7 +78,7 @@ export default async function DashboardPage() {
                     <DashboardItem title="Hackerpack">
                       <InfoCard
                         description="The Hackerpack contains all the important information about MRUHacks, including rules, resources, and tips."
-                        linkUrl="/hackerpack"
+                        linkUrl="https://mruhacks.notion.site/"
                         linkText="View Hackerpack"
                         icon={<FileText className="h-5 w-5" />}
                       />

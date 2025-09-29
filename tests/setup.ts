@@ -56,15 +56,20 @@ jest.mock("@/utils/supabase/server", () => ({
 
 // E2E Test Setup
 let browser: Browser | null = null;
+let activePages: Set<Page> = new Set();
 
 export async function createPage(): Promise<Page> {
   // Always create a new browser instance for each test to avoid connection issues
   if (browser) {
     await browser.close();
+    browser = null;
   }
 
+  // Determine headless mode - default to true unless explicitly set to false
+  const isHeadless = process.env.HEADLESS !== "false";
+
   browser = await puppeteer.launch({
-    headless: process.env.CI === "true" ? true : false,
+    headless: isHeadless,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -78,11 +83,25 @@ export async function createPage(): Promise<Page> {
       "--disable-background-timer-throttling",
       "--disable-backgrounding-occluded-windows",
       "--disable-renderer-backgrounding",
+      "--disable-extensions",
+      "--disable-plugins",
+      "--disable-images", // Disable images for faster loading
+      "--disable-background-networking",
+      "--disable-sync",
+      "--disable-translate",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--no-default-browser-check",
+      "--no-pings",
+      "--disable-logging",
+      "--disable-permissions-api",
+      "--disable-notifications",
     ],
     timeout: 30000,
   });
 
   const page = await browser.newPage();
+  activePages.add(page);
 
   // Set permissions for localStorage access
   await page.evaluateOnNewDocument(() => {
@@ -116,10 +135,21 @@ export async function createPage(): Promise<Page> {
 export async function cleanupPage(page: Page): Promise<void> {
   if (page && !page.isClosed()) {
     await page.close();
+    activePages.delete(page);
   }
 }
 
 export async function cleanupBrowser(): Promise<void> {
+  // Close all active pages first
+  const closePromises = Array.from(activePages).map(async (page) => {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  });
+
+  await Promise.allSettled(closePromises);
+  activePages.clear();
+
   if (browser) {
     await browser.close();
     browser = null;
@@ -135,9 +165,19 @@ beforeEach(() => {
 });
 
 // Global test teardown
-afterEach(() => {
+afterEach(async () => {
   // Clean up after each test
   jest.restoreAllMocks();
+
+  // Clean up any remaining pages
+  const closePromises = Array.from(activePages).map(async (page) => {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  });
+
+  await Promise.allSettled(closePromises);
+  activePages.clear();
 });
 
 // Global setup for E2E tests
