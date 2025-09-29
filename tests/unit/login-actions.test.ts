@@ -1,10 +1,10 @@
-import { login, loginWithGoogle } from "@/app/login/actions";
+import { login } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
-import { getRegistration } from "@/db/registration";
+import { getRegistrationDataAction } from "@/actions/registrationActions";
 
 // Mock dependencies
 jest.mock("@/utils/supabase/server");
-jest.mock("@/db/registration");
+jest.mock("@/actions/registrationActions");
 jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
 }));
@@ -12,9 +12,10 @@ jest.mock("next/cache", () => ({
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
 >;
-const mockGetRegistration = getRegistration as jest.MockedFunction<
-  typeof getRegistration
->;
+const mockGetRegistrationDataAction =
+  getRegistrationDataAction as jest.MockedFunction<
+    typeof getRegistrationDataAction
+  >;
 
 // Test data factory
 const createLoginFormData = (
@@ -42,10 +43,17 @@ describe("Login Actions", () => {
           data: { url: null },
           error: null,
         }),
+        getUser: jest.fn().mockResolvedValue({
+          data: { user: { id: "user123" } },
+          error: null,
+        }),
       },
     };
     mockCreateClient.mockResolvedValue(mockSupabase);
-    mockGetRegistration.mockResolvedValue({ data: null, error: undefined });
+    mockGetRegistrationDataAction.mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
   describe("login function", () => {
@@ -58,7 +66,10 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ id: "reg123" } as any);
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: { id: "reg123" } as any,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
@@ -170,11 +181,14 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ id: "reg123" } as any);
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: { id: "reg123" } as any,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockGetRegistration).toHaveBeenCalled();
+      expect(mockGetRegistrationDataAction).toHaveBeenCalled();
     });
 
     it("should redirect to registration for new user", async () => {
@@ -186,45 +200,14 @@ describe("Login Actions", () => {
         error: null,
       });
 
-      mockGetRegistration.mockResolvedValue({ data: null });
+      mockGetRegistrationDataAction.mockResolvedValue({
+        success: true,
+        data: null,
+      });
 
       // Act & Assert
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockGetRegistration).toHaveBeenCalled();
-    });
-  });
-
-  describe("loginWithGoogle function", () => {
-    it("should initiate Google OAuth flow", async () => {
-      // Arrange
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: "https://google.com/oauth" },
-        error: null,
-      });
-
-      // Act & Assert
-      await expect(loginWithGoogle()).rejects.toThrow("NEXT_REDIRECT");
-      expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: "google",
-        options: {
-          redirectTo: "http://localhost:3000/auth/callback",
-          queryParams: {
-            prompt: "select_account",
-          },
-          scopes: "email profile",
-        },
-      });
-    });
-
-    it("should handle Google OAuth errors", async () => {
-      // Arrange
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-        data: { url: null },
-        error: { message: "OAuth failed" },
-      });
-
-      // Act & Assert
-      await expect(loginWithGoogle()).rejects.toThrow();
+      expect(mockGetRegistrationDataAction).toHaveBeenCalled();
     });
   });
 });

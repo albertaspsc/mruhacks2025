@@ -1,43 +1,35 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Users,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import Link from "next/link";
+import { type ColumnDef } from "@tanstack/react-table";
+import { AdvancedDataTable } from "@/components/dashboards/shared/ui/AdvancedDataTable";
+import { SortableHeader } from "@/components/dashboards/shared/utils/SortableHeader";
+import { generateFilters } from "@/components/dashboards/shared/utils/FilterUtils";
+import { generateFilename } from "@/components/dashboards/shared/utils/ExportUtils";
+import { AdminPageLayout } from "@/components/dashboards/admin/shared/AdminPageLayout";
+import { WorkshopWithRegistrations } from "@/types/admin";
+import {
+  getWorkshopAction,
+  getWorkshopRegistrationsAction,
+} from "@/actions/adminActions";
 
-interface Participant {
-  id: string;
-  registeredAt: string;
-  participant: {
-    firstName: string;
-    lastName: string;
-    fullName: string;
-    yearOfStudy: string;
-    gender: string;
-    major: string;
-  };
-}
-
-interface WorkshopData {
-  id: string;
-  title: string;
-  maxCapacity: number;
-  currentRegistrations: number;
-}
+type Participant = NonNullable<WorkshopWithRegistrations["registrations"]>[0];
 
 interface RegistrationData {
-  workshop: WorkshopData;
+  workshop: WorkshopWithRegistrations;
   registrations: Participant[];
 }
 
@@ -49,34 +41,92 @@ export default function WorkshopRegistrationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<RegistrationData | null>(null);
 
-  useEffect(() => {
-    if (workshopId) {
-      fetchRegistrations();
-    }
-  }, [workshopId]);
+  // Column definitions for AdvancedDataTable
+  const columns = useMemo<ColumnDef<Participant>[]>(
+    () => [
+      {
+        id: "participant.fullName",
+        accessorFn: (row) => row.participant.fullName,
+        header: ({ column }) => (
+          <SortableHeader column={column}>Name</SortableHeader>
+        ),
+        cell: ({ row }) => {
+          const participant = row.original.participant;
+          return <div className="font-medium">{participant.fullName}</div>;
+        },
+      },
+      {
+        id: "participant.yearOfStudy",
+        accessorFn: (row) => row.participant.yearOfStudy,
+        header: ({ column }) => (
+          <SortableHeader column={column}>Year of Study</SortableHeader>
+        ),
+        cell: ({ row }) => row.original.participant.yearOfStudy,
+      },
+      {
+        id: "participant.major",
+        accessorFn: (row) => row.participant.major,
+        header: "Major",
+        cell: ({ row }) => row.original.participant.major,
+      },
+      {
+        accessorKey: "registeredAt",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Registered At</SortableHeader>
+        ),
+        cell: ({ row }) => {
+          const date = new Date(row.original.registeredAt);
+          return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        },
+      },
+    ],
+    [],
+  );
 
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/workshops/${workshopId}/registrations`,
-      );
 
-      console.log("Response status:", response.status);
-      console.log(
-        "Response headers:",
-        Object.fromEntries(response.headers.entries()),
-      );
+      // Fetch both workshop and registrations data
+      const [workshopResult, registrationsResult] = await Promise.all([
+        getWorkshopAction(workshopId),
+        getWorkshopRegistrationsAction(workshopId),
+      ]);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
+      if (!workshopResult.success) {
+        throw new Error(workshopResult.error || "Failed to fetch workshop");
+      }
+
+      if (!registrationsResult.success) {
         throw new Error(
-          `Failed to fetch registrations: ${response.status} - ${errorText}`,
+          registrationsResult.error || "Failed to fetch registrations",
         );
       }
 
-      const registrationData = await response.json();
+      // Transform data to match expected format
+      const workshopData = workshopResult.data!;
+      const registrationsData = registrationsResult.data || [];
+
+      const registrationData: RegistrationData = {
+        workshop: {
+          ...workshopData,
+          eventName: "mruhacks2025",
+          isRegistered: false,
+          isFull: workshopData.maxCapacity
+            ? registrationsData.length >= workshopData.maxCapacity
+            : false,
+          currentRegistrations: registrationsData.length,
+          registrations: registrationsData,
+        },
+        registrations: registrationsData,
+      };
+
       setData(registrationData);
     } catch (err) {
       setError(
@@ -86,7 +136,13 @@ export default function WorkshopRegistrationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workshopId]);
+
+  useEffect(() => {
+    if (workshopId) {
+      fetchRegistrations();
+    }
+  }, [workshopId, fetchRegistrations]);
 
   const exportCSV = async () => {
     try {
@@ -98,7 +154,9 @@ export default function WorkshopRegistrationsPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${data?.workshop.title.replace(/\s+/g, "_")}_registrations.csv`;
+        a.download = generateFilename(
+          `${data?.workshop.title.replace(/\s+/g, "_")}_registrations`,
+        );
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -111,6 +169,24 @@ export default function WorkshopRegistrationsPage() {
       alert("Error exporting registrations");
     }
   };
+
+  // Prepare filters for AdvancedDataTable
+  const filters = useMemo(() => {
+    if (!data?.registrations) return [];
+
+    return generateFilters(data.registrations, [
+      {
+        column: "participant.yearOfStudy",
+        getValue: (r) => r.participant.yearOfStudy,
+        placeholder: "All Years",
+      },
+      {
+        column: "participant.major",
+        getValue: (r) => r.participant.major,
+        placeholder: "All Majors",
+      },
+    ]);
+  }, [data?.registrations]);
 
   if (loading) {
     return (
@@ -158,123 +234,82 @@ export default function WorkshopRegistrationsPage() {
     );
   }
 
+  const stats = [
+    {
+      title: "Total Registrations",
+      value: data.registrations?.length || 0,
+      icon: Users,
+    },
+    {
+      title: "Capacity Used",
+      value: data.workshop.maxCapacity
+        ? `${Math.round((data.workshop.currentRegistrations / data.workshop.maxCapacity) * 100)}%`
+        : "0%",
+      icon: Users,
+    },
+    {
+      title: "Available Spots",
+      value: data.workshop.maxCapacity
+        ? Math.max(
+            0,
+            data.workshop.maxCapacity - data.workshop.currentRegistrations,
+          )
+        : 0,
+      icon: Users,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-[70px]">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/admin/dashboard?tab=workshops">
-                <Button>
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Workshop Registrations
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button onClick={exportCSV}>
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-            </div>
+    <AdminPageLayout
+      title="Workshop Registrations"
+      backHref="/admin/dashboard?tab=workshops"
+      stats={stats}
+    >
+      {/* Workshop Info */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {data.workshop.title}
+        </h2>
+        <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-1" />
+            <span>{data.workshop.currentRegistrations} registered</span>
+          </div>
+          <div>
+            <span>Capacity: {data.workshop.maxCapacity || "Unlimited"}</span>
+          </div>
+          <div>
+            <Badge
+              variant={
+                data.workshop.maxCapacity &&
+                data.workshop.currentRegistrations >= data.workshop.maxCapacity
+                  ? "destructive"
+                  : "default"
+              }
+            >
+              {data.workshop.maxCapacity &&
+              data.workshop.currentRegistrations >= data.workshop.maxCapacity
+                ? "Full"
+                : "Available"}
+            </Badge>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Workshop Info */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {data.workshop.title}
-            </h2>
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <Users className="w-4 h-4 mr-1" />
-                <span>{data.workshop.currentRegistrations} registered</span>
-              </div>
-              <div>
-                <span>Capacity: {data.workshop.maxCapacity}</span>
-              </div>
-              <div>
-                <Badge
-                  variant={
-                    data.workshop.currentRegistrations >=
-                    data.workshop.maxCapacity
-                      ? "destructive"
-                      : "default"
-                  }
-                >
-                  {data.workshop.currentRegistrations >=
-                  data.workshop.maxCapacity
-                    ? "Full"
-                    : "Available"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Registrations Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Registered Participants ({data.registrations.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.registrations.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-gray-500">No registrations yet</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Year of Study</TableHead>
-                      <TableHead>Major</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Registered At</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.registrations.map((registration) => (
-                      <TableRow key={registration.id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {registration.participant.fullName}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {registration.participant.yearOfStudy}
-                        </TableCell>
-                        <TableCell>{registration.participant.major}</TableCell>
-                        <TableCell>{registration.participant.gender}</TableCell>
-                        <TableCell>
-                          {new Date(
-                            registration.registeredAt,
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+      {/* Advanced Data Table */}
+      <AdvancedDataTable
+        data={data.registrations || []}
+        columns={columns}
+        loading={loading}
+        emptyMessage="No registrations yet"
+        onExport={exportCSV}
+        searchPlaceholder="Search participants..."
+        searchColumn="participant.fullName"
+        filters={filters}
+        enableSelection={false}
+        enablePagination={true}
+        pageSizeOptions={[10, 20, 30, 50]}
+      />
+    </AdminPageLayout>
   );
 }

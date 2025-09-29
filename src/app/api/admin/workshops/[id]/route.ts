@@ -66,7 +66,7 @@ export async function PUT(
       adminError ||
       !adminData ||
       adminData.status !== "active" ||
-      !["volunteer", "admin", "super_admin"].includes(adminData.role)
+      !["admin", "super_admin"].includes(adminData.role)
     ) {
       return NextResponse.json(
         { error: "Admin access required" },
@@ -146,7 +146,7 @@ export async function DELETE(
       adminError ||
       !adminData ||
       adminData.status !== "active" ||
-      !["volunteer", "admin", "super_admin"].includes(adminData.role)
+      !["admin", "super_admin"].includes(adminData.role)
     ) {
       return NextResponse.json(
         { error: "Admin access required" },

@@ -40,7 +40,7 @@ export async function GET(
 
     if (
       adminData.status !== "active" ||
-      !["volunteer", "admin", "super_admin"].includes(adminData.role)
+      !["admin", "super_admin"].includes(adminData.role)
     ) {
       return NextResponse.json(
         { error: "Insufficient permissions" },

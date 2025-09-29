@@ -4,17 +4,12 @@
 
 -- Dietary Restrictions
 INSERT INTO "public"."dietary_restrictions" ("restriction") VALUES 
-('None'),
+('Kosher'),
 ('Vegetarian'), 
 ('Vegan'), 
-('Gluten-free'), 
-('Dairy-free'),
-('Nut allergy'),
-('Kosher'), 
 ('Halal'), 
-('Peanuts and Treenuts allergy'),
-('Shellfish allergy'),
-('Other');
+('Gluten-free'), 
+('Peanuts and Treenuts allergy');
 
 -- Experience Types
 INSERT INTO "public"."experience_types" ("experience") VALUES 
@@ -37,47 +32,58 @@ INSERT INTO "public"."interests" ("interest") VALUES
 ('Web Development'), 
 ('Data Science and ML'), 
 ('Design and User Experience (UX/UI)'), 
-('Game Development'),
-('Cybersecurity'),
-('Cloud Computing'),
-('DevOps'),
-('Blockchain'),
-('AI/ML'),
-('IoT'),
-('AR/VR'),
-('Backend Development'),
-('Frontend Development'),
-('Full Stack Development'),
-('Database Design'),
-('API Development'),
-('Machine Learning'),
-('Data Analytics'),
-('UI/UX Design');
+('Game Development');
 
 -- Majors
-INSERT INTO "public"."majors" ("major") VALUES 
-('Computer Science'),
-('Computer Information Systems'),
-('Software Engineering'),
-('Data Science'),
-('Data Analytics'),
-('Mathematics'),
-('Statistics'),
-('Information Technology'),
-('Cybersecurity'),
-('Computer Engineering'),
-('Electrical Engineering'),
-('Mechanical Engineering'),
-('Business Administration'),
-('Accounting'),
-('Finance'),
-('Marketing'),
-('Economics'),
-('Physics'),
-('Chemistry'),
-('Biology'),
-('Psychology'),
-('Other');
+INSERT INTO "public"."majors" ("id", "major") OVERRIDING SYSTEM VALUE VALUES 
+(1, 'Computer Information Systems'), 
+(2, 'Data Science'), 
+(3, 'Computer Science'), 
+(4, 'Mathematics'), 
+(29, 'Accounting'), 
+(44, 'Data Analytics'), 
+(46, 'Software development'), 
+(47, 'Software Development'), 
+(48, 'Software Engineering'), 
+(49, 'Computer Information systems'), 
+(50, 'BCIS'), 
+(51, 'Computer science '), 
+(52, 'Geology'), 
+(53, 'Comp Sci'), 
+(54, 'university entrance option'), 
+(55, 'Bcis'), 
+(56, 'open studies'), 
+(57, 'Comp Science '), 
+(58, 'Computer science'), 
+(59, 'B.Sc. Computer Science'), 
+(60, 'criminal justice'), 
+(61, 'Natural Science(Concentration in CS and Math)'), 
+(62, 'Computer information systems'), 
+(63, 'B.Sc. Computer info systems'), 
+(64, 'Information Design '), 
+(65, 'Computer Science '), 
+(66, 'Bcom'), 
+(67, 'Buisness administration '), 
+(68, 'Bsc. General Science '), 
+(69, 'Electrical Engineering '), 
+(70, 'Information Design'), 
+(71, 'Computer science- Bsc'), 
+(72, 'computer science '), 
+(73, 'CS'), 
+(74, 'Computer Information System '), 
+(75, 'Computer Info Systems'), 
+(76, 'Mechanical Engineering'), 
+(77, 'Science'), 
+(78, 'CIS'), 
+(79, 'Mechanical engineering'), 
+(80, 'Bachelor of Computer information systems'), 
+(81, 'Batchlor of science, Computer science'), 
+(82, 'Computer scoencw'), 
+(83, 'University Entrance Option'), 
+(84, 'computer science');
+
+-- Set the sequence value to the highest id
+SELECT setval('public.majors_id_seq', (SELECT MAX(id) FROM public.majors));
 
 -- Marketing Types
 INSERT INTO "public"."marketing_types" ("marketing") VALUES 
@@ -88,27 +94,37 @@ INSERT INTO "public"."marketing_types" ("marketing") VALUES
 ('Attended the event before'), 
 ('Other');
 
--- Universities
-INSERT INTO "public"."universities" ("uni") VALUES 
-('Mount Royal University'),
-('University of Calgary'),
-('SAIT'),
-('University of Alberta'),
-('University of British Columbia'),
-('University of Toronto'),
-('University of Waterloo'),
-('McGill University'),
-('University of Saskatchewan'),
-('University of Manitoba'),
-('Dalhousie University'),
-('Simon Fraser University'),
-('York University'),
-('Concordia University'),
-('University of Ottawa'),
-('Carleton University'),
-('Athabasca University'),
-('Bow Valley College'),
-('Other');
+
+-- Universities 
+INSERT INTO "public"."universities" ("id", "uni") OVERRIDING SYSTEM VALUE VALUES 
+(1, 'MRU'), 
+(2, 'U of C'), 
+(15, 'SAIT'), 
+(16, 'Athabasca'), 
+(30, 'UBC'), 
+(32, 'Mount Royal University'), 
+(33, 'Mount Royal University '), 
+(34, 'University of Calgary'), 
+(35, 'University of Waterloo'), 
+(36, 'Bowvalley college '), 
+(37, 'University of Toronto'), 
+(38, 'University of Calgary '), 
+(39, 'University of Saskatchewan'), 
+(40, 'University of Victoria'), 
+(41, 'Mount royal university '), 
+(42, 'Mount royal university'), 
+(43, 'University of British Columbia'), 
+(44, 'Stanford University'), 
+(45, 'Mount Royal'), 
+(46, 'Mount Royal university '), 
+(47, 'Mount royal '), 
+(48, 'MountRoyalUniversity'), 
+(49, 'mount royal'), 
+(50, 'Mount Royal ');
+
+-- Set the sequence value to the highest id
+SELECT setval('public.universities_id_seq', (SELECT MAX(id) FROM public.universities));
+
 
 -- =============================================
 -- WORKSHOPS/EVENTS
@@ -191,9 +207,9 @@ SELECT
   (au.raw_user_meta_data->>'first_name'),
   (au.raw_user_meta_data->>'last_name'),
   (random() * ((SELECT COUNT(*) FROM public.gender) - 1) + 1)::int,
-  (random() * ((SELECT COUNT(*) FROM public.universities) - 1) + 1)::int,
+  (SELECT id FROM public.universities ORDER BY random() LIMIT 1),
   (random() > 0.5),
-  (random() * ((SELECT COUNT(*) FROM public.majors) - 1) + 1)::int,
+  (SELECT id FROM public.majors ORDER BY random() LIMIT 1),
   (ARRAY['Yes','No','Not sure'])[floor(random()*3+1)]::parking_state,
   au.email,
   (ARRAY['1st','2nd','3rd','4th+','Recent Grad'])[floor(random()*5+1)]::year_of_study,
@@ -235,7 +251,7 @@ WHERE u.email LIKE 'participant%'
 
 -------------------------------------------------------
 -- User Interests
--- Each participant gets 1–3 random interests (no duplicates)
+-- Each participant gets 1-3 random interests (no duplicates)
 -------------------------------------------------------
 -- First interest (everyone gets at least one)
 INSERT INTO "public"."user_interests" ("id", "interest")
@@ -288,7 +304,7 @@ WHERE rn = 1;
 
 -------------------------------------------------------
 -- User Dietary Restrictions
--- Most participants have none, but some get 1–2 restrictions (no duplicates)
+-- Most participants have none, but some get 1-2 restrictions (no duplicates)
 -------------------------------------------------------
 
 -- First restriction (~30% of users)
@@ -324,7 +340,7 @@ WHERE rn = 1;
 
 -------------------------------------------------------
 -- Workshop Registrations
--- Each participant may register for 0–3 random workshops (no duplicates)
+-- Each participant may register for 0-3 random workshops (no duplicates)
 -------------------------------------------------------
 
 -- First registration (~70% of users)

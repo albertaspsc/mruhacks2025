@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (
       adminData.status !== "active" ||
-      !["volunteer", "admin", "super_admin"].includes(adminData.role)
+      !["admin", "super_admin"].includes(adminData.role)
     ) {
       return NextResponse.json(
         { error: "Insufficient permissions" },

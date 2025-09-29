@@ -6,8 +6,9 @@ import {
   universities,
   majors,
   experienceTypes,
+  admins,
 } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull } from "drizzle-orm";
 import { withApiAuth } from "@/app/auth/api-auth";
 
 export const GET = withApiAuth(
@@ -28,6 +29,8 @@ export const GET = withApiAuth(
           .from(users)
           .leftJoin(gender, eq(users.gender, gender.id))
           .leftJoin(universities, eq(users.university, universities.id))
+          .leftJoin(admins, eq(users.id, admins.id))
+          .where(isNull(admins.id))
           .orderBy(desc(users.timestamp));
 
         const transformedParticipants = participants.map((participant) => ({
@@ -68,6 +71,8 @@ export const GET = withApiAuth(
         .leftJoin(universities, eq(users.university, universities.id))
         .leftJoin(majors, eq(users.major, majors.id))
         .leftJoin(experienceTypes, eq(users.experience, experienceTypes.id))
+        .leftJoin(admins, eq(users.id, admins.id))
+        .where(isNull(admins.id))
         .orderBy(desc(users.timestamp));
 
       const transformedParticipants = participants.map((participant) => ({
@@ -98,5 +103,5 @@ export const GET = withApiAuth(
       );
     }
   },
-  { requiredRoles: ["admin", "volunteer"] }, // Both roles can access, but get different data
+  { requiredRoles: ["admin", "super_admin", "volunteer"] }, // Allow super_admin as well
 );

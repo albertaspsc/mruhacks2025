@@ -17,8 +17,8 @@ jest.mock("next/image", () => {
   };
 });
 
-jest.mock("react-icons/fc", () => ({
-  FcGoogle: () => <div data-testid="google-icon">Google Icon</div>,
+jest.mock("@/assets/icons/google.svg", () => ({
+  default: () => <div data-testid="google-icon">Google Icon</div>,
 }));
 
 const mockLogin = login as jest.MockedFunction<typeof login>;

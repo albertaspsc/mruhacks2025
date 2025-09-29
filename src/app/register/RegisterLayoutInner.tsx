@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import ProgressBar from "@/components/Register/ProgressBar";
+import ProgressBar from "@/components/forms/register/ProgressBar";
 import logo from "@/assets/logos/color-logo.svg";
 
 export default function RegisterLayoutInner({
@@ -12,14 +12,12 @@ export default function RegisterLayoutInner({
   children: ReactNode;
 }) {
   const path = usePathname() ?? "";
-  // Deterministic route → step mapping for the registration flow
-  // Account = 1, Personal = 2, Final = 3, Complete = 4
+  // Deterministic route -> step mapping for the registration flow
+  // Account = 1, Personal = 2, Final = 3
   const ROUTE_STEP: Array<[RegExp, number]> = [
     [/^\/register\/?$/, 1],
-    [/^\/register\/verify-2fa\/?$/, 1],
     [/^\/register\/step-1\/?$/, 2],
     [/^\/register\/step-2\/?$/, 3],
-    [/^\/register\/complete\/?$/, 4],
   ];
 
   const step = ROUTE_STEP.find(([re]) => re.test(path))?.[1] ?? 1;
@@ -37,7 +35,7 @@ export default function RegisterLayoutInner({
             priority
           />
         </div>
-        <ProgressBar step={step} totalSteps={4} />
+        <ProgressBar step={step} totalSteps={3} />
         {children}
       </div>
     </div>

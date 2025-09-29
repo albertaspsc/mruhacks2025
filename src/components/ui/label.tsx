@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/components/lib/utils";
+import { cn } from "@/lib/utils";
 
 // Updated interface with optional children
 interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
@@ -14,7 +14,7 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     <label
       ref={ref}
       className={cn(
-        "block mb-1 font-semibold text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "block mb-1 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className,
       )}
       {...props}

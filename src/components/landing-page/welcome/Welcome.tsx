@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import styles from "./Welcome.module.css";
-import { usePrefersReducedMotion } from "@/components/hooks/use-prefers-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import welcomeImage from "@/assets/graphics/welcome-component.webp";
 
 const Welcome = () => {
@@ -39,7 +39,7 @@ const Welcome = () => {
             Connect with experienced software engineers serving as industry
             mentors, dive into engaging hands-on workshops, and enjoy
             complimentary food throughout the event. Your experience comes first
-            at MRUHacks–exciting activities, workshops, and plenty of
+            at MRUHacks - exciting activities, workshops, and plenty of
             opportunities to network with companies and other hackers.
           </p>
         </div>

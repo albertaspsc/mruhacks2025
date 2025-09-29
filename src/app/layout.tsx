@@ -1,6 +1,7 @@
 import { DM_Sans } from "next/font/google";
 import "@/globals.css";
 import Navbar from "@/components/Navbar/Navbar";
+import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className={dmSans.variable}>
         <Navbar />
         {children}
+        <Toaster />
         <SpeedInsights />
         <Analytics />
       </body>

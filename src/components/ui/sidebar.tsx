@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { cn } from "@/components/lib/utils";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   User,
@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Registration } from "@/db/registration";
+import { UserRegistration } from "@/types/registration";
 
 type DashboardView = "dashboard" | "settings" | "profile";
 
@@ -34,7 +34,7 @@ interface NavItem {
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
-  user?: Registration;
+  user?: UserRegistration;
   onLogout?: () => void;
   onNavigate?: (view: DashboardView) => void; // Navigation handler
   currentView?: DashboardView; // Current active view
@@ -48,7 +48,7 @@ export function Sidebar({
   currentView = "dashboard",
   ...props
 }: SidebarProps) {
-  const userName = user?.firstName || "Hacker";
+  const userName = user?.f_name || "Hacker";
 
   const topNavItems: NavItem[] = [
     {

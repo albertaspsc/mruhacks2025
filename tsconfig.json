@@ -22,15 +22,15 @@
       "@components/*": ["src/components/*"],
       "@/components/*": ["src/components/*"],
       "@/components/ui/*": ["src/components/ui/*"],
-      "@/hooks/*": ["src/components/hooks/*"],
+      "@/hooks/*": ["src/hooks/*"],
       "@context/*": ["src/context/*"],
       "@/context/*": ["src/context/*"],
       "@assets/*": ["src/assets/*"],
       "@/assets/*": ["src/assets/*"],
       "@/db/*": ["src/db/*"],
       "@db/*": ["src/db/*"],
-      "@/utils/*": ["./utils/*"],
-      "@utils/*": ["./utils/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@utils/*": ["src/utils/*"],
       "@/auth/*": ["src/auth/*"],
       "@auth/*": ["src/auth/*"]
     },
@@ -42,7 +42,13 @@
     ],
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "tests/helpers/testServer.cjs"
+  ],
   "exclude": [
     "node_modules",
     "tailwind.config.js",
