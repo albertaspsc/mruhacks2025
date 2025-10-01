@@ -38,11 +38,7 @@ export default async function DashboardPage() {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}
-            {user && (
-              <StatusBanner status={user.status as RegistrationStatus} />
-            )}
-
-            {/* Discord Card */}
+            <StatusBanner status={user.status as RegistrationStatus} />
 
             {/* Dashboard Content */}
             <div className="max-w-full">
