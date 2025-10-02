@@ -1,5 +1,7 @@
 import {
   pgTable,
+  integer,
+  bigint,
   pgSchema,
   uuid,
   text,
@@ -16,11 +18,10 @@ import {
   bigserial,
   inet,
   pgPolicy,
-  integer,
   unique,
   date,
   time,
-  bigint,
+  primaryKey,
   pgView,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -78,6 +79,12 @@ export const yearOfStudy = pgEnum("year_of_study", [
   "4th+",
   "Recent Grad",
 ]);
+
+export const confirmedCount = pgTable("confirmed_count", {
+  id: integer().default(1).primaryKey().notNull(),
+  // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+  count: bigint({ mode: "number" }).notNull(),
+});
 
 export const instancesInAuth = auth.table("instances", {
   id: uuid().notNull(),
@@ -692,105 +699,6 @@ export const oauthClientsInAuth = auth.table(
   ],
 );
 
-export const users = pgTable(
-  "users",
-  {
-    id: uuid().primaryKey().notNull(),
-    fName: varchar("f_name", { length: 255 }).notNull(),
-    lName: varchar("l_name", { length: 255 }).notNull(),
-    gender: integer().notNull(),
-    university: integer().notNull(),
-    prevAttendance: boolean("prev_attendance").notNull(),
-    major: integer().notNull(),
-    parking: parkingState().notNull(),
-    email: varchar({ length: 255 }).notNull(),
-    yearOfStudy: yearOfStudy().notNull(),
-    experience: integer().notNull(),
-    accommodations: text().notNull(),
-    marketing: integer().notNull(),
-    timestamp: timestamp({ mode: "string" }),
-    status: status().default("waitlisted").notNull(),
-    checkedIn: boolean("checked_in").default(false),
-    resumeUrl: text("resume_url"),
-    resumeFilename: varchar("resume_filename", { length: 255 }),
-    pendingEmail: text("pending_email"),
-    emailChangeRequestedAt: timestamp("email_change_requested_at", {
-      withTimezone: true,
-      mode: "string",
-    }),
-    updatedAt: timestamp("updated_at", {
-      withTimezone: true,
-      mode: "string",
-    }).defaultNow(),
-  },
-  (table) => [
-    index("idx_users_resume_url")
-      .using("btree", table.resumeUrl.asc().nullsLast().op("text_ops"))
-      .where(sql`(resume_url IS NOT NULL)`),
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [table.id],
-      name: "users_auth_user_fkey",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.experience],
-      foreignColumns: [experienceTypes.id],
-      name: "users_experience_experience_types_id_fk",
-    }),
-    foreignKey({
-      columns: [table.gender],
-      foreignColumns: [gender.id],
-      name: "users_gender_gender_id_fk",
-    }),
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [table.id],
-      name: "users_id_fkey",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [table.id],
-      name: "users_id_users_id_fk",
-    }),
-    foreignKey({
-      columns: [table.major],
-      foreignColumns: [majors.id],
-      name: "users_major_majors_id_fk",
-    }),
-    foreignKey({
-      columns: [table.marketing],
-      foreignColumns: [marketingTypes.id],
-      name: "users_marketing_marketing_types_id_fk",
-    }),
-    foreignKey({
-      columns: [table.university],
-      foreignColumns: [universities.id],
-      name: "users_university_universities_id_fk",
-    }),
-    pgPolicy("Users can delete their own registrations", {
-      as: "permissive",
-      for: "delete",
-      to: ["public"],
-      using: sql`(auth.uid() = id)`,
-    }),
-    pgPolicy("users_insert_own", {
-      as: "permissive",
-      for: "insert",
-      to: ["authenticated"],
-    }),
-    pgPolicy("users_select_own", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-    }),
-    pgPolicy("users_update_own", {
-      as: "permissive",
-      for: "update",
-      to: ["authenticated"],
-    }),
-  ],
-);
-
 export const admins = pgTable(
   "admins",
   {
@@ -1114,7 +1022,7 @@ export const profile = pgTable(
     fName: varchar("f_name", { length: 255 }),
     lName: varchar("l_name", { length: 255 }),
     marketingEmails: boolean("marketing_emails").default(false),
-    parking: parkingState().default("Not sure"),
+    parking: varchar({ length: 10 }).default("Not sure"),
     licensePlate: varchar("license_plate", { length: 20 }),
     pendingEmail: text("pending_email"),
     emailChangeRequestedAt: timestamp("email_change_requested_at", {
@@ -1163,6 +1071,10 @@ export const profile = pgTable(
       for: "select",
       to: ["authenticated"],
     }),
+    check(
+      "profile_parking_check",
+      sql`(parking)::text = ANY (ARRAY[('Yes'::character varying)::text, ('No'::character varying)::text, ('Not sure'::character varying)::text])`,
+    ),
   ],
 );
 
@@ -1191,78 +1103,6 @@ export const universities = pgTable(
       as: "permissive",
       for: "select",
       to: ["public"],
-    }),
-  ],
-);
-
-export const userDietRestrictions = pgTable(
-  "user_diet_restrictions",
-  {
-    id: uuid().notNull(),
-    restriction: integer().notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [users.id],
-      name: "user_diet_restrictions_id_users_id_fk",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.restriction],
-      foreignColumns: [dietaryRestrictions.id],
-      name: "user_diet_restrictions_restriction_dietary_restrictions_id_fk",
-    }),
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [users.id],
-      name: "user_diet_restrictions_user_fkey",
-    }).onDelete("cascade"),
-    pgPolicy("user_restrictions_insert_own", {
-      as: "permissive",
-      for: "insert",
-      to: ["authenticated"],
-      withCheck: sql`(auth.uid() = id)`,
-    }),
-    pgPolicy("user_restrictions_select_own", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
-    }),
-  ],
-);
-
-export const userInterests = pgTable(
-  "user_interests",
-  {
-    id: uuid().notNull(),
-    interest: integer().notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [users.id],
-      name: "user_interests_id_users_id_fk",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.interest],
-      foreignColumns: [interests.id],
-      name: "user_interests_interest_interests_id_fk",
-    }),
-    foreignKey({
-      columns: [table.id],
-      foreignColumns: [users.id],
-      name: "user_interests_user_fkey",
-    }).onDelete("cascade"),
-    pgPolicy("user_interests_insert_own", {
-      as: "permissive",
-      for: "insert",
-      to: ["authenticated"],
-      withCheck: sql`(auth.uid() = id)`,
-    }),
-    pgPolicy("user_interests_select_own", {
-      as: "permissive",
-      for: "select",
-      to: ["authenticated"],
     }),
   ],
 );
@@ -1423,6 +1263,225 @@ export const preReg = pgTable("pre_reg", {
   time: timestamp({ withTimezone: true, mode: "string" }).notNull(),
   email: text().notNull(),
 });
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid().primaryKey().notNull(),
+    fName: varchar("f_name", { length: 255 }).notNull(),
+    lName: varchar("l_name", { length: 255 }).notNull(),
+    gender: integer().notNull(),
+    university: integer().notNull(),
+    prevAttendance: boolean("prev_attendance").notNull(),
+    major: integer().notNull(),
+    parking: parkingState().notNull(),
+    email: varchar({ length: 255 }).notNull(),
+    yearOfStudy: yearOfStudy().notNull(),
+    experience: integer().notNull(),
+    accommodations: text().notNull(),
+    marketing: integer().notNull(),
+    timestamp: timestamp({ mode: "string" }),
+    status: status().default("waitlisted").notNull(),
+    checkedIn: boolean("checked_in").default(false),
+    resumeUrl: text("resume_url"),
+    resumeFilename: varchar("resume_filename", { length: 255 }),
+    pendingEmail: text("pending_email"),
+    emailChangeRequestedAt: timestamp("email_change_requested_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    index("idx_users_experience").using(
+      "btree",
+      table.experience.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_users_gender").using(
+      "btree",
+      table.gender.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_users_major").using(
+      "btree",
+      table.major.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_users_marketing").using(
+      "btree",
+      table.marketing.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_users_resume_url")
+      .using("btree", table.resumeUrl.asc().nullsLast().op("text_ops"))
+      .where(sql`(resume_url IS NOT NULL)`),
+    index("idx_users_university").using(
+      "btree",
+      table.university.asc().nullsLast().op("int4_ops"),
+    ),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [table.id],
+      name: "users_auth_user_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.experience],
+      foreignColumns: [experienceTypes.id],
+      name: "users_experience_experience_types_id_fk",
+    }),
+    foreignKey({
+      columns: [table.gender],
+      foreignColumns: [gender.id],
+      name: "users_gender_gender_id_fk",
+    }),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [table.id],
+      name: "users_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [table.id],
+      name: "users_id_users_id_fk",
+    }),
+    foreignKey({
+      columns: [table.major],
+      foreignColumns: [majors.id],
+      name: "users_major_majors_id_fk",
+    }),
+    foreignKey({
+      columns: [table.marketing],
+      foreignColumns: [marketingTypes.id],
+      name: "users_marketing_marketing_types_id_fk",
+    }),
+    foreignKey({
+      columns: [table.university],
+      foreignColumns: [universities.id],
+      name: "users_university_universities_id_fk",
+    }),
+    pgPolicy("Users can delete their own registrations", {
+      as: "permissive",
+      for: "delete",
+      to: ["public"],
+      using: sql`(auth.uid() = id)`,
+    }),
+    pgPolicy("users_insert_own", {
+      as: "permissive",
+      for: "insert",
+      to: ["authenticated"],
+    }),
+    pgPolicy("users_select_own", {
+      as: "permissive",
+      for: "select",
+      to: ["authenticated"],
+    }),
+    pgPolicy("users_update_own", {
+      as: "permissive",
+      for: "update",
+      to: ["authenticated"],
+    }),
+  ],
+);
+
+export const userDietRestrictions = pgTable(
+  "user_diet_restrictions",
+  {
+    id: uuid().notNull(),
+    restriction: integer().notNull(),
+  },
+  (table) => [
+    index("idx_user_diet_restrictions_restriction_id").using(
+      "btree",
+      table.restriction.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_user_diet_restrictions_user_id").using(
+      "btree",
+      table.id.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [users.id],
+      name: "user_diet_restrictions_id_users_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.restriction],
+      foreignColumns: [dietaryRestrictions.id],
+      name: "user_diet_restrictions_restriction_dietary_restrictions_id_fk",
+    }),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [users.id],
+      name: "user_diet_restrictions_user_fkey",
+    }).onDelete("cascade"),
+    primaryKey({
+      columns: [table.id, table.restriction],
+      name: "user_diet_restrictions_pkey",
+    }),
+    pgPolicy("user_restrictions_insert_own", {
+      as: "permissive",
+      for: "insert",
+      to: ["authenticated"],
+      withCheck: sql`(auth.uid() = id)`,
+    }),
+    pgPolicy("user_restrictions_select_own", {
+      as: "permissive",
+      for: "select",
+      to: ["authenticated"],
+    }),
+  ],
+);
+
+export const userInterests = pgTable(
+  "user_interests",
+  {
+    id: uuid().notNull(),
+    interest: integer().notNull(),
+  },
+  (table) => [
+    index("idx_user_interests_interest_id").using(
+      "btree",
+      table.interest.asc().nullsLast().op("int4_ops"),
+    ),
+    index("idx_user_interests_user_id").using(
+      "btree",
+      table.id.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [users.id],
+      name: "user_interests_id_users_id_fk",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.interest],
+      foreignColumns: [interests.id],
+      name: "user_interests_interest_interests_id_fk",
+    }),
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [users.id],
+      name: "user_interests_user_fkey",
+    }).onDelete("cascade"),
+    primaryKey({
+      columns: [table.id, table.interest],
+      name: "user_interests_pkey",
+    }),
+    pgPolicy("user_interests_insert_own", {
+      as: "permissive",
+      for: "insert",
+      to: ["authenticated"],
+      withCheck: sql`(auth.uid() = id)`,
+    }),
+    pgPolicy("user_interests_select_own", {
+      as: "permissive",
+      for: "select",
+      to: ["authenticated"],
+    }),
+  ],
+);
+export const rsvpableUsers = pgView("rsvpable_users", { id: uuid() }).as(
+  sql`SELECT u.id FROM users u LEFT JOIN pre_reg p ON p.email = u.email::text LEFT JOIN auth.users ON users.id = u.id WHERE u.status = ANY (ARRAY['pending'::status, 'waitlisted'::status]) ORDER BY (p.email IS NOT NULL) DESC, users.created_at LIMIT 500 - (( SELECT count(*) AS count FROM users users_1 WHERE users_1.status = 'confirmed'::status))`,
+);
+
 export const adminManagementView = pgView("admin_management_view", {
   id: uuid(),
   email: varchar({ length: 255 }),
@@ -1443,8 +1502,4 @@ export const adminManagementView = pgView("admin_management_view", {
   }),
 }).as(
   sql`SELECT a.id, a.email, a.role, a.status, a.f_name AS "firstName", a.l_name AS "lastName", a.is_admin_only, a.created_at, a.updated_at, u.last_sign_in_at, u.email_confirmed_at FROM admins a JOIN auth.users u ON a.id = u.id ORDER BY a.created_at DESC`,
-);
-
-export const rsvpableUsers = pgView("rsvpable_users", { id: uuid() }).as(
-  sql`SELECT u.id FROM users u LEFT JOIN pre_reg p ON p.email = u.email::text WHERE u.status = ANY (ARRAY['pending'::status, 'waitlisted'::status]) ORDER BY (p.email IS NOT NULL) DESC, u.updated_at LIMIT 145`,
 );

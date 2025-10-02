@@ -14,7 +14,7 @@ import { FileText, MessageSquare, HelpCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Rsvp from "./rsvp";
+import Rsvp from "./rsvp/rsvp";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -38,11 +38,7 @@ export default async function DashboardPage() {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-6 max-w-7xl mx-auto w-full">
             {/* Status Banner */}
-            {user && (
-              <StatusBanner status={user.status as RegistrationStatus} />
-            )}
-
-            {/* Discord Card */}
+            <StatusBanner status={user.status as RegistrationStatus} />
 
             {/* Dashboard Content */}
             <div className="max-w-full">

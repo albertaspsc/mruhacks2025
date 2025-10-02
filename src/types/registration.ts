@@ -138,7 +138,7 @@ export interface UserRegistration {
   accommodations: string;
   resume_url?: string;
   resume_filename?: string;
-  status: "pending" | "confirmed" | "waitlisted" | "rejected";
+  status: "pending" | "confirmed" | "waitlisted" | "denied" | "declined";
   checked_in: boolean;
   timestamp?: string;
   updated_at?: string;

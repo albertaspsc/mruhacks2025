@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CheckCircle, Clock, AlertTriangle, XCircle, Ban } from "lucide-react";
+import { useRegistrationStatus } from "@/app/user/dashboard/rsvp/states";
 
 export type RegistrationStatus =
   | "confirmed"
@@ -14,7 +15,12 @@ interface StatusBannerProps {
   status: RegistrationStatus;
 }
 
-const StatusBanner: React.FC<StatusBannerProps> = ({ status }) => {
+function StatusBanner({ status }: StatusBannerProps) {
+  const liveStatus = useRegistrationStatus();
+
+  // Use the live status once it loads
+  if (!liveStatus.loading) status = liveStatus.status;
+
   const config = {
     confirmed: {
       bgColor: "bg-green-100",
@@ -79,6 +85,6 @@ const StatusBanner: React.FC<StatusBannerProps> = ({ status }) => {
       <p className={`mt-2 ${textColor} text-xs md:text-sm`}>{message}</p>
     </div>
   );
-};
+}
 
 export default StatusBanner;

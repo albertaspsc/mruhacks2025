@@ -133,6 +133,7 @@ export async function PATCH(
       return NextResponse.json(response, { status: 200 });
     }
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       { error: "Failed to update participant" },
       { status: 500 },

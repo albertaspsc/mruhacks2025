@@ -2,8 +2,13 @@
 
 import DashboardItem from "@/components/dashboards/shared/ui/DashboardItem";
 import { createClient } from "@/utils/supabase/server";
-import RSVPButton, { ConfirmDecline } from "./confirm_button";
 import { RegistrationStatus } from "@/components/dashboards/shared/ui/StatusBanner";
+import {
+  FcsfRsvpButton,
+  ConfirmDecline,
+  RSVPButton,
+  LiveStatusMessage,
+} from "./inner";
 
 export default async function Rsvp() {
   const client = await createClient();
@@ -27,6 +32,9 @@ export default async function Rsvp() {
   const userCanRSVP = !!rsvpRes.data;
   const status = statusRes.data?.status as RegistrationStatus;
 
+  const doFcfs =
+    (status == "pending" || status == "waitlisted") && !userCanRSVP;
+
   const messages: Partial<Record<RegistrationStatus, string>> = {
     confirmed: "You’ve confirmed your spot. See you at the event!",
     pending: "Your registration is pending. Please RSVP to secure your spot.",
@@ -34,7 +42,11 @@ export default async function Rsvp() {
       "We don't have a spot for you at this time. We'll email you if a slot opens up.",
   };
 
-  if (!(status == "pending" && userCanRSVP) && !(status == "confirmed"))
+  if (
+    !(status == "pending" && userCanRSVP) &&
+    !(status == "confirmed") &&
+    !doFcfs
+  )
     return null;
 
   return (
@@ -43,9 +55,9 @@ export default async function Rsvp() {
       className="overflow-hidden"
       contentClassName="py-2 px-3 space-y-2 flex flex-col"
     >
-      {messages[status]}
+      {doFcfs ? <LiveStatusMessage /> : messages[status]}
       <div className="flex flex-row lg:w-1/2 mt-2 space-x-2">
-        <RSVPButton disabled={!userCanRSVP} />
+        {doFcfs ? <FcsfRsvpButton /> : <RSVPButton disabled={!userCanRSVP} />}
         <ConfirmDecline />
       </div>
     </DashboardItem>
