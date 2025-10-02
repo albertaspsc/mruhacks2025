@@ -52,7 +52,7 @@ export async function fcsfRsvp(): Promise<ServiceResult> {
         .select({ count: confirmedCount.count })
         .from(confirmedCount);
 
-      if (count > CAPACITY)
+      if (count >= CAPACITY)
         return { success: false, message: "Max Registration Count Reached" };
 
       await tx
